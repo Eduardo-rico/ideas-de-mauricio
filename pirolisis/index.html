@@ -215,7 +215,7 @@ tfoot td { background: var(--panel2); }
       <fieldset>
         <legend>Separación <small>en vivo</small></legend>
         <label class="chk" for="reflux"><input type="checkbox" id="reflux" checked> Deflegmador (reflujo de pesados)</label>
-        <label class="ctl" for="Tref"><span class="row">Temperatura del deflegmador<output id="o-Tref"></output></span><input type="range" id="Tref" min="150" max="450" step="5" value="330"><span class="hint">Lo que condensa aquí regresa al reactor a seguir craqueando.</span></label>
+        <label class="ctl" for="Tref"><span class="row">Temperatura del deflegmador<output id="o-Tref"></output></span><input type="range" id="Tref" min="150" max="450" step="5" value="280"><span class="hint">Lo que condensa aquí regresa al reactor a seguir craqueando.</span></label>
         <label class="ctl" for="Tc"><span class="row">Agua del condensador<output id="o-Tc"></output></span><input type="range" id="Tc" min="5" max="60" step="1" value="25"></label>
         <label class="chk" for="recirc"><input type="checkbox" id="recirc" checked> Quemar el gas no condensable en el quemador del reactor</label>
       </fieldset>
@@ -312,14 +312,14 @@ tfoot td { background: var(--panel2); }
         <p>Más presión o menos purga de N₂ alargan τ: el vapor pasa más tiempo caliente y se rompe más (más gasolina y gas, menos ceras).</p>
       </div>
       <div class="eq">
-        <span class="what">9 · Deflegmador (reflujo)</span>
-        <math display="block"><msub><mi>F</mi><mrow><mi>i</mi><mo>,</mo><mtext>reflujo</mtext></mrow></msub><mo>=</mo><mi>η</mi><mspace width="0.15em"/><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mi>d</mi></msub><mo>)</mo></mrow><mi>P</mi></mfrac><mo>)</mo><mspace width="0.15em"/><msub><mover><mi>m</mi><mo>˙</mo></mover><mrow><mi>i</mi><mo>,</mo><mtext>sal</mtext></mrow></msub><mo>,</mo><mspace width="0.5em"/><mi>η</mi><mo>=</mo><mn>0.9</mn></math>
-        <p>A 330 °C regresa casi toda la cera y deja pasar el diésel: esa es la palanca principal para hacer diésel en vez de parafina.</p>
+        <span class="what">9 · Deflegmador: una etapa de equilibrio</span>
+        <math display="block"><msub><mi>F</mi><mrow><mi>i</mi><mo>,</mo><mtext>reflujo</mtext></mrow></msub><mo>=</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>V</mi></mrow><mrow><mn>1</mn><mo>−</mo><mi>V</mi><mo>+</mo><mi>V</mi><msub><mi>K</mi><mi>i</mi></msub></mrow></mfrac><msub><mover><mi>m</mi><mo>˙</mo></mover><mrow><mi>i</mi><mo>,</mo><mtext>sal</mtext></mrow></msub><mo>,</mo><mspace width="0.5em"/><msub><mi>K</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mi>d</mi></msub><mo>)</mo></mrow><mi>P</mi></mfrac><mo>,</mo><mspace width="0.5em"/><munder><mo>∑</mo><mi>i</mi></munder><mfrac><mrow><msub><mi>z</mi><mi>i</mi></msub><mo>(</mo><msub><mi>K</mi><mi>i</mi></msub><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mn>1</mn><mo>+</mo><mi>V</mi><mo>(</mo><msub><mi>K</mi><mi>i</mi></msub><mo>−</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mn>0</mn></math>
+        <p>Flash ideal (Raoult) resuelto con Rachford–Rice; el gas y el N₂ no condensan y diluyen a las ceras. Contra Peng–Robinson con 11 pseudocomponentes da casi lo mismo para las ceras (24 % contra 22 % a 330 °C, 82 % contra 81 % a 280 °C). A 330 °C casi no regresa cera; entre 260 y 280 °C regresa casi toda sin arrastrar mucho diésel.</p>
       </div>
       <div class="eq">
         <span class="what">10 · Pérdida de gasolina en el condensador</span>
         <math display="block"><msub><mover><mi>m</mi><mo>˙</mo></mover><mrow><mi>G</mi><mo>,</mo><mtext>pérdida</mtext></mrow></msub><mo>=</mo><msub><mover><mi>n</mi><mo>˙</mo></mover><mtext>nc</mtext></msub><mfrac><mrow><msubsup><mi>P</mi><mi>G</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mi>c</mi></msub><mo>)</mo></mrow><mrow><mi>P</mi><mo>−</mo><msubsup><mi>P</mi><mi>G</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mi>c</mi></msub><mo>)</mo></mrow></mfrac><msub><mi>M</mi><mi>G</mi></msub></math>
-        <p>El gas no condensable y el N₂ salen saturados de gasolina. Agua más fría y más presión recuperan más.</p>
+        <p>El gas no condensable y el N₂ salen saturados de gasolina. Agua más fría y más presión recuperan más. Con un solo pseudocomponente esta regla subestima la pérdida: Peng–Robinson da 11 % contra 6 %, porque los C5–C6 son mucho más volátiles que el promedio.</p>
       </div>
       <div class="eq">
         <span class="what">11 · Balance de energía del reactor</span>
@@ -380,11 +380,11 @@ tfoot td { background: var(--panel2); }
           <tr><td>Purga de nitrógeno</td><td>Sacar el oxígeno antes de calentar y barrer vapores</td><td>Cilindro o generador de N₂, rotámetro 0–60 NL/min, analizador de O₂ &lt; 2 %</td></tr>
           <tr><td>Descarga de coque</td><td>Sacar el residuo sólido entre lotes</td><td>Puerta inferior o tornillo enfriado</td></tr>
           <tr><td colspan="3" class="stage">3 · Separación de productos</td></tr>
-          <tr><td>Deflegmador (columna de reflujo)</td><td>Condensar y regresar las ceras al reactor para craquearlas a diésel</td><td>Columna empacada o enfriada por aire, control de 250–380 °C</td></tr>
+          <tr><td>Deflegmador (columna de reflujo)</td><td>Condensar y regresar las ceras al reactor para craquearlas a diésel</td><td>Columna empacada o enfriada por aire, control de 250–300 °C; con varias etapas teóricas regresa más cera y menos diésel</td></tr>
           <tr><td>Condensador de carcasa y tubos</td><td>Pasar el vapor a líquido</td><td>Agua de enfriamiento 15–30 °C; tubos de inoxidable; trampa de ceras antes para que no se tape</td></tr>
           <tr><td>Torre de enfriamiento o chiller</td><td>Mantener fría el agua del condensador</td><td>≈ 0.3 kW de enfriamiento por cada kg/h de aceite</td></tr>
           <tr><td>Separador gas–líquido</td><td>Separar el aceite del gas no condensable</td><td>Tanque vertical con eliminador de niebla</td></tr>
-          <tr><td>Destilación fraccionada</td><td>Cortar el aceite en gasolina (&lt; 180 °C) y diésel (180–360 °C)</td><td>Columna con rehervidor, o destilador por lotes con corte por temperatura</td></tr>
+          <tr><td>Destilación fraccionada</td><td>Cortar el aceite en gasolina (C5–C12, hasta ≈ 216 °C) y diésel (C13–C22, 216–369 °C)</td><td>Columna con rehervidor, o destilador por lotes con corte por temperatura</td></tr>
           <tr><td>Tanques de producto</td><td>Guardar gasolina, diésel y ceras</td><td>Acero al carbono con venteo y arrestaflamas, conectados a tierra</td></tr>
           <tr><td colspan="3" class="stage">4 · Gas y seguridad</td></tr>
           <tr><td>Válvula de contrapresión (PCV)</td><td>Fijar la presión del reactor</td><td>Regulador de 1–5 bar abs</td></tr>
@@ -463,7 +463,6 @@ const K_EV = 0.15;          // constante de evaporación, 1/s
 const KV = 2e-5;            // válvula de contrapresión, mol/(s·Pa)
 const KR = 1e-3;            // válvula de alivio (PSV), mol/(s·Pa)
 const P_RELIEF = 6e5;       // disparo PSV, Pa abs
-const ETA_R = 0.9;          // eficiencia del deflegmador
 const DH_SEC = 0.3e6;       // calor de craqueo secundario, J/kg
 const LHV_GAS = 46e6, ETA_B = 0.75; // gas C1–C4 y eficiencia del quemador
 const KP = 2500, KI = 8;    // control PI del calentador
@@ -497,6 +496,25 @@ const CAT = {
 
 function psat(Tb, T) { return PATM * Math.exp(Math.min(40, (88 / R) * (1 - Tb / T))); }
 function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
+
+// Fracción de cada lump que condensa en un flash ideal a (Td, P); Gs y N2 no condensan
+function refluxFlash(out, nN2, Td, P) {
+  const n = {}, K = {};
+  const nNC = nN2 + out.Gs / LUMP.Gs.M;
+  let N = nNC;
+  for (const i of ['W', 'D', 'G']) { n[i] = out[i] / LUMP[i].M; N += n[i]; K[i] = psat(LUMP[i].Tb, Td) / P; }
+  const none = { W: 0, D: 0, G: 0 };
+  if (N <= 0) return none;
+  const f = (V) => nNC / N / V + ['W', 'D', 'G'].reduce((a, i) => a + n[i] / N * (K[i] - 1) / ((1 - V) + V * K[i]), 0);
+  if (f(1) >= 0) return none;            // todo vapor
+  let lo = 1e-9, hi = 1;
+  if (f(lo) <= 0) return { W: 1, D: 1, G: 1 }; // todo líquido
+  for (let k = 0; k < 60; k++) { const m = 0.5 * (lo + hi); if (f(m) > 0) lo = m; else hi = m; }
+  const V = 0.5 * (lo + hi);
+  const r = {};
+  for (const i of ['W', 'D', 'G']) r[i] = (1 - V) / ((1 - V) + V * K[i]);
+  return r;
+}
 
 function makeState(c) {
   const mP = {};
@@ -593,11 +611,11 @@ function step(s, c, dt) {
   const nOut = (N0 - N1) / dt;
   s.tau = nOut > 1e-6 ? N1 / nOut : Infinity;
 
-  // 6. Deflegmador: regresa al reactor lo que condensa a Td
+  // 6. Deflegmador: una etapa de equilibrio a Td (Raoult + Rachford–Rice); el líquido regresa al reactor
   if (c.reflux) {
-    const Td = Math.min(c.Tref, T);
+    const liq = refluxFlash(out, outN2, Math.min(c.Tref, T), s.P);
     for (const i of ['W', 'D', 'G']) {
-      const b = out[i] * ETA_R * Math.max(0, 1 - psat(LUMP[i].Tb, Td) / s.P);
+      const b = out[i] * liq[i];
       out[i] -= b; s.L[i] += b; s.cum.refl += b;
     }
   }
@@ -664,11 +682,11 @@ const K0 = 273.15;
 let cfg, st, running = false, hist = [], runs = [], lastHist = -1e9, pendingLoad = false;
 
 const PRESETS = {
-  mix:        { HDPE: 40, LDPE: 20, PP: 30, PS: 10, Tsp: 460, Pset: 1.2, reflux: true, Tref: 330, cat: 'none', catLoad: 0, n2: 0.005, Pmax: 40 },
-  diesel:     { HDPE: 60, LDPE: 20, PP: 20, PS: 0, Tsp: 445, Pset: 1.3, reflux: true, Tref: 350, cat: 'none', catLoad: 0, n2: 0.0025, Pmax: 40 },
+  mix:        { HDPE: 40, LDPE: 20, PP: 30, PS: 10, Tsp: 460, Pset: 1.2, reflux: true, Tref: 280, cat: 'none', catLoad: 0, n2: 0.005, Pmax: 40 },
+  diesel:     { HDPE: 60, LDPE: 20, PP: 20, PS: 0, Tsp: 455, Pset: 1.3, reflux: true, Tref: 270, cat: 'none', catLoad: 0, n2: 0.0025, Pmax: 40 },
   gasolina:   { HDPE: 10, LDPE: 10, PP: 70, PS: 10, Tsp: 470, Pset: 2.5, reflux: true, Tref: 240, cat: 'ZSM5', catLoad: 0.1, n2: 0.005, Pmax: 60 },
-  sinreflujo: { HDPE: 40, LDPE: 20, PP: 30, PS: 10, Tsp: 460, Pset: 1.05, reflux: false, Tref: 330, cat: 'none', catLoad: 0, n2: 0.01, Pmax: 40 },
-  ps:         { HDPE: 0, LDPE: 0, PP: 0, PS: 100, Tsp: 420, Pset: 1.2, reflux: true, Tref: 300, cat: 'none', catLoad: 0, n2: 0.005, Pmax: 40 },
+  sinreflujo: { HDPE: 40, LDPE: 20, PP: 30, PS: 10, Tsp: 460, Pset: 1.05, reflux: false, Tref: 280, cat: 'none', catLoad: 0, n2: 0.01, Pmax: 40 },
+  ps:         { HDPE: 0, LDPE: 0, PP: 0, PS: 100, Tsp: 420, Pset: 1.2, reflux: true, Tref: 280, cat: 'none', catLoad: 0, n2: 0.005, Pmax: 40 },
 };
 
 const fmt = {
@@ -1046,9 +1064,9 @@ function drawScene(dtReal) {
   ctx.strokeStyle = rgba(C.muted, 0.5); ctx.lineWidth = 1;
   for (let y = 320; y < 460; y += 14) { ctx.beginPath(); ctx.moveTo(564, y); ctx.lineTo(596, y); ctx.stroke(); }
   title('Destilación', 580, 492, 'center');
-  label('<180 °C', 608, 318, C.gasoline, 'left', 10);
-  label('180–360 °C', 608, 373, C.diesel, 'left', 10);
-  label('>360 °C', 608, 448, C.wax, 'left', 10);
+  label('<216 °C', 608, 318, C.gasoline, 'left', 10);
+  label('216–369 °C', 608, 373, C.diesel, 'left', 10);
+  label('>369 °C', 608, 448, C.wax, 'left', 10);
 
   // tanques
   const cap = Math.max(1, st.mass0 * 0.6);
@@ -1244,7 +1262,8 @@ function renderStatus() {
   else if (st.P > 5e5) pills.push(['Presión alta', 'warn']);
   if (cfg.n2 === 0) pills.push(['Sin purga de N₂', 'warn']);
   if (T > 560) pills.push(['Temperatura alta: mucho gas y coque', 'warn']);
-  if (cfg.reflux && cfg.Tref - K0 < 230) pills.push(['Deflegmador frío: regresa diésel', 'warn']);
+  if (cfg.reflux && cfg.Tref - K0 < 250) pills.push(['Deflegmador frío: regresa diésel', 'warn']);
+  if (cfg.reflux && cfg.Tref - K0 > 320) pills.push(['Deflegmador caliente: casi no regresa cera', 'warn']);
   const fill = st.mass0 / 750 / cfg.Vr;
   if (fill > 0.7) pills.push(['Reactor sobrecargado', 'crit']);
   $('status').innerHTML = pills.map(([t, c]) => `<span class="pill ${c}">${t}</span>`).join('');

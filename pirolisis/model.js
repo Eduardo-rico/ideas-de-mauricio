@@ -7,7 +7,6 @@ const K_EV = 0.15;          // constante de evaporación, 1/s
 const KV = 2e-5;            // válvula de contrapresión, mol/(s·Pa)
 const KR = 1e-3;            // válvula de alivio (PSV), mol/(s·Pa)
 const P_RELIEF = 6e5;       // disparo PSV, Pa abs
-const ETA_R = 0.9;          // eficiencia del deflegmador
 const DH_SEC = 0.3e6;       // calor de craqueo secundario, J/kg
 const LHV_GAS = 46e6, ETA_B = 0.75; // gas C1–C4 y eficiencia del quemador
 const KP = 2500, KI = 8;    // control PI del calentador
@@ -41,6 +40,25 @@ const CAT = {
 
 function psat(Tb, T) { return PATM * Math.exp(Math.min(40, (88 / R) * (1 - Tb / T))); }
 function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
+
+// Fracción de cada lump que condensa en un flash ideal a (Td, P); Gs y N2 no condensan
+function refluxFlash(out, nN2, Td, P) {
+  const n = {}, K = {};
+  const nNC = nN2 + out.Gs / LUMP.Gs.M;
+  let N = nNC;
+  for (const i of ['W', 'D', 'G']) { n[i] = out[i] / LUMP[i].M; N += n[i]; K[i] = psat(LUMP[i].Tb, Td) / P; }
+  const none = { W: 0, D: 0, G: 0 };
+  if (N <= 0) return none;
+  const f = (V) => nNC / N / V + ['W', 'D', 'G'].reduce((a, i) => a + n[i] / N * (K[i] - 1) / ((1 - V) + V * K[i]), 0);
+  if (f(1) >= 0) return none;            // todo vapor
+  let lo = 1e-9, hi = 1;
+  if (f(lo) <= 0) return { W: 1, D: 1, G: 1 }; // todo líquido
+  for (let k = 0; k < 60; k++) { const m = 0.5 * (lo + hi); if (f(m) > 0) lo = m; else hi = m; }
+  const V = 0.5 * (lo + hi);
+  const r = {};
+  for (const i of ['W', 'D', 'G']) r[i] = (1 - V) / ((1 - V) + V * K[i]);
+  return r;
+}
 
 function makeState(c) {
   const mP = {};
@@ -137,11 +155,11 @@ function step(s, c, dt) {
   const nOut = (N0 - N1) / dt;
   s.tau = nOut > 1e-6 ? N1 / nOut : Infinity;
 
-  // 6. Deflegmador: regresa al reactor lo que condensa a Td
+  // 6. Deflegmador: una etapa de equilibrio a Td (Raoult + Rachford–Rice); el líquido regresa al reactor
   if (c.reflux) {
-    const Td = Math.min(c.Tref, T);
+    const liq = refluxFlash(out, outN2, Math.min(c.Tref, T), s.P);
     for (const i of ['W', 'D', 'G']) {
-      const b = out[i] * ETA_R * Math.max(0, 1 - psat(LUMP[i].Tb, Td) / s.P);
+      const b = out[i] * liq[i];
       out[i] -= b; s.L[i] += b; s.cum.refl += b;
     }
   }

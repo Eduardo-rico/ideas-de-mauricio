@@ -55,7 +55,7 @@ Diseño mínimo de 6 corridas para que cada parámetro tenga algo que lo mueva:
 Más 1–2 corridas en otras condiciones para `--validar`, y una repetida para conocer el error experimental.
 
 - **Pesa todo:** la carga, cada tanque y el coque. El gas puede ir por diferencia. Si los productos no suman 95–105 % de la carga, el script avisa.
-- **Separa gasolina y diésel por destilación:** corte a 180 °C (ASTM D86), o reporta con destilación simulada (ASTM D2887). Lo que hierve arriba de 360 °C son ceras.
+- **Separa gasolina y diésel por destilación:** corte a ≈ 216 °C, el punto de ebullición del n-C12 (ASTM D86), o reporta con destilación simulada (ASTM D2887). Lo que hierve arriba de ≈ 369 °C (n-C22) son ceras.
 - **Con `--ajustar-ea`** (corridas a ≥ 3 temperaturas) también se ajustan las Eₐ secundarias.
 
 Formato del CSV: ver `ejemplo/banco_sintetico.csv`. Opcionales: `potencia_kW`, `UA_W_K` (pérdidas del reactor, W/K) y `masa_acero_kg`.

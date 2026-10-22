@@ -11,7 +11,7 @@ R, PATM = 8.314, 101325.0
 
 DEFAULTS = {
     "RHO": 750.0, "CP_POLY": 2400.0, "CP_LIQ": 2500.0, "CP_CHAR": 1000.0, "CP_STEEL": 500.0,
-    "K_EV": 0.15, "KV": 2e-5, "KR": 1e-3, "P_RELIEF": 6e5, "ETA_R": 0.9, "DH_SEC": 0.3e6,
+    "K_EV": 0.15, "KV": 2e-5, "KR": 1e-3, "P_RELIEF": 6e5, "DH_SEC": 0.3e6,
     "LHV_GAS": 46e6, "ETA_B": 0.75, "KP": 2500.0, "KI": 8.0,
     "POLY": {
         "HDPE": {"A": 1.0e16, "Ea": 268e3, "s": {"W": .55, "D": .22, "G": .13, "Gs": .08, "C": .02}, "Tm": 403, "dHm": 190e3, "dHr": 1.05e6},
@@ -67,6 +67,33 @@ def config(**kw):
     c.setdefault("mSteel", 335 * c["Vr"] ** (2 / 3))
     c.setdefault("UA", 64 * c["Vr"] ** (2 / 3))
     return c
+
+
+def reflux_flash(out, nN2, Td, P, LUMP):
+    """Fracción de cada lump que condensa en un flash ideal a (Td, P); Gs y N2 no condensan."""
+    n = {i: out[i] / LUMP[i]["M"] for i in LIQ}
+    K = {i: psat(LUMP[i]["Tb"], Td) / P for i in LIQ}
+    nNC = nN2 + out["Gs"] / LUMP["Gs"]["M"]
+    N = nNC + sum(n.values())
+    if N <= 0:
+        return {i: 0.0 for i in LIQ}
+
+    def f(V):
+        return nNC / N / V + sum(n[i] / N * (K[i] - 1) / ((1 - V) + V * K[i]) for i in LIQ)
+
+    if f(1.0) >= 0:
+        return {i: 0.0 for i in LIQ}
+    lo, hi = 1e-9, 1.0
+    if f(lo) <= 0:
+        return {i: 1.0 for i in LIQ}
+    for _ in range(60):
+        m = 0.5 * (lo + hi)
+        if f(m) > 0:
+            lo = m
+        else:
+            hi = m
+    V = 0.5 * (lo + hi)
+    return {i: (1 - V) / ((1 - V) + V * K[i]) for i in LIQ}
 
 
 def make_state(c, p):
@@ -163,11 +190,11 @@ def step(s, c, p, dt):
     nOut = (N0 - N1) / dt
     s["tau"] = N1 / nOut if nOut > 1e-6 else math.inf
 
-    # 6. Deflegmador
+    # 6. Deflegmador: una etapa de equilibrio a Td (Raoult + Rachford–Rice)
     if c["reflux"]:
-        Td = min(c["Tref"], T)
+        liq = reflux_flash(out, outN2, min(c["Tref"], T), s["P"], LUMP)
         for i in LIQ:
-            b = out[i] * p["ETA_R"] * max(0.0, 1 - psat(LUMP[i]["Tb"], Td) / s["P"])
+            b = out[i] * liq[i]
             out[i] -= b; L[i] += b
 
     # 7. Condensador
