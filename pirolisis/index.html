@@ -689,7 +689,7 @@ function readCfg() {
   POLYS.forEach((p) => { mix[p] = v('m-' + p); });
   const Vr = v('Vr');
   return {
-    mix, mass: v('mass'), Vr, mSteel: 400 * Vr + 30, UA: 20 + 30 * Vr, Tamb: 298,
+    mix, mass: v('mass'), Vr, mSteel: 335 * Math.pow(Vr, 2 / 3), UA: 64 * Math.pow(Vr, 2 / 3), Tamb: 298,
     Tsp: v('Tsp') + K0, Pmax: v('Pmax') * 1000, Pset: v('Pset') * 1e5, n2: v('n2'),
     reflux: $('reflux').checked, Tref: v('Tref') + K0, Tc: v('Tc') + K0, recirc: $('recirc').checked,
     cat: $('cat').value, catLoad: v('catLoad'),

@@ -1,0 +1,16 @@
+[project]
+name = "ajuste-pirolisis"
+version = "0.1.0"
+description = "Ajuste de cinética de pirólisis a partir de TGA y corridas de banco"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.0", "scipy>=1.13", "matplotlib>=3.9"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
