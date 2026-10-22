@@ -1,0 +1,1265 @@
+<title>Flóculo y Diplodon</title>
+<meta name="description" content="Modelo dinámico de fósforo para restaurar un lago eutrófico en dos pasos: inactivación abiótica con floculantes y biofiltración con la almeja nativa Diplodon chilensis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,500;0,600;1,400;1,500&display=swap">
+<style>
+:root{
+  --ground:#edf2f0; --surface:#fbfcfb; --surface-2:#f4f7f6;
+  --ink:#0f2329; --ink-2:#43575d; --muted:#6c7d82;
+  --rule:#d3ddda; --grid:#e2e8e6; --axis:#b4c2bf;
+  --accent:#0c6367; --accent-soft:#d5e9e8; --accent-ink:#ffffff;
+  --water:#e2eeee; --sed:#efe7da; --sed-ink:#6a5440;
+  --s-chl:#1baf7a; --s-tp:#eb6834; --s-sed:#2a78d6; --s-cap:#eda100; --s-mus:#4a3aa7; --s-base:#8d9a9c;
+  --crit:#d03b3b; --crit-soft:rgba(208,59,59,.10);
+  --r1:#86b6ef; --r2:#3987e5; --r3:#256abf; --r4:#184f95; --r5:#0d366b;
+  --sky-top:#cfe3ea; --sky-bot:#eef5f4; --land:#9c8a6c; --land-2:#7d6c51;
+  --shadow:0 1px 2px rgba(15,35,41,.06),0 8px 24px rgba(15,35,41,.06);
+  --serif:"Spectral",Georgia,"Times New Roman",serif;
+  --sans:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#091417; --surface:#0f1f23; --surface-2:#132629;
+    --ink:#e3edeb; --ink-2:#a8bbba; --muted:#7c9092;
+    --rule:#22373b; --grid:#1a2d31; --axis:#30474b;
+    --accent:#63c3c4; --accent-soft:#143639; --accent-ink:#05252a;
+    --water:#10292d; --sed:#211d17; --sed-ink:#c9b497;
+    --s-chl:#199e70; --s-tp:#d95926; --s-sed:#3987e5; --s-cap:#c98500; --s-mus:#9085e9; --s-base:#6d8083;
+    --crit:#e06464; --crit-soft:rgba(224,100,100,.14);
+    --r1:#184f95; --r2:#256abf; --r3:#3987e5; --r4:#6da7ec; --r5:#b7d3f6;
+    --sky-top:#0b1d2b; --sky-bot:#16303a; --land:#4a4033; --land-2:#3a3228;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#091417; --surface:#0f1f23; --surface-2:#132629;
+  --ink:#e3edeb; --ink-2:#a8bbba; --muted:#7c9092;
+  --rule:#22373b; --grid:#1a2d31; --axis:#30474b;
+  --accent:#63c3c4; --accent-soft:#143639; --accent-ink:#05252a;
+  --water:#10292d; --sed:#211d17; --sed-ink:#c9b497;
+  --s-chl:#199e70; --s-tp:#d95926; --s-sed:#3987e5; --s-cap:#c98500; --s-mus:#9085e9; --s-base:#6d8083;
+  --crit:#e06464; --crit-soft:rgba(224,100,100,.14);
+  --r1:#184f95; --r2:#256abf; --r3:#3987e5; --r4:#6da7ec; --r5:#b7d3f6;
+  --sky-top:#0b1d2b; --sky-bot:#16303a; --land:#4a4033; --land-2:#3a3228;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;padding-inline:clamp(16px,3vw,40px);padding-block:0 64px}
+.wrap{max-width:1280px;margin:0 auto}
+a{color:var(--accent);text-underline-offset:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;text-wrap:balance;margin:0;letter-spacing:-.01em}
+h2{font-size:clamp(26px,3vw,34px);line-height:1.15}
+h3{font-size:19px;line-height:1.25}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- header ---------- */
+header.top{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px 48px;align-items:end;padding-block:40px 22px;border-bottom:1px solid var(--rule)}
+header.top h1{font-size:clamp(44px,7vw,84px);line-height:.95;font-weight:500;letter-spacing:-.025em}
+header.top h1 em{font-style:italic;font-weight:400;color:var(--accent)}
+.lede{font-family:var(--serif);font-size:19px;line-height:1.45;color:var(--ink-2);max-width:58ch}
+.lede strong{color:var(--ink);font-weight:600}
+.head-meta{display:flex;flex-direction:column;gap:14px}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;padding-block:12px;border-bottom:1px solid var(--rule)}
+nav.toc a{color:var(--ink-2);text-decoration:none}
+nav.toc a:hover{color:var(--accent);text-decoration:underline}
+
+section{padding-block:44px 8px}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:12px 48px;align-items:end;margin-bottom:22px}
+.sec-head p{color:var(--ink-2);max-width:62ch}
+
+/* ---------- protocol strip ---------- */
+.protocol{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin-top:22px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);overflow:hidden}
+.protocol li{list-style:none;padding:12px 14px 13px;border-left:1px solid var(--rule);display:flex;flex-direction:column;gap:3px;position:relative}
+.protocol li:first-child{border-left:0}
+.protocol .step{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.protocol b{font-size:14px;line-height:1.25}
+.protocol span.when{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.protocol li.abio{box-shadow:inset 0 3px 0 var(--s-cap)}
+.protocol li.bio{box-shadow:inset 0 3px 0 var(--s-mus)}
+.protocol li.wait{background:repeating-linear-gradient(135deg,transparent 0 7px,var(--grid) 7px 8px)}
+ol.protocol{padding:0;margin-block:22px 0}
+
+/* ---------- simulator layout ---------- */
+.sim{display:grid;grid-template-columns:316px minmax(0,1fr);gap:24px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:8px}
+aside.controls{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;padding:4px 0 10px;scrollbar-width:thin}
+.scen{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:12px 14px 4px}
+.scen button{font:inherit;font-size:13px;line-height:1.2;padding:8px 8px;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-2);border-radius:5px;cursor:pointer;text-align:left}
+.scen button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.scen button:hover:not([aria-pressed="true"]){border-color:var(--accent);color:var(--ink)}
+fieldset{border:0;margin:0;padding:12px 14px 6px;border-top:1px solid var(--rule)}
+fieldset:first-of-type{border-top:0}
+legend{padding:0;font-family:var(--serif);font-size:17px;font-weight:600;display:flex;align-items:center;gap:8px;width:100%}
+legend .tag{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:3px;border:1px solid currentColor}
+legend .tag.abio{color:var(--s-cap)}
+legend .tag.bio{color:var(--s-mus)}
+.ctl{display:grid;grid-template-columns:1fr auto;gap:0 8px;margin-top:9px;align-items:baseline}
+.ctl label{font-size:13.5px;color:var(--ink-2)}
+.ctl output{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent);margin:4px 0 0;height:20px}
+.ctl select{grid-column:1/-1;width:100%;font:inherit;font-size:13.5px;padding:6px 8px;margin-top:4px;border-radius:5px;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink)}
+details.adv{margin-top:10px;border-top:1px dashed var(--rule);padding-top:6px}
+details.adv summary{cursor:pointer;font-size:12.5px;color:var(--muted);font-family:var(--mono);letter-spacing:.03em}
+details.adv summary:hover{color:var(--accent)}
+.note{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:8px}
+.note.warn{color:var(--crit)}
+
+.out{display:flex;flex-direction:column;gap:18px;min-width:0}
+
+/* ---------- lake theatre ---------- */
+.theatre{padding:14px 14px 12px}
+.lakes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lake{position:relative;border-radius:6px;overflow:hidden;background:var(--sky-bot);aspect-ratio:16/10.5;max-width:100%}
+.lake canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;left:10px;top:9px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;align-items:flex-start}
+.hud .who{font-family:var(--serif);font-weight:600;font-size:15px;color:#0f2329;background:rgba(255,255,255,.78);padding:2px 8px;border-radius:4px;backdrop-filter:blur(2px)}
+.hud .who.scen-l{color:#fff;background:rgba(12,99,103,.88)}
+.hud .vals{font-family:var(--mono);font-size:11.5px;line-height:1.35;text-align:right;color:#0f2329;background:rgba(255,255,255,.78);padding:4px 7px;border-radius:4px}
+.hud .vals b{font-weight:500}
+.hud .chipline{display:flex;gap:4px;justify-content:flex-end;margin-top:2px}
+.tsi-chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;padding:1px 6px;border-radius:9px;background:rgba(15,35,41,.08);color:#0f2329}
+.tsi-chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.banner{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-family:var(--mono);font-size:11.5px;padding:3px 9px;border-radius:12px;background:rgba(15,35,41,.82);color:#fff;white-space:nowrap;transition:opacity .4s;pointer-events:none}
+.banner[data-off="1"]{opacity:0}
+.player{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:12px;align-items:center;margin-top:12px}
+.player button.play{font:inherit;font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;padding:7px 14px 7px 11px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;min-width:104px}
+.player button.play svg{width:14px;height:14px;fill:currentColor}
+.speed{display:inline-flex;border:1px solid var(--rule);border-radius:16px;overflow:hidden}
+.speed button{font:inherit;font-family:var(--mono);font-size:11.5px;padding:5px 9px;border:0;background:transparent;color:var(--ink-2);cursor:pointer}
+.speed button[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);font-weight:500}
+.player input[type=range]{width:100%;accent-color:var(--accent)}
+.player .date{font-family:var(--mono);font-size:12.5px;color:var(--ink);min-width:12ch;text-align:right}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12.5px;color:var(--ink-2)}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.key i.sw{display:inline-block;width:10px;height:10px;border-radius:50%}
+
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--rule);border-radius:8px;background:var(--surface)}
+.kpi{padding:12px 14px 13px;border-left:1px solid var(--rule);display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi:first-child{border-left:0}
+.kpi .lab{font-size:12.5px;color:var(--ink-2);line-height:1.3}
+.kpi .val{font-family:var(--serif);font-size:30px;font-weight:500;line-height:1.1;letter-spacing:-.01em}
+.kpi .val small{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:400;margin-left:4px;letter-spacing:0}
+.kpi .sub{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.delta-good{color:var(--s-chl)}
+.delta-bad{color:var(--crit)}
+.kpis-2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 24px;padding:12px 16px;font-size:13px;color:var(--ink-2)}
+.kpis-2 b{font-family:var(--mono);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---------- charts ---------- */
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart{padding:12px 12px 6px;position:relative;min-width:0}
+.chart h4{margin:0 0 2px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.chart h4 b{font-weight:700}
+.chart h4 span{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--muted)}
+.chart .plot{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart svg text{font-family:var(--mono);font-size:10.5px;fill:var(--muted)}
+.chart svg text.endlab{fill:var(--ink-2);font-size:11px}
+.chart svg text.endval{fill:var(--ink);font-size:11px;font-weight:500}
+.chart svg text.reflab{fill:var(--muted);font-size:10px}
+.chart svg text.mk{fill:var(--ink-2);font-size:10px}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--rule);box-shadow:var(--shadow);border-radius:6px;padding:7px 9px;font-size:12px;line-height:1.45;min-width:150px;z-index:5}
+.tip .d{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:2px}
+.tip .r{display:flex;justify-content:space-between;gap:12px}
+.tip .r span{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2)}
+.tip .r i{width:10px;height:3px;border-radius:2px;display:inline-block}
+.tip .r b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* ---------- budget ---------- */
+.budget{padding:14px 16px}
+.brow{display:grid;grid-template-columns:200px minmax(0,1fr) 92px;gap:10px;align-items:center;padding-block:5px;border-top:1px solid var(--grid);font-size:13px}
+.brow:first-of-type{border-top:0}
+.brow .bl{color:var(--ink-2)}
+.brow .bv{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.btrack{position:relative;height:14px}
+.btrack .axis0{position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:var(--axis)}
+.btrack .bar{position:absolute;top:2px;height:10px;border-radius:2px}
+.btrack .bar.in{background:var(--s-tp)}
+.btrack .bar.outb{background:var(--s-sed)}
+.btrack .bmark{position:absolute;top:-2px;height:18px;width:2px;background:var(--ink);opacity:.55}
+.bhead{display:grid;grid-template-columns:200px minmax(0,1fr) 92px;gap:10px;font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.bhead .lr{display:flex;justify-content:space-between}
+
+/* ---------- heatmap ---------- */
+.hm-wrap{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px;align-items:start}
+.hm{padding:14px 14px 10px;position:relative}
+.hm svg{width:100%;height:auto;display:block}
+.hm svg text{font-family:var(--mono);font-size:10.5px;fill:var(--muted)}
+.hm svg text.ax{fill:var(--ink-2);font-size:11.5px}
+.hm rect.cell{cursor:pointer}
+.hm rect.cell:hover{stroke:var(--ink);stroke-width:1.5}
+.hm .status{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:6px}
+.legend-ord{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.legend-ord div{display:flex;align-items:center;gap:8px}
+.legend-ord i{width:22px;height:14px;border-radius:2px;display:inline-block}
+.legend-ord span.m{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-left:auto}
+
+/* ---------- diagram ---------- */
+figure{margin:0}
+.diagram{padding:12px 12px 4px;overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:760px;height:auto;color:var(--ink)}
+.diagram svg text{font-family:var(--sans);font-size:12.5px;fill:var(--ink)}
+.diagram svg text.lab{font-size:11.5px;fill:var(--ink-2)}
+.diagram svg text.zone{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;fill:var(--muted)}
+.diagram svg text.sym{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.diagram .box{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.diagram .box.abio{stroke:var(--s-cap);stroke-width:2}
+.diagram .box.bio{stroke:var(--s-mus);stroke-width:2}
+.diagram .fl{fill:none;stroke:var(--ink-2);stroke-width:1.4}
+.diagram .fl.abio{stroke:var(--s-cap);stroke-width:1.8}
+.diagram .fl.bio{stroke:var(--s-mus);stroke-width:1.8}
+.diagram .fl.dash{stroke-dasharray:5 4}
+.diagram .ah{fill:var(--ink-2)}
+.diagram .ah.abio{fill:var(--s-cap)}
+.diagram .ah.bio{fill:var(--s-mus)}
+.diagram .waterz{fill:var(--water)}
+.diagram .sedz{fill:var(--sed)}
+figcaption{font-size:13px;color:var(--ink-2);padding:8px 4px 6px;max-width:90ch;line-height:1.5}
+figcaption i.sw{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-inline:2px 4px}
+
+/* ---------- math + tables ---------- */
+.eqs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.eq{padding:14px 16px 12px;min-width:0}
+.eq h3{font-size:17px;margin-bottom:4px;display:flex;gap:8px;align-items:baseline}
+.eq h3 .mono{font-size:11px;color:var(--muted);font-weight:400}
+.eq p{font-size:13.5px;color:var(--ink-2);max-width:62ch}
+.eq .m{overflow-x:auto;overflow-y:hidden;padding-block:4px;font-size:15px}
+.eq.wide{grid-column:1/-1}
+mjx-container{color:var(--ink)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
+th{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);background:var(--surface)}
+td.v{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.src{color:var(--ink-2);font-size:12.5px}
+tr.grp td{font-family:var(--serif);font-weight:600;font-size:14.5px;background:var(--surface-2);color:var(--ink)}
+.st{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:3px;white-space:nowrap}
+.st.lit{background:var(--accent-soft);color:var(--ink)}
+.st.sup{background:var(--crit-soft);color:var(--ink)}
+.st.cal{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--rule)}
+
+/* ---------- prose blocks ---------- */
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{padding:16px 18px}
+.card h3{margin-bottom:8px}
+.card ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--ink-2)}
+.card ul b{color:var(--ink)}
+ol.refs{padding-left:24px;margin:0;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--ink-2);max-width:110ch}
+ol.refs li::marker{font-family:var(--mono);font-size:12px;color:var(--muted)}
+ol.refs i{color:var(--ink)}
+ol.refs .use{display:block;font-size:12.5px;color:var(--muted)}
+.refgroup{font-family:var(--serif);font-size:18px;font-weight:600;margin:22px 0 10px}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--muted)}
+
+@media (max-width:1060px){
+  .sim{grid-template-columns:1fr}
+  aside.controls{position:static;max-height:none}
+  .controls-inner{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .controls-inner fieldset:first-of-type{border-top:1px solid var(--rule)}
+  .hm-wrap{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  header.top,.sec-head{grid-template-columns:1fr}
+  .lakes,.charts,.eqs,.cols{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi:nth-child(3){border-left:0}
+  .kpi:nth-child(n+3){border-top:1px solid var(--rule)}
+  .kpis-2{grid-template-columns:1fr}
+  .protocol{grid-template-columns:1fr}
+  .protocol li{border-left:0;border-top:1px solid var(--rule)}
+  .protocol li:first-child{border-top:0}
+  .brow,.bhead{grid-template-columns:120px minmax(0,1fr) 70px}
+  .player{grid-template-columns:auto 1fr;}
+  .player input[type=range]{grid-column:1/-1;order:3}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <span class="eyebrow">Modelo dinámico de fósforo · lago templado del sur de Chile</span>
+    <h1>Flóculo y <em>Diplodon</em></h1>
+  </div>
+  <div class="head-meta">
+    <p class="lede">Un lago eutrófico se trata en <strong>dos tiempos</strong>. Primero un paso <strong>abiótico</strong>: un floculante (aluminio, hierro o bentonita con lantano) arrastra las algas al fondo y deja una capa que retiene el fósforo del sedimento. Después, con el agua ya sin residuo tóxico, se siembra la almeja nativa <strong><i>Diplodon chilensis</i></strong>, que sigue filtrando fitoplancton cuando el efecto químico ya se está perdiendo.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Secciones">
+  <a href="#simulador">Simulador</a>
+  <a href="#mapa">Mapa dosis × densidad</a>
+  <a href="#balance">Balance de fósforo</a>
+  <a href="#diagrama">Diagrama del modelo</a>
+  <a href="#ecuaciones">Ecuaciones</a>
+  <a href="#parametros">Parámetros</a>
+  <a href="#riesgos">Supuestos y riesgos</a>
+  <a href="#referencias">Referencias</a>
+</nav>
+
+<ol class="protocol" id="protocol" aria-label="Protocolo en el tiempo">
+  <li><span class="step">FASE 0 · día 0 (1 sep)</span><b>Diagnóstico y control de la carga externa</b><span class="when" id="pr0">carga −50 %</span></li>
+  <li class="abio"><span class="step">FASE 1 · abiótica</span><b>Aplicación del floculante</b><span class="when" id="pr1">día 45</span></li>
+  <li class="wait"><span class="step">ESPERA</span><b>Disipar residuo tóxico, consolidar el flóculo</b><span class="when" id="pr2">75 días</span></li>
+  <li class="bio"><span class="step">FASE 2 · biótica</span><b>Siembra de <i>Diplodon chilensis</i></b><span class="when" id="pr3">día 120</span></li>
+  <li><span class="step">FASE 3</span><b>Monitoreo y re-dosificación</b><span class="when" id="pr4">sin re-dosis</span></li>
+</ol>
+
+<!-- ======================= SIMULADOR ======================= -->
+<section id="simulador">
+  <div class="sec-head">
+    <h2>Simulador</h2>
+    <p>Mueve cualquier parámetro y todo se recalcula: los dos lagos animados, las gráficas, el balance y el protocolo. El panel izquierdo siempre muestra el mismo lago <b>sin tratamiento en el lago</b>, solo con la reducción de carga externa, para comparar.</p>
+  </div>
+
+  <div class="sim">
+    <aside class="controls panel" aria-label="Parámetros">
+      <div class="scen" role="group" aria-label="Escenario">
+        <button id="sc-none" data-f="0" data-m="0" aria-pressed="false">Sin tratamiento</button>
+        <button id="sc-floc" data-f="1" data-m="0" aria-pressed="false">Solo floculante</button>
+        <button id="sc-mus" data-f="0" data-m="1" aria-pressed="false">Solo <i>Diplodon</i></button>
+        <button id="sc-both" data-f="1" data-m="1" aria-pressed="true">Floculante + <i>Diplodon</i></button>
+      </div>
+      <div class="controls-inner">
+      <fieldset>
+        <legend>Lago</legend>
+        <div class="ctl"><label for="area">Área</label><output for="area" id="o-area"></output><input type="range" id="area" min="1" max="500" step="1" value="20"></div>
+        <div class="ctl"><label for="z">Profundidad media z</label><output id="o-z"></output><input type="range" id="z" min="2" max="20" step="0.5" value="5"></div>
+        <div class="ctl"><label for="tau">Tiempo de residencia τ</label><output id="o-tau"></output><input type="range" id="tau" min="0.2" max="5" step="0.1" value="1.5"></div>
+        <div class="ctl"><label for="Lext">Carga externa histórica de P</label><output id="o-Lext"></output><input type="range" id="Lext" min="500" max="6000" step="100" value="3000"></div>
+        <div class="ctl"><label for="red">Reducción de la carga externa</label><output id="o-red"></output><input type="range" id="red" min="0" max="90" step="5" value="50"></div>
+        <details class="adv"><summary>Clima y fitoplancton</summary>
+          <div class="ctl"><label for="Tm">Temperatura media del agua</label><output id="o-Tm"></output><input type="range" id="Tm" min="6" max="22" step="0.5" value="12"></div>
+          <div class="ctl"><label for="Ta">Amplitud estacional</label><output id="o-Ta"></output><input type="range" id="Ta" min="1" max="10" step="0.5" value="7"></div>
+          <div class="ctl"><label for="mu">Crecimiento máximo μ<sub>max</sub> (20 °C)</label><output id="o-mu"></output><input type="range" id="mu" min="0.5" max="2.5" step="0.05" value="1.2"></div>
+          <div class="ctl"><label for="rAn">Liberación anóxica r<sub>an</sub></label><output id="o-rAn"></output><input type="range" id="rAn" min="0" max="0.03" step="0.001" value="0.012"></div>
+        </details>
+      </fieldset>
+
+      <fieldset>
+        <legend>Paso 1 <span class="tag abio">abiótico</span></legend>
+        <div class="ctl"><label for="prod">Producto</label><select id="prod">
+          <option value="alum">Sulfato de aluminio (alumbre)</option>
+          <option value="pac">Policloruro de aluminio (PAC)</option>
+          <option value="fecl3">Cloruro férrico</option>
+          <option value="lmb">Bentonita modificada con La (Phoslock®)</option>
+          <option value="fl">Quitosano + bentonita-La (Flock &amp; Lock)</option>
+        </select></div>
+        <div class="ctl"><label for="dose">Dosis</label><output id="o-dose"></output><input type="range" id="dose" min="0" max="1000" step="10" value="400"></div>
+        <div class="ctl"><label for="tF">Día de aplicación</label><output id="o-tF"></output><input type="range" id="tF" min="0" max="364" step="1" value="45"></div>
+        <div class="ctl"><label for="rep">Re-aplicar cada</label><output id="o-rep"></output><input type="range" id="rep" min="0" max="5" step="1" value="0"></div>
+        <details class="adv"><summary>Propiedades del producto</summary>
+          <div class="ctl"><label for="q">Capacidad de unión q</label><output id="o-q"></output><input type="range" id="q" min="1" max="20" step="0.5" value="6"></div>
+          <div class="ctl"><label for="beta">Barrido de algas β</label><output id="o-beta"></output><input type="range" id="beta" min="0" max="25" step="0.5" value="15"></div>
+          <div class="ctl"><label for="half">Vida media de la capa t<sub>½</sub></label><output id="o-half"></output><input type="range" id="half" min="0.1" max="15" step="0.05" value="0.25"></div>
+          <div class="ctl"><label for="rho">Sensibilidad redox ρ</label><output id="o-rho"></output><input type="range" id="rho" min="0" max="1" step="0.05" value="0"></div>
+          <div class="ctl"><label for="tox">Toxicidad residual τ<sub>p</sub></label><output id="o-tox"></output><input type="range" id="tox" min="0" max="0.2" step="0.005" value="0.1"></div>
+        </details>
+      </fieldset>
+
+      <fieldset>
+        <legend>Paso 2 <span class="tag bio">biótico</span></legend>
+        <div class="ctl"><label for="N0">Densidad sembrada</label><output id="o-N0"></output><input type="range" id="N0" min="0" max="200" step="5" value="60"></div>
+        <div class="ctl"><label for="flit">Fondo sembrado (litoral)</label><output id="o-flit"></output><input type="range" id="flit" min="5" max="100" step="5" value="50"></div>
+        <div class="ctl"><label for="wait">Espera tras la floculación</label><output id="o-wait"></output><input type="range" id="wait" min="0" max="180" step="1" value="75"></div>
+        <details class="adv"><summary>Fisiología de <i>Diplodon</i></summary>
+          <div class="ctl"><label for="CR">Tasa de aclaramiento CR<sub>max</sub></label><output id="o-CR"></output><input type="range" id="CR" min="0.1" max="2.5" step="0.05" value="1.3"></div>
+          <div class="ctl"><label for="emix">Eficiencia por mezcla ε</label><output id="o-emix"></output><input type="range" id="emix" min="0.1" max="1" step="0.05" value="0.6"></div>
+          <div class="ctl"><label for="assim">Asimilación a</label><output id="o-assim"></output><input type="range" id="assim" min="0.2" max="0.9" step="0.05" value="0.5"></div>
+          <div class="ctl"><label for="exc">Fracción excretada e</label><output id="o-exc"></output><input type="range" id="exc" min="0" max="1" step="0.05" value="0.6"></div>
+          <div class="ctl"><label for="m0">Mortalidad de fondo m<sub>0</sub></label><output id="o-m0"></output><input type="range" id="m0" min="0" max="60" step="1" value="12"></div>
+        </details>
+        <p class="note warn" id="toxnote" hidden></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Simulación</legend>
+        <div class="ctl"><label for="years">Horizonte</label><output id="o-years"></output><input type="range" id="years" min="1" max="12" step="1" value="6"></div>
+        <p class="note">Inicio: 1 de septiembre (primavera austral). El lago parte del estado estacional estable con la carga histórica.</p>
+      </fieldset>
+      </div>
+    </aside>
+
+    <div class="out">
+      <!-- lake theatre -->
+      <div class="panel theatre">
+        <div class="lakes">
+          <div class="lake" id="lakeA" aria-label="Corte del lago sin tratamiento">
+            <canvas></canvas>
+            <div class="hud"><span class="who">Sin tratamiento</span><div class="vals"></div></div>
+            <div class="banner" data-off="1"></div>
+          </div>
+          <div class="lake" id="lakeB" aria-label="Corte del lago con el escenario elegido">
+            <canvas></canvas>
+            <div class="hud"><span class="who scen-l" id="scen-label">Floculante + Diplodon</span><div class="vals"></div></div>
+            <div class="banner" data-off="1"></div>
+          </div>
+        </div>
+        <div class="player">
+          <button class="play" id="play" aria-label="Reproducir"><svg viewBox="0 0 16 16" aria-hidden="true"><path id="playicon" d="M4 2.5v11l9-5.5z"/></svg><span id="playtxt">Reproducir</span></button>
+          <div class="speed" role="group" aria-label="Velocidad">
+            <button data-s="30" aria-pressed="false">1 mes/s</button>
+            <button data-s="91" aria-pressed="true">1 estación/s</button>
+            <button data-s="365" aria-pressed="false">1 año/s</button>
+          </div>
+          <input type="range" id="scrub" min="0" max="2190" step="1" value="0" aria-label="Tiempo de la simulación">
+          <span class="date" id="pdate">Año 1 · sep</span>
+        </div>
+        <div class="key" aria-label="Qué se ve en el corte">
+          <span><i class="sw" style="background:#58a832"></i>fitoplancton</span>
+          <span><i class="sw" style="background:#f08a3c"></i>fósforo disuelto (y el que sube del sedimento)</span>
+          <span><i class="sw" style="background:#efe2bf;border:1px solid #b9a77a"></i>flóculo cayendo</span>
+          <span><i class="sw" style="background:#e9b949"></i>capa activa sobre el sedimento</span>
+          <span><i class="sw" style="background:#3b2a22"></i><i>Diplodon</i> viva (con su corriente de filtración)</span>
+          <span><i class="sw" style="background:#9aa0a3"></i>concha vacía</span>
+          <span><i class="sw" style="background:#5b3d6e"></i>hipolimnion anóxico</span>
+          <span><i class="sw" style="background:#fff;border:2px solid #222"></i>disco Secchi</span>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpis" id="kpis">
+        <div class="kpi"><span class="lab">Clorofila <i>a</i>, verano del último año</span><span class="val num" id="k-chl"></span><span class="sub" id="k-chl-s"></span></div>
+        <div class="kpi"><span class="lab">Estado trófico (Carlson, clorofila)</span><span class="val num" id="k-tsi"></span><span class="sub" id="k-tsi-s"></span></div>
+        <div class="kpi"><span class="lab">Fósforo total, media del último año</span><span class="val num" id="k-tp"></span><span class="sub" id="k-tp-s"></span></div>
+        <div class="kpi"><span class="lab"><i>Diplodon</i> vivas al final</span><span class="val num" id="k-n"></span><span class="sub" id="k-n-s"></span></div>
+      </div>
+      <div class="panel kpis-2" id="kpis2">
+        <span>Producto a aplicar: <b id="k-prod"></b></span>
+        <span>Almejas a sembrar: <b id="k-mus"></b></span>
+        <span>La población filtra el lago cada: <b id="k-clear"></b></span>
+      </div>
+
+      <!-- charts -->
+      <div class="charts">
+        <div class="panel chart"><h4><b>Clorofila <i>a</i></b><span>µg/L</span></h4><div class="plot" id="ch-chl"></div></div>
+        <div class="panel chart"><h4><b>Fósforo total en el agua</b><span>µg P/L</span></h4><div class="plot" id="ch-tp"></div></div>
+        <div class="panel chart"><h4><b>Sedimento: P móvil y capa activa</b><span>mg P/m²</span></h4><div class="plot" id="ch-sed"></div></div>
+        <div class="panel chart"><h4><b><i>Diplodon chilensis</i> en el litoral sembrado</b><span>ind/m²</span></h4><div class="plot" id="ch-mus"></div></div>
+      </div>
+      <details class="panel" style="padding:10px 14px">
+        <summary style="cursor:pointer;font-size:13.5px;color:var(--ink-2)">Ver los resultados año por año en tabla</summary>
+        <div class="tablewrap" style="margin-top:8px"><table id="ytable"></table></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= MAPA ======================= -->
+<section id="mapa">
+  <div class="sec-head">
+    <h2>Mapa de diseño: dosis × densidad</h2>
+    <p>Cada celda es una simulación completa con el producto, el lago y el horizonte actuales. El color es la clorofila media del verano del último año. Clic en una celda para cargar esa combinación en el simulador. El anillo marca la combinación actual.</p>
+  </div>
+  <div class="hm-wrap">
+    <div class="panel hm"><div id="hm"></div><div class="status" id="hm-status">calculando…</div></div>
+    <div class="legend-ord" id="hm-legend" aria-label="Clases de estado trófico"></div>
+  </div>
+</section>
+
+<!-- ======================= BALANCE ======================= -->
+<section id="balance">
+  <div class="sec-head">
+    <h2>Balance de fósforo de la columna de agua</h2>
+    <p>Flujos del último año simulado, en mg P por m² de lago al año. A la derecha lo que entra al agua y a la izquierda lo que sale. La marca oscura es el mismo flujo en el lago sin tratamiento. Así se ve qué parte del problema resuelve cada paso.</p>
+  </div>
+  <div class="panel budget" id="budget"></div>
+</section>
+
+<!-- ======================= DIAGRAMA ======================= -->
+<section id="diagrama">
+  <div class="sec-head">
+    <h2>El modelo, como diagrama</h2>
+    <p>Ocho compartimentos y los flujos que los conectan. Cada flecha corresponde a un término de las ecuaciones de la sección siguiente.</p>
+  </div>
+  <figure class="panel diagram">
+    <svg viewBox="0 0 990 548" role="img" aria-label="Diagrama de compartimentos: la carga externa entra al fósforo disuelto, que el fitoplancton capta; el fitoplancton sedimenta, sale por el efluente o es filtrado por Diplodon; el sedimento libera fósforo con anoxia; el floculante une fósforo en el agua, barre algas y forma una capa activa que inactiva el fósforo móvil del sedimento.">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="ahA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah abio" d="M0 0L10 5L0 10z"/></marker>
+        <marker id="ahB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah bio" d="M0 0L10 5L0 10z"/></marker>
+      </defs>
+      <rect class="waterz" x="150" y="20" width="670" height="300" rx="4"/>
+      <rect class="sedz" x="150" y="336" width="670" height="204" rx="4"/>
+      <text class="zone" x="164" y="40">COLUMNA DE AGUA · profundidad z</text>
+      <text class="zone" x="164" y="356">SEDIMENTO</text>
+
+      <!-- flows -->
+      <path class="fl" d="M120 124H398" marker-end="url(#ah)"/>
+      <text class="lab" x="260" y="116" text-anchor="middle">carga externa L(1−r)</text>
+      <path class="fl" d="M550 113H638" marker-end="url(#ah)"/>
+      <text class="lab" x="595" y="106" text-anchor="middle">captación μ</text>
+      <path class="fl" d="M640 137H552" marker-end="url(#ah)"/>
+      <text class="lab" x="595" y="154" text-anchor="middle">reciclaje</text>
+      <path class="fl" d="M800 124H848" marker-end="url(#ah)"/>
+      <path class="fl" d="M475 98V62H910V96" marker-end="url(#ah)"/>
+      <text class="lab" x="690" y="56" text-anchor="middle">salida por el efluente (P + A)/τ</text>
+      <path class="fl" d="M470 410V152" marker-end="url(#ah)"/>
+      <text class="lab" x="478" y="300">liberación interna</text>
+      <text class="sym" x="478" y="315">J_int · más con anoxia</text>
+      <path class="fl" d="M670 150V380H530V408" marker-end="url(#ah)"/>
+      <text class="lab" x="662" y="250" text-anchor="end">sedimentación v_A</text>
+      <!-- abiotic -->
+      <path class="fl abio" d="M420 150V262H342" marker-end="url(#ahA)"/>
+      <text class="lab" x="412" y="206" text-anchor="end">unión J_W</text>
+      <path class="fl abio" d="M265 288V408" marker-end="url(#ahA)"/>
+      <text class="lab" x="273" y="372">sedimenta v_f</text>
+      <path class="fl abio dash" d="M320 288V330H666" marker-end="url(#ahA)"/>
+      <text class="lab" x="560" y="324" text-anchor="middle">barrido de algas β</text>
+      <path class="fl abio" d="M400 436H342" marker-end="url(#ahA)"/>
+      <text class="sym" x="371" y="428" text-anchor="middle">J_C</text>
+      <path class="fl abio" d="M265 462V478" marker-end="url(#ahA)"/>
+      <path class="fl" d="M475 462V528" marker-end="url(#ah)"/>
+      <text class="lab" x="483" y="508">entierro b·S</text>
+      <!-- biotic -->
+      <path class="fl bio" d="M740 150V408" marker-end="url(#ahB)"/>
+      <text class="lab" x="748" y="250">filtración F</text>
+      <path class="fl bio" d="M700 410V200H510V152" marker-end="url(#ahB)"/>
+      <text class="lab" x="605" y="194" text-anchor="middle">excreción e·a</text>
+      <path class="fl bio" d="M640 436H552" marker-end="url(#ahB)"/>
+      <text class="lab" x="596" y="428" text-anchor="middle">biodepósitos</text>
+
+      <!-- boxes -->
+      <rect class="box" x="10" y="98" width="110" height="52" rx="4"/>
+      <text x="65" y="120" text-anchor="middle">Cuenca</text><text class="sym" x="65" y="138" text-anchor="middle">carga externa</text>
+      <rect class="box" x="400" y="98" width="150" height="52" rx="4"/>
+      <text x="475" y="120" text-anchor="middle">P disuelto</text><text class="sym" x="475" y="138" text-anchor="middle">P · µg/L</text>
+      <rect class="box" x="640" y="98" width="160" height="52" rx="4"/>
+      <text x="720" y="120" text-anchor="middle">Fitoplancton</text><text class="sym" x="720" y="138" text-anchor="middle">A · Chl = κA</text>
+      <rect class="box" x="850" y="98" width="120" height="52" rx="4"/>
+      <text x="910" y="120" text-anchor="middle">Efluente</text><text class="sym" x="910" y="138" text-anchor="middle">1/τ</text>
+      <rect class="box abio" x="190" y="236" width="150" height="52" rx="4"/>
+      <text x="265" y="258" text-anchor="middle">Floculante</text><text class="sym" x="265" y="276" text-anchor="middle">W · capacidad</text>
+      <rect class="box abio" x="190" y="410" width="150" height="52" rx="4"/>
+      <text x="265" y="432" text-anchor="middle">Capa activa</text><text class="sym" x="265" y="450" text-anchor="middle">C · mg P/m²</text>
+      <rect class="box" x="190" y="480" width="150" height="46" rx="4"/>
+      <text x="265" y="500" text-anchor="middle">P inactivado</text><text class="sym" x="265" y="516" text-anchor="middle">I (Fe: vuelve con anoxia)</text>
+      <rect class="box" x="400" y="410" width="150" height="52" rx="4"/>
+      <text x="475" y="432" text-anchor="middle">P móvil</text><text class="sym" x="475" y="450" text-anchor="middle">S · mg P/m²</text>
+      <rect class="box bio" x="640" y="410" width="160" height="52" rx="4"/>
+      <text x="720" y="432" text-anchor="middle">Diplodon chilensis</text><text class="sym" x="720" y="450" text-anchor="middle">N · P en tejido M</text>
+      <text class="sym" x="720" y="482" text-anchor="middle">muere si residuo X &gt; umbral</text>
+    </svg>
+    <figcaption><i class="sw" style="background:var(--s-cap)"></i>flujos del paso abiótico (floculante) · <i class="sw" style="background:var(--s-mus)"></i>flujos del paso biótico (<i>Diplodon</i>) · <i class="sw" style="background:var(--ink-2)"></i>dinámica natural del lago. El floculante quita P del agua (J<sub>W</sub>), barre algas al fondo (β) y forma una capa que convierte el P móvil en P inactivado (J<sub>C</sub>). La almeja quita algas (F): una parte vuelve al agua como fósforo excretado, otra se va al sedimento como biodepósitos y otra queda en su tejido.</figcaption>
+  </figure>
+</section>
+
+<!-- ======================= ECUACIONES ======================= -->
+<section id="ecuaciones">
+  <div class="sec-head">
+    <h2>Ecuaciones</h2>
+    <p>Sistema de nueve ecuaciones diferenciales ordinarias, una caja bien mezclada (lago) sobre una capa de sedimento activa. El tiempo <i>t</i> está en días y se integra con Runge–Kutta de 4.º orden (Δt = 0,25 d). Las concentraciones del agua van en µg/L y los almacenes del fondo en mg/m². La conversión entre ambos es la profundidad media <i>z</i>.</p>
+  </div>
+  <div class="eqs">
+    <div class="panel eq">
+      <h3>Fósforo disuelto <span class="mono">P · µg P/L</span></h3>
+      <div class="m">$$\frac{dP}{dt}=\frac{L_{ext}(1-r)}{365\,z}-\frac{P}{\tau}-\sigma_P P-\mu A+f_r m_A A+\frac{J_{int}+J_{redox}}{z}+e\,a\,F A-J_W$$</div>
+      <p>Entra por la cuenca y por el sedimento; sale por el efluente, por adsorción y sedimentación (σ<sub>P</sub>), por la captación de algas y por la unión al floculante.</p>
+    </div>
+    <div class="panel eq">
+      <h3>Fitoplancton <span class="mono">A · µg P/L · Chl = κA</span></h3>
+      <div class="m">$$\frac{dA}{dt}=\mu A-m_A A-\frac{v_A}{z}\bigl(1+\beta\,\phi_W\bigr)A-F A+\frac{A_{in}-A}{\tau}$$</div>
+      <div class="m">$$\mu=\mu_{max}\,\theta^{T-20}\,f_I(t)\,\frac{P}{P+K_P}\,\frac{1}{1+A/A_k},\qquad \phi_W=\frac{W}{W+K_W}$$</div>
+      <p>Monod en P, Arrhenius en temperatura, luz estacional f<sub>I</sub> y autosombreado. El floculante multiplica la sedimentación por (1+βφ<sub>W</sub>) mientras está en el agua.</p>
+    </div>
+    <div class="panel eq">
+      <h3>P móvil del sedimento <span class="mono">S · mg P/m²</span></h3>
+      <div class="m">$$\frac{dS}{dt}=z\Bigl[\sigma_P P+(1-\pi)\Bigl(\tfrac{v_A}{z}(1+\beta\phi_W)+(1-f_r)m_A\Bigr)A+(1-a)FA\Bigr]-J_{int}-J_C-bS$$</div>
+      <div class="m">$$J_{int}=S\,\bigl(r_{ox}+r_{an}H\bigr)\theta^{T-20},\qquad H=s(t)\,\frac{A}{A+K_H}$$</div>
+      <p>La carga interna crece con la anoxia H. Esta depende de la estratificación estacional s(t) y de cuánta materia orgánica produce el lago, y esa retroalimentación es la que mantiene al lago eutrófico.</p>
+    </div>
+    <div class="panel eq">
+      <h3>Floculante y capa activa <span class="mono">W · C · I</span></h3>
+      <div class="m">$$\frac{dW}{dt}=-J_W-\frac{v_f}{z}W,\qquad J_W=k_W P\,\phi_W$$</div>
+      <div class="m">$$\frac{dC}{dt}=v_f W-J_C-\frac{\ln 2}{t_{1/2}}C,\qquad J_C=k_C\,S\,\frac{C}{C+K_C}$$</div>
+      <div class="m">$$\frac{dI}{dt}=J_C+zJ_W-J_{redox},\qquad J_{redox}=\rho\,r_{an}H\theta^{T-20}I$$</div>
+      <p>Pulso de aplicación en t<sub>f</sub> (y cada re-dosis): W += D·q/z. La capacidad sin usar envejece con vida media t<sub>½</sub>. Con hierro (ρ &gt; 0) el P inactivado vuelve a soltarse cuando hay anoxia.</p>
+    </div>
+    <div class="panel eq">
+      <h3><i>Diplodon chilensis</i> <span class="mono">N · ind/m² sembrado</span></h3>
+      <div class="m">$$F=\frac{CR_{max}\,\theta_m^{T-15}}{1+\mathrm{Chl}/K_{chl}}\cdot\frac{h_f}{1000}\cdot\frac{N f_{lit}\,\varepsilon}{z}\quad[\mathrm{d^{-1}}]$$</div>
+      <div class="m">$$\frac{dN}{dt}=-\bigl[m_0+m_X\max(0,X-1)\bigr]N,\qquad \frac{dM}{dt}=(1-e)\,a\,F A\,z$$</div>
+      <p>F es la fracción del volumen del lago que la población aclara por día, con h<sub>f</sub> = 14 h de filtración al día [24]. La tasa se satura con mucho seston por la producción de pseudoheces. Pulso de siembra en t<sub>s</sub> = t<sub>f</sub> + Δt: N += N<sub>0</sub>. No hay reclutamiento dentro del horizonte, porque la larva gloquidio necesita un pez hospedero y años para llegar a adulto.</p>
+    </div>
+    <div class="panel eq">
+      <h3>Residuo tóxico y diagnósticos <span class="mono">X · TSI</span></h3>
+      <div class="m">$$\frac{dX}{dt}=-k_X X,\qquad X\mathrel{+}=\tau_p\,\frac{D}{z}\ \text{en cada aplicación}$$</div>
+      <div class="m">$$\mathrm{TSI}_{Chl}=9.81\ln \mathrm{Chl}+30.6,\quad \mathrm{TSI}_{TP}=14.42\ln TP+4.15,\quad SD=e^{(60-\mathrm{TSI})/14.41}$$</div>
+      <p>X es el residuo disuelto del metal relativo a su umbral crónico (X = 1 en el umbral). Es un supuesto del modelo que representa por qué hay que esperar antes de sembrar. TP = P + A. La transparencia Secchi se estima por equivalencia de índices de Carlson (1977) [4].</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= PARÁMETROS ======================= -->
+<section id="parametros">
+  <div class="sec-head">
+    <h2>Parámetros</h2>
+    <p>Valores por defecto del simulador. <span class="st lit">literatura</span> = valor o rango publicado; <span class="st cal">calibración</span> = elegido para que el lago base sea eutrófico típico; <span class="st sup">supuesto</span> = no medido, hay que estimarlo en terreno antes de usar el modelo para decidir.</p>
+  </div>
+  <div class="panel tablewrap">
+  <table id="ptable">
+    <thead><tr><th>Símbolo</th><th>Significado</th><th>Valor</th><th>Unidad</th><th>Base</th></tr></thead>
+    <tbody>
+      <tr class="grp"><td colspan="5">Lago y fitoplancton</td></tr>
+      <tr><td>\(z,\ \tau\)</td><td>Profundidad media; tiempo de residencia hidráulica</td><td class="v">5 ; 1,5</td><td>m ; año</td><td class="src"><span class="st cal">calibración</span> lago tipo</td></tr>
+      <tr><td>\(L_{ext}\)</td><td>Carga externa histórica de P</td><td class="v">3000</td><td>mg P m⁻² año⁻¹</td><td class="src"><span class="st lit">literatura</span> orden de magnitud de carga eutrofizante [1,2]</td></tr>
+      <tr><td>\(\mu_{max},\ \theta\)</td><td>Crecimiento máximo a 20 °C; coeficiente de temperatura</td><td class="v">1,2 ; 1,066</td><td>d⁻¹ ; –</td><td class="src"><span class="st lit">literatura</span> μ<sub>max</sub> 1,0–2,5 d⁻¹ [5,6]</td></tr>
+      <tr><td>\(K_P\)</td><td>Semisaturación por P</td><td class="v">5</td><td>µg P/L</td><td class="src"><span class="st lit">literatura</span> usual 1–5 µg/L [5]</td></tr>
+      <tr><td>\(m_A,\ f_r\)</td><td>Mortalidad/respiración de algas; fracción reciclada al agua</td><td class="v">0,10 ; 0,5</td><td>d⁻¹ ; –</td><td class="src"><span class="st lit">literatura</span> [5,6]</td></tr>
+      <tr><td>\(v_A,\ \sigma_P,\ \pi\)</td><td>Sedimentación de algas; pérdida de P disuelto al fondo; fracción enterrada definitiva</td><td class="v">0,15 ; 0,006 ; 0,3</td><td>m d⁻¹ ; d⁻¹ ; –</td><td class="src"><span class="st lit">literatura</span> v<sub>A</sub> 0,05–0,5 m/d [5]; σ ≈ 10/z año⁻¹ [2] · <span class="st cal">calibración</span></td></tr>
+      <tr><td>\(\kappa\)</td><td>Clorofila por unidad de P algal</td><td class="v">0,7</td><td>µg Chl / µg P</td><td class="src"><span class="st lit">literatura</span> ≈ 0,4–2, derivado de C:Chl y P:peso seco [5]</td></tr>
+      <tr><td>\(A_k,\ A_{in}\)</td><td>Autosombreado; algas que llegan con el afluente</td><td class="v">90 ; 0,5</td><td>µg P/L</td><td class="src"><span class="st cal">calibración</span></td></tr>
+      <tr class="grp"><td colspan="5">Sedimento</td></tr>
+      <tr><td>\(r_{ox},\ r_{an}\)</td><td>Liberación de P móvil: base óxica y con anoxia plena</td><td class="v">0,0008 ; 0,012</td><td>d⁻¹</td><td class="src"><span class="st lit">literatura</span> da flujos anóxicos de 1–5 (eutrófico) a 10–60 (hipertrófico) mg m⁻² d⁻¹ [7,8,9] · <span class="st cal">calibración</span></td></tr>
+      <tr><td>\(K_H,\ b\)</td><td>Algas a media anoxia; entierro del P móvil</td><td class="v">15 ; 0,0003</td><td>µg P/L ; d⁻¹</td><td class="src"><span class="st sup">supuesto</span> retroalimentación tipo [9,10]</td></tr>
+      <tr class="grp"><td colspan="5">Paso 1: floculante</td></tr>
+      <tr><td>\(q\)</td><td>Capacidad efectiva de unión de P por gramo de producto</td><td class="v">6 · 7 · 12 · 7 · 7</td><td>mg P/g</td><td class="src"><span class="st lit">literatura</span> Al:P ≥ 10 molar [14], Al:P móvil 100:1 en masa [13]; La-bentonita ≈ 10,6 mg/g teórico, 100:1 a veces insuficiente [15,16]</td></tr>
+      <tr><td>\(D\)</td><td>Dosis por m² de lago</td><td class="v">400 · 350 · 250 · 400 · 400</td><td>g/m²</td><td class="src"><span class="st lit">literatura</span> La-bentonita: media 388 g/m² (159–530) [15]</td></tr>
+      <tr><td>\(\beta\)</td><td>Multiplicador de sedimentación de algas (barrido)</td><td class="v">15 · 14 · 12 · 3 · 18</td><td>–</td><td class="src"><span class="st sup">supuesto</span> ordenado según eficacia reportada: Flock &amp; Lock bajó Chl de 19,5 a 3,7 µg/L [18]</td></tr>
+      <tr><td>\(t_{1/2}\)</td><td>Vida media de la capacidad sin usar</td><td class="v">0,25 · 0,25 · 3 · 10 · 10</td><td>año</td><td class="src"><span class="st lit">literatura</span> el Al(OH)₃ pierde 75 % de capacidad en 90 días [14]; efecto medio de 11 años (0–45) en 114 lagos [12] · <span class="st sup">supuesto</span> Fe y La</td></tr>
+      <tr><td>\(\rho\)</td><td>Sensibilidad redox del P unido</td><td class="v">0 · 0 · 0,5 · 0 · 0</td><td>–</td><td class="src"><span class="st lit">literatura</span> el P ligado a Fe se libera con anoxia [20]</td></tr>
+      <tr><td>\(\tau_p,\ k_X,\ m_X\)</td><td>Toxicidad residual por dosis; disipación; mortalidad por exceso</td><td class="v">0,10 ; 0,12 ; 0,15</td><td>m³/g ; d⁻¹ ; d⁻¹</td><td class="src"><span class="st sup">supuesto</span> el pH controla la toxicidad del Al [21]; con PAC &gt; 10 g Al/m² los uniónidos casi dejan de filtrar hasta 72 h [22]</td></tr>
+      <tr><td>\(v_f,\ k_W,\ K_W,\ k_C,\ K_C\)</td><td>Sedimentación del flóculo; cinética de unión en agua y en sedimento</td><td class="v">2–3 ; 3 ; 50 ; 0,02 ; 300</td><td>m d⁻¹ ; d⁻¹ ; µg/L ; d⁻¹ ; mg/m²</td><td class="src"><span class="st sup">supuesto</span></td></tr>
+      <tr class="grp"><td colspan="5">Paso 2: <i>Diplodon chilensis</i></td></tr>
+      <tr><td>\(CR_{max}\)</td><td>Tasa de aclaramiento individual (adulto ≈ 8 cm)</td><td class="v">1,3</td><td>L ind⁻¹ h⁻¹</td><td class="src"><span class="st lit">literatura</span> ≈ 1,3 L/h por individuo [23]; ≈ 0,12 L/h en ejemplares de 32–39 mm (cita de segunda mano en [24]); 0,51 L h⁻¹ g⁻¹ de tejido seco [30]</td></tr>
+      <tr><td>\(h_f\)</td><td>Horas de filtración al día</td><td class="v">14</td><td>h</td><td class="src"><span class="st lit">literatura</span> supuesto usado en [24]</td></tr>
+      <tr><td>\(N_0,\ f_{lit}\)</td><td>Densidad sembrada; fracción del fondo apta y sembrada</td><td class="v">60 ; 0,5</td><td>ind/m² ; –</td><td class="src"><span class="st lit">literatura</span> naturales 50–200 ind/m² [23]; hasta 326 ind/m² entre 4 y 12 m, ninguna bajo 16 m [24]; 33–176 ind/m² según contaminación [25]</td></tr>
+      <tr><td>\(\theta_m,\ K_{chl}\)</td><td>Temperatura de la filtración; Chl a la que se reduce a la mitad</td><td class="v">1,05 ; 25</td><td>– ; µg/L</td><td class="src"><span class="st sup">supuesto</span> la filtración sube mucho con la temperatura [24]; saturación general en bivalvos [33]</td></tr>
+      <tr><td>\(a,\ e\)</td><td>Asimilación; fracción del P asimilado que se excreta</td><td class="v">0,5 ; 0,6</td><td>–</td><td class="src"><span class="st sup">supuesto</span> sin datos propios de la especie; rangos de uniónidos [34]</td></tr>
+      <tr><td>\(\varepsilon\)</td><td>Eficiencia por mezcla (refiltración en la capa cerca del fondo)</td><td class="v">0,6</td><td>–</td><td class="src"><span class="st sup">supuesto</span> [33]</td></tr>
+      <tr><td>\(m_0\)</td><td>Mortalidad de fondo, incluido el estrés de trasplante</td><td class="v">12</td><td>% año⁻¹</td><td class="src"><span class="st sup">supuesto</span> especie de hasta ~90 años de vida [27]; el trasplante puede ser mucho más letal</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note" style="margin-top:10px">Orden de los productos en las filas con cinco valores: alumbre · PAC · cloruro férrico · bentonita-La · Flock &amp; Lock.</p>
+</section>
+
+<!-- ======================= RIESGOS ======================= -->
+<section id="riesgos">
+  <div class="sec-head">
+    <h2>Supuestos y riesgos</h2>
+    <p>Es un modelo de caja para explorar y dimensionar, no para prometer resultados. Antes de aplicar nada en un lago real hay que medir en terreno los parámetros marcados como supuesto y tener los permisos ambientales correspondientes.</p>
+  </div>
+  <div class="cols">
+    <div class="panel card">
+      <h3>Lo que el modelo simplifica</h3>
+      <ul>
+        <li>Una sola caja mezclada. El litoral y el hipolimnion no se separan, solo se representa la anoxia con el índice <b>H</b>.</li>
+        <li>Solo fósforo. No modela nitrógeno ni sílice, tampoco la sucesión a cianobacterias.</li>
+        <li>Clima idealizado como sinusoide y sin variación entre años.</li>
+        <li>Las almejas no se reproducen dentro del horizonte simulado.</li>
+      </ul>
+    </div>
+    <div class="panel card">
+      <h3>Paso abiótico</h3>
+      <ul>
+        <li><b>Sin bajar la carga externa no dura.</b> El sedimento se vuelve a llenar de P. Pon la reducción de carga en 0 % y lo verás. En 114 lagos tratados con alumbre, la carga de la cuenca explica gran parte de cuánto dura el efecto [12].</li>
+        <li>El <b>alumbre baja el pH</b>. En lagos patagónicos de baja alcalinidad conviene amortiguarlo (aluminato de sodio) o fraccionar la dosis, porque el Al³⁺ disuelto es tóxico [21,22].</li>
+        <li>El <b>cloruro férrico</b> pierde el P con anoxia [20]. Sube ρ y míralo.</li>
+        <li>La <b>bentonita con lantano</b> casi no flocula las algas y rinde menos con ácidos húmicos y baja alcalinidad [15,16]. Por eso se combina con un floculante (Flock &amp; Lock [18]).</li>
+        <li>El <b>quitosano</b> puede romper células de cianobacterias y liberar toxinas [19].</li>
+      </ul>
+    </div>
+    <div class="panel card">
+      <h3>Paso biótico</h3>
+      <ul>
+        <li><b>Sembrar demasiado pronto mata a las almejas.</b> Baja la espera a menos de dos semanas con alumbre y mira la curva de supervivencia [22].</li>
+        <li><b>La evidencia de campo es mixta.</b> En estanques la clorofila bajó de ~300 a 3 µg/L en 18 días [23], pero en Laguna Chica de San Pedro el efecto sobre el fósforo total fue débil e inconsistente [24]. Cuenta con que la almeja baje clorofila, no fósforo.</li>
+        <li>La especie <b>declina en lagos eutróficos y turbios</b> [26]. Es otra razón para aclarar el agua antes de sembrar.</li>
+        <li>Acumula <b>microcistina</b> si hay cianobacterias tóxicas [31]. No se deben consumir almejas del lago tratado.</li>
+        <li>Es <b>nativa de Chile y Argentina</b>; en Argentina se ha propuesto como vulnerable. Los ejemplares deben venir de poblaciones sanas y con permiso. <b>Fuera de su área nativa sería una especie introducida.</b> En México u otro país usa un uniónido local con sus propios parámetros.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= REFERENCIAS ======================= -->
+<section id="referencias">
+  <div class="sec-head">
+    <h2>Referencias</h2>
+    <p>Los números entre corchetes en la tabla de parámetros remiten a esta lista.</p>
+  </div>
+  <p class="refgroup">Modelación y estado trófico</p>
+<ol class="refs">
+<li value="1">Vollenweider, R. A. (1968). <i>Scientific fundamentals of the eutrophication of lakes and flowing waters, with particular reference to nitrogen and phosphorus as factors in eutrophication</i>. OECD, Tech. Rep. DAS/CSI/68.27, París.<span class="use">Concepto de carga crítica de P.</span></li>
+<li value="2">Vollenweider, R. A. (1976). Advances in defining critical loading levels for phosphorus in lake eutrophication. <i>Memorie dell’Istituto Italiano di Idrobiologia</i>, 33, 53–83.<span class="use">Modelo de carga P = L/[q<sub>s</sub>(1+√τ)]; sedimentación σ ≈ 10/z.</span></li>
+<li value="3">OECD (1982). <i>Eutrophication of waters: monitoring, assessment and control</i>. Vollenweider, R. A. &amp; Kerekes, J. (eds.). OECD, París.<span class="use">Umbrales de PT: eutrófico 35–100 µg/L, hipertrófico &gt; 100.</span></li>
+<li value="4">Carlson, R. E. (1977). A trophic state index for lakes. <i>Limnology and Oceanography</i>, 22(2), 361–369. <a href="https://doi.org/10.4319/lo.1977.22.2.0361">doi:10.4319/lo.1977.22.2.0361</a><span class="use">Ecuaciones del TSI usadas en los diagnósticos.</span></li>
+<li value="5">Bowie, G. L. et al. (1985). <i>Rates, constants, and kinetics formulations in surface water quality modeling</i> (2.ª ed.). U.S. EPA, EPA/600/3-85/040.<span class="use">Rangos de μ<sub>max</sub>, K<sub>P</sub>, v<sub>A</sub>.</span></li>
+<li value="6">Chapra, S. C. (1997). <i>Surface Water-Quality Modeling</i>. McGraw-Hill. ISBN 0-07-011364-5.<span class="use">Estructura de los balances de masa P–fitoplancton–sedimento.</span></li>
+<li value="7">Nürnberg, G. K. (1984). The prediction of internal phosphorus load in lakes with anoxic hypolimnia. <i>Limnology and Oceanography</i>, 29(1), 111–124. <a href="https://doi.org/10.4319/lo.1984.29.1.0111">doi:10.4319/lo.1984.29.1.0111</a></li>
+<li value="8">Nürnberg, G. K. (1988). Prediction of phosphorus release rates from total and reductant-soluble phosphorus in anoxic lake sediments. <i>Canadian Journal of Fisheries and Aquatic Sciences</i>, 45(3), 453–462. <a href="https://doi.org/10.1139/f88-054">doi:10.1139/f88-054</a><span class="use">Tasas de liberación anóxica según el estado trófico.</span></li>
+<li value="9">Søndergaard, M., Jensen, J. P. &amp; Jeppesen, E. (2003). Role of sediment and internal loading of phosphorus in shallow lakes. <i>Hydrobiologia</i>, 506–509, 135–145. <a href="https://doi.org/10.1023/B:HYDR.0000008611.12704.dd">doi:10.1023/B:HYDR.0000008611.12704.dd</a><span class="use">Por qué el lago tarda años en responder a la reducción de carga.</span></li>
+<li value="10">Scheffer, M., Hosper, S. H., Meijer, M.-L., Moss, B. &amp; Jeppesen, E. (1993). Alternative equilibria in shallow lakes. <i>Trends in Ecology &amp; Evolution</i>, 8(8), 275–279. <a href="https://doi.org/10.1016/0169-5347(93)90254-M">doi:10.1016/0169-5347(93)90254-M</a></li>
+</ol>
+<p class="refgroup">Paso abiótico: inactivación de fósforo y floculación</p>
+<ol class="refs">
+<li value="11">Cooke, G. D., Welch, E. B., Peterson, S. A. &amp; Nichols, S. A. (2005). <i>Restoration and Management of Lakes and Reservoirs</i> (3.ª ed.). CRC Press. <a href="https://doi.org/10.1201/9781420032109">doi:10.1201/9781420032109</a></li>
+<li value="12">Huser, B. J. et al. (2016). Longevity and effectiveness of aluminum addition to reduce sediment phosphorus release and restore lake water quality. <i>Water Research</i>, 97, 122–132. <a href="https://doi.org/10.1016/j.watres.2015.06.051">doi:10.1016/j.watres.2015.06.051</a><span class="use">114 lagos: efecto medio de 11 años; 21 en lagos profundos y 5,7 en someros.</span></li>
+<li value="13">Rydin, E. &amp; Welch, E. B. (1999). Dosing alum to Wisconsin lake sediments based on <i>in vitro</i> formation of aluminum bound phosphate. <i>Lake and Reservoir Management</i>, 15(4), 324–331. <a href="https://doi.org/10.1080/07438149909354127">doi:10.1080/07438149909354127</a><span class="use">Regla Al : P móvil ≈ 100:1 en masa.</span></li>
+<li value="14">de Vicente, I., Huang, P., Andersen, F. Ø. &amp; Jensen, H. S. (2008). Phosphate adsorption by fresh and aged aluminum hydroxide. Consequences for lake restoration. <i>Environmental Science &amp; Technology</i>, 42(17), 6650–6655. <a href="https://doi.org/10.1021/es800503s">doi:10.1021/es800503s</a><span class="use">El Al(OH)₃ pierde 75 % de capacidad en 90 días; Al:P ≥ 10 molar.</span></li>
+<li value="15">Copetti, D. et al. (2016). Eutrophication management in surface waters using lanthanum modified bentonite: A review. <i>Water Research</i>, 97, 162–174. <a href="https://doi.org/10.1016/j.watres.2015.11.056">doi:10.1016/j.watres.2015.11.056</a><span class="use">Dosis, capacidad e interferencias de la bentonita-La.</span></li>
+<li value="16">Reitzel, K. et al. (2013). Phosphate adsorption by lanthanum modified bentonite clay in fresh and brackish water. <i>Water Research</i>, 47(8), 2787–2796. <a href="https://doi.org/10.1016/j.watres.2013.02.051">doi:10.1016/j.watres.2013.02.051</a></li>
+<li value="17">Spears, B. M. et al. (2016). A meta-analysis of water quality and aquatic macrophyte responses in 18 lakes treated with lanthanum modified bentonite (Phoslock®). <i>Water Research</i>, 97, 111–121. <a href="https://doi.org/10.1016/j.watres.2015.08.020">doi:10.1016/j.watres.2015.08.020</a><span class="use">18 lagos: PT mediano de 0,08 a 0,03 mg/L.</span></li>
+<li value="18">Lürling, M. &amp; van Oosterhout, F. (2013). Controlling eutrophication by combined bloom precipitation and sediment phosphorus inactivation. <i>Water Research</i>, 47(17), 6527–6537. <a href="https://doi.org/10.1016/j.watres.2013.08.019">doi:10.1016/j.watres.2013.08.019</a><span class="use">“Flock &amp; Lock”: PAC en dosis baja + bentonita-La.</span></li>
+<li value="19">Mucci, M. et al. (2017). Chitosan as coagulant on cyanobacteria in lake restoration management may cause rapid cell lysis. <i>Water Research</i>, 118, 121–130. <a href="https://doi.org/10.1016/j.watres.2017.04.020">doi:10.1016/j.watres.2017.04.020</a></li>
+<li value="20">Hupfer, M. &amp; Lewandowski, J. (2008). Oxygen controls the phosphorus release from lake sediments – a long-lasting paradigm in limnology. <i>International Review of Hydrobiology</i>, 93(4–5), 415–432. <a href="https://doi.org/10.1002/iroh.200711054">doi:10.1002/iroh.200711054</a></li>
+<li value="21">Gensemer, R. W. &amp; Playle, R. C. (1999). The bioavailability and toxicity of aluminum in aquatic environments. <i>Critical Reviews in Environmental Science and Technology</i>, 29(4), 315–450. <a href="https://doi.org/10.1080/10643389991259245">doi:10.1080/10643389991259245</a></li>
+<li value="22">Jakubiak, M. et al. (2025). Hidden effects of aluminum coagulant on freshwater mussels: Responses of <i>Anodonta anatina</i> and <i>Unio tumidus</i> to lake restoration. <i>Ecotoxicology and Environmental Safety</i>, 305, 119277. <a href="https://doi.org/10.1016/j.ecoenv.2025.119277">doi:10.1016/j.ecoenv.2025.119277</a><span class="use">Con &gt; 10 g Al/m² la filtración casi se detiene hasta 72 h; Al en tejido &gt; 7000 mg/kg.</span></li>
+</ol>
+<p class="refgroup">Paso biótico: <i>Diplodon chilensis</i> y bivalvos</p>
+<ol class="refs">
+<li value="23">Soto, D. &amp; Mena, G. (1999). Filter feeding by the freshwater mussel, <i>Diplodon chilensis</i>, as a biocontrol of salmon farming eutrophication. <i>Aquaculture</i>, 171(1–2), 65–81. <a href="https://doi.org/10.1016/S0044-8486(98)00420-7">doi:10.1016/S0044-8486(98)00420-7</a><span class="use">Filtración ≈ 1,3 L/h por individuo; densidades 50–200 ind/m²; Chl de ~300 a 3 µg/L en 18 días.</span></li>
+<li value="24">Valdovinos, C. et al. (2026). Benthic–pelagic coupling mediated by a native freshwater mussel (<i>Diplodon chilensis</i>) in a Southern South American lake. <i>Water</i>, 18, 473. <a href="https://doi.org/10.3390/w18040473">doi:10.3390/w18040473</a><span class="use">Filtración muy dependiente de la temperatura; hasta 326 ind/m² a 4–12 m; efecto débil sobre PT; 14 h/d de filtración.</span></li>
+<li value="25">Rocchetta, I. et al. (2014). Growth, abundance, morphometric and metabolic parameters of three populations of <i>Diplodon chilensis</i> subject to different levels of natural and anthropogenic organic matter input in a glaciar lake of North Patagonia. <i>Limnologica</i>, 44, 72–80. <a href="https://doi.org/10.1016/j.limno.2013.06.004">doi:10.1016/j.limno.2013.06.004</a><span class="use">Densidad 176 ind/m² en sitio prístino y 33 en la bahía con aguas servidas; crecimiento k = 0,045–0,079 año⁻¹.</span></li>
+<li value="26">Valdovinos, C. &amp; Pedreros, P. (2007). Geographic variations in shell growth rates of the mussel <i>Diplodon chilensis</i> from temperate lakes of Chile: Implications for biodiversity conservation. <i>Limnologica</i>, 37(1), 63–75. <a href="https://doi.org/10.1016/j.limno.2006.08.007">doi:10.1016/j.limno.2006.08.007</a><span class="use">Sensible a la eutrofización y la turbidez.</span></li>
+<li value="27">Soldati, A. L., Jacob, D. E., Schöne, B. R., Bianchi, M. M. &amp; Hajduk, A. (2009). Seasonal periodicity of growth and composition in valves of <i>Diplodon chilensis patagonicus</i>. <i>Journal of Molluscan Studies</i>, 75(1), 75–85. <a href="https://doi.org/10.1093/mollus/eyn044">doi:10.1093/mollus/eyn044</a><span class="use">Longevidad ≈ 90 años.</span></li>
+<li value="28">Lara, G., Parada, E. &amp; Peredo, S. (2002). Alimentación y conducta alimentaria de la almeja de agua dulce <i>Diplodon chilensis</i> (Bivalvia: Hyriidae). <i>Gayana</i>, 66(2), 107–112.<span class="use">Dieta mixta: fitoplancton, fitobentos y detritos.</span></li>
+<li value="29">Parada, E. et al. (2008). <i>Diplodon chilensis</i> Gray, 1828 (Bivalvia: Hyriidae) a potential residual waters depurator on inland water salmonid fish-farms: a laboratory scale study. <i>Gayana</i>, 72(1), 68–78. <a href="https://doi.org/10.4067/S0717-65382008000100009">doi:10.4067/S0717-65382008000100009</a><span class="use">Remoción de SST, PT y DQO en efluentes.</span></li>
+<li value="30">Sabatini, S. E. et al. (2011). Effects of sewage pollution and bacterial load on growth and oxidative balance in the freshwater mussel <i>Diplodon chilensis</i>. <i>Limnologica</i>, 41(4), 356–362. <a href="https://doi.org/10.1016/j.limno.2011.04.004">doi:10.1016/j.limno.2011.04.004</a><span class="use">Aclaramiento 0,51 L h⁻¹ g⁻¹ de tejido seco.</span></li>
+<li value="31">Sabatini, S. E. et al. (2011). Microcystin accumulation and antioxidant responses in the freshwater clam <i>Diplodon chilensis patagonicus</i> upon subchronic exposure to toxic <i>Microcystis aeruginosa</i>. <i>Ecotoxicology and Environmental Safety</i>, 74(5), 1188–1194. <a href="https://doi.org/10.1016/j.ecoenv.2011.03.012">doi:10.1016/j.ecoenv.2011.03.012</a></li>
+<li value="32">Yusseppone, M. S., Rocchetta, I., Sabatini, S. E. et al. (2018). Inducing the alternative oxidase forms part of the molecular strategy of anoxic survival in freshwater bivalves. <i>Frontiers in Physiology</i>, 9, 100. <a href="https://doi.org/10.3389/fphys.2018.00100">doi:10.3389/fphys.2018.00100</a><span class="use">Sobrevive ~10 días de anoxia.</span></li>
+<li value="33">Riisgård, H. U. (2001). On measurement of filtration rates in bivalves – the stony road to reliable data: review and interpretation. <i>Marine Ecology Progress Series</i>, 211, 275–291. <a href="https://doi.org/10.3354/meps211275">doi:10.3354/meps211275</a></li>
+<li value="34">Vaughn, C. C. &amp; Hakenkamp, C. C. (2001). The functional role of burrowing bivalves in freshwater ecosystems. <i>Freshwater Biology</i>, 46(11), 1431–1446. <a href="https://doi.org/10.1046/j.1365-2427.2001.00771.x">doi:10.1046/j.1365-2427.2001.00771.x</a></li>
+</ol>
+<p class="note" style="margin-top:14px">Autores, año, revista, volumen y DOI se verificaron contra Crossref, PubMed o la editorial. Varios valores se tomaron de resúmenes; los citados “de segunda mano” vienen de otro artículo que los reporta.</p>
+</section>
+
+<footer>Modelo y simulador construidos para explorar escenarios. Los resultados dependen de supuestos indicados en la tabla de parámetros y no sustituyen un estudio limnológico del lago específico.</footer>
+</div>
+
+<script>
+"use strict";
+/* =================== PRODUCTS & PARAMS =================== */
+const PRODUCTS={
+  alum:{label:"Alumbre",q:6,beta:15,half:0.25,rho:0,tox:0.10,vf:2,dose:400},
+  pac:{label:"PAC",q:7,beta:14,half:0.25,rho:0,tox:0.06,vf:2,dose:350},
+  fecl3:{label:"Cloruro férrico",q:12,beta:12,half:3,rho:0.5,tox:0.03,vf:2,dose:250},
+  lmb:{label:"Bentonita-La",q:7,beta:3,half:10,rho:0,tox:0.03,vf:3,dose:400},
+  fl:{label:"Flock & Lock",q:7,beta:18,half:10,rho:0,tox:0.04,vf:3,dose:400}
+};
+const FIXED={A_in:0.5,sigP:0.006,KP:5,Ak:90,theta:1.066,mA:0.1,frec:0.5,vA:0.15,kappa:0.7,
+  rOx:0.0008,KH:15,bur:0.0003,permA:0.3,KW:50,kW:3,kC:0.02,KC:300,thM:1.05,Kchl:25,kX:0.12,mX:0.15,hf:14};
+const P={...FIXED,area:20,z:5,tau:1.5,Lext:3000,red:50,Tm:12,Ta:7,mu:1.2,rAn:0.012,
+  prod:"alum",dose:400,tF:45,rep:0,q:6,beta:15,half:0.25,rho:0,tox:0.1,
+  N0:60,flit:50,wait:75,CR:1.3,emix:0.6,assim:0.5,exc:0.6,m0:12,years:6,floc:true,mus:true};
+
+const MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const fmtPct=v=>{const r=Math.round(v);return r===0?"0 %":(r>0?"+":"−")+Math.abs(r)+" %";};
+const nf=(v,d=0)=>Number(v).toLocaleString("es-MX",{minimumFractionDigits:d,maximumFractionDigits:d});
+function dayToDate(d){const dt=new Date(2025,8,1);dt.setDate(dt.getDate()+Math.round(d));return dt.getDate()+" "+MES[dt.getMonth()];}
+function fmtT(t){const y=Math.floor(t/365);const d=t-365*y;const mi=Math.min(11,Math.floor(d/30.42));return "Año "+(y+1)+" · "+MES[(mi+8)%12];}
+
+/* =================== MODEL =================== */
+const KEYS=["P","A","S","W","C","I","N","X","M"];
+function deriv(p,t,s,d,flux){
+  const Tt=p.Tm+p.Ta*Math.cos(2*Math.PI*(t-120)/365);
+  const ft=Math.pow(p.theta,Tt-20);
+  const st=Math.max(0,Math.cos(2*Math.PI*(t-150)/365));
+  const H=st*s.A/(s.A+p.KH);
+  const fI=0.65+0.35*Math.cos(2*Math.PI*(t-110)/365);
+  const mu=p.mu*ft*fI*s.P/(s.P+p.KP)/(1+s.A/p.Ak);
+  const phiW=s.W/(s.W+p.KW);
+  const set=p.vA/p.z*(1+p.beta*phiW);
+  const chl=p.kappa*s.A;
+  const F=p.CR*Math.pow(p.thM,Tt-15)/(1+chl/p.Kchl)*p.hf/1000*s.N*p.flitF*p.emix/p.z;
+  const Jint=s.S*(p.rOx+p.rAn*H)*ft;
+  const JW=p.kW*s.P*phiW;
+  const JC=p.kC*s.S*s.C/(s.C+p.KC);
+  const Jred=p.rho*p.rAn*H*ft*s.I;
+  const fl=1/(p.tau*365);
+  const filt=F*s.A;
+  const z=p.z;
+  d.P=p.Lext*(1-p.redF)/(365*z)-s.P*fl-p.sigP*s.P-mu*s.A+p.mA*p.frec*s.A+(Jint+Jred)/z+p.exc*p.assim*filt-JW;
+  d.A=mu*s.A-p.mA*s.A-set*s.A-filt+(p.A_in-s.A)*fl;
+  d.S=z*(p.sigP*s.P+(1-p.permA)*(set+p.mA*(1-p.frec))*s.A+(1-p.assim)*filt)-Jint-JC-p.bur*s.S;
+  d.W=-JW-(p.vf/z)*s.W;
+  d.C=p.vf*s.W-JC-p.kage*s.C;
+  d.I=JC+z*JW-Jred;
+  d.N=-(p.m0d+p.mX*Math.max(0,s.X-1))*s.N;
+  d.X=-p.kX*s.X;
+  d.M=(1-p.exc)*p.assim*filt*z;
+  if(flux){flux.Jint=Jint;flux.Jred=Jred;flux.JW=JW;flux.F=F;flux.H=H;flux.st=st;flux.T=Tt;flux.set=set;flux.mu=mu;flux.fl=fl;flux.filt=filt;}
+}
+function prep(p){
+  const pr=PRODUCTS[p.prod];
+  return Object.assign({},p,{vf:pr.vf,kage:Math.log(2)/(p.half*365),redF:p.red/100,flitF:p.flit/100,m0d:p.m0/100/365});
+}
+function rk4(p,t,s,dt,k){
+  const [k1,k2,k3,k4,tmp]=k;
+  deriv(p,t,s,k1);
+  for(const key of KEYS)tmp[key]=s[key]+k1[key]*dt/2;
+  deriv(p,t+dt/2,tmp,k2);
+  for(const key of KEYS)tmp[key]=s[key]+k2[key]*dt/2;
+  deriv(p,t+dt/2,tmp,k3);
+  for(const key of KEYS)tmp[key]=s[key]+k3[key]*dt;
+  deriv(p,t+dt,tmp,k4);
+  for(const key of KEYS){const v=s[key]+dt/6*(k1[key]+2*k2[key]+2*k3[key]+k4[key]);s[key]=v>0?v:0;}
+}
+const mkK=()=>[{},{},{},{},{}];
+let spinCache={key:"",state:null};
+function spinup(p){
+  const key=[p.z,p.tau,p.Lext,p.Tm,p.Ta,p.mu,p.rAn].join("|");
+  if(spinCache.key===key)return Object.assign({},spinCache.state);
+  const q=prep(Object.assign({},p,{red:0}));q.N=0;
+  const s={P:40,A:20,S:3000,W:0,C:0,I:0,N:0,X:0,M:0};
+  const dt=0.25,k=mkK();const n=40*365/dt;
+  for(let i=0;i<n;i++)rk4(q,i*dt,s,dt,k);
+  spinCache={key,state:Object.assign({},s)};
+  return Object.assign({},s);
+}
+function simulate(p,floc,mus,record){
+  const q=prep(p);const dt=0.25,k=mkK();
+  const days=Math.round(p.years*365);const n=days/dt;
+  const s=spinup(p);
+  const tStock=p.tF+p.wait;
+  const apps=[];if(floc&&p.dose>0){let t=p.tF;apps.push(t);if(p.rep>0){while((t+=p.rep*365)<days)apps.push(t);}}
+  const R=record?{}:null;
+  if(record){for(const key of ["P","A","S","W","C","I","N","X","M","Jint","F","H","st","T"])R[key]=new Float32Array(days+1);}
+  const flux={};const dtmp={};
+  const bud={ext:0,ain:0,int:0,red:0,exc:0,out:0,sed:0,bind:0,filt:0};
+  const lastY0=(p.years-1)*365;
+  let sumChlSummer=0,nSummer=0,sumTP=0,nTP=0;
+  let ai=0,stocked=false;
+  for(let i=0;i<=n;i++){
+    const t=i*dt;
+    while(ai<apps.length&&t>=apps[ai]-1e-9){s.W+=p.dose*p.q/p.z;s.X+=p.tox*p.dose/p.z;ai++;}
+    if(mus&&!stocked&&t>=tStock-1e-9){s.N+=p.N0;stocked=true;}
+    if(record&&i%4===0){
+      const di=i/4;deriv(q,t,s,dtmp,flux);
+      R.P[di]=s.P;R.A[di]=s.A;R.S[di]=s.S;R.W[di]=s.W;R.C[di]=s.C;R.I[di]=s.I;R.N[di]=s.N;R.X[di]=s.X;R.M[di]=s.M;
+      R.Jint[di]=flux.Jint;R.F[di]=flux.F;R.H[di]=flux.H;R.st[di]=flux.st;R.T[di]=flux.T;
+    }
+    if(t>=lastY0&&i<n){
+      deriv(q,t,s,dtmp,flux);const z=p.z;
+      bud.ext+=q.Lext*(1-q.redF)/365*dt;
+      bud.ain+=q.A_in*flux.fl*z*dt;
+      bud.int+=flux.Jint*dt;bud.red+=flux.Jred*dt;
+      bud.exc+=q.exc*q.assim*flux.filt*z*dt;
+      bud.out+=(s.P+s.A)*flux.fl*z*dt;
+      bud.sed+=(q.sigP*s.P+flux.set*s.A+q.mA*(1-q.frec)*s.A)*z*dt;
+      bud.bind+=flux.JW*z*dt;
+      bud.filt+=flux.filt*z*dt;
+      const doy=t-lastY0;
+      if(i%4===0){sumTP+=s.P+s.A;nTP++;if(doy>=91&&doy<212){sumChlSummer+=q.kappa*s.A;nSummer++;}}
+    }
+    if(i<n)rk4(q,t,s,dt,k);
+  }
+  return {R,bud,chlSummer:sumChlSummer/Math.max(1,nSummer),tpMean:sumTP/Math.max(1,nTP),final:Object.assign({},s),apps,tStock:mus?tStock:null,days};
+}
+const tsiChl=c=>9.81*Math.log(Math.max(c,0.05))+30.6;
+const secchi=c=>Math.exp((60-tsiChl(c))/14.41);
+const TSI_CLASSES=[
+  {max:2.6,name:"Oligotrófico",short:"oligo",tok:"--r1",range:"< 2,6"},
+  {max:7.3,name:"Mesotrófico",short:"meso",tok:"--r2",range:"2,6 – 7,3"},
+  {max:20,name:"Eutrófico",short:"eutro",tok:"--r3",range:"7,3 – 20"},
+  {max:56,name:"Eutrófico alto",short:"eutro+",tok:"--r4",range:"20 – 56"},
+  {max:Infinity,name:"Hipereutrófico",short:"hiper",tok:"--r5",range:"> 56"}];
+const tsiClass=c=>TSI_CLASSES.find(k=>c<k.max);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* =================== CONTROLS =================== */
+const FMT={
+  area:v=>nf(v)+" ha",z:v=>nf(v,1)+" m",tau:v=>nf(v,1)+" años",Lext:v=>nf(v)+" mg/m²·año",red:v=>v+" %",
+  Tm:v=>nf(v,1)+" °C",Ta:v=>"±"+nf(v,1)+" °C",mu:v=>nf(v,2)+" d⁻¹",rAn:v=>nf(v,3)+" d⁻¹",
+  dose:v=>nf(v)+" g/m²",tF:v=>"día "+v+" · "+dayToDate(v),rep:v=>v==0?"nunca":(v==1?"cada año":"cada "+v+" años"),
+  q:v=>nf(v,1)+" mg P/g",beta:v=>"×"+nf(v,1),half:v=>nf(v,2)+" años",rho:v=>nf(v,2),tox:v=>nf(v,3)+" m³/g",
+  N0:v=>nf(v)+" ind/m²",flit:v=>v+" %",wait:v=>v+" días",CR:v=>nf(v,2)+" L/h",emix:v=>nf(v,2),assim:v=>nf(v,2),exc:v=>nf(v,2),
+  m0:v=>v+" %/año",years:v=>v+" años"};
+const NUMERIC=Object.keys(FMT);
+function syncOutputs(){for(const k of NUMERIC){const o=document.getElementById("o-"+k);if(o)o.textContent=FMT[k](P[k]);}}
+function setInput(k,v){P[k]=v;const el=document.getElementById(k);if(el)el.value=v;}
+function applyProduct(key,setDose){
+  const pr=PRODUCTS[key];P.prod=key;
+  setInput("q",pr.q);setInput("beta",pr.beta);setInput("half",pr.half);setInput("rho",pr.rho);setInput("tox",pr.tox);
+  if(setDose)setInput("dose",pr.dose);
+}
+let pending=false;
+function schedule(full){if(full)hmDirty=true;if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;recompute();});}
+for(const k of NUMERIC){
+  const el=document.getElementById(k);if(!el)continue;
+  el.addEventListener("input",()=>{P[k]=parseFloat(el.value);syncOutputs();schedule(false);});
+  el.addEventListener("change",()=>{schedule(true);});
+}
+document.getElementById("prod").addEventListener("change",e=>{applyProduct(e.target.value,true);syncOutputs();schedule(true);});
+const scBtns=[...document.querySelectorAll(".scen button")];
+const SCEN_NAMES={"00":"Sin tratamiento","10":"Solo floculante","01":"Solo Diplodon","11":"Floculante + Diplodon"};
+scBtns.forEach(b=>b.addEventListener("click",()=>{
+  scBtns.forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+  P.floc=b.dataset.f==="1";P.mus=b.dataset.m==="1";schedule(true);
+}));
+
+/* =================== CHARTS =================== */
+const charts=[];
+let hoverT=null,playT=0;
+class LineChart{
+  constructor(host,opt){this.host=host;this.opt=opt;this.h=opt.h||176;this.data=null;
+    this.tip=document.createElement("div");this.tip.className="tip";this.tip.hidden=true;host.appendChild(this.tip);
+    this.svgWrap=document.createElement("div");host.insertBefore(this.svgWrap,this.tip);
+    host.addEventListener("pointermove",e=>this.move(e));
+    host.addEventListener("pointerleave",()=>{hoverT=null;charts.forEach(c=>c.drawHover());});
+    host.addEventListener("click",e=>{const t=this.tAt(e);if(t!=null)setPlay(t);});
+    charts.push(this);}
+  tAt(e){if(!this.data)return null;const r=this.svgWrap.getBoundingClientRect();const x=(e.clientX-r.left)*(this.W/r.width);
+    const t=(x-this.ml)/(this.W-this.ml-this.mr)*this.data.days;return(t<0||t>this.data.days)?null:t;}
+  move(e){const t=this.tAt(e);hoverT=t;charts.forEach(c=>c.drawHover(c===this));}
+  render(data){
+    this.data=data;const W=Math.max(320,Math.round(this.host.clientWidth||600));this.W=W;
+    const H=this.h,ml=44,mr=88,mt=10,mb=24;this.ml=ml;this.mr=mr;this.mt=mt;this.mb=mb;
+    let ymax=0;for(const s of data.series)for(let i=0;i<s.v.length;i+=3)if(s.v[i]>ymax)ymax=s.v[i];
+    if(data.ymin)ymax=Math.max(ymax,data.ymin);
+    const nice=niceTicks(ymax*1.06);this.ymax=nice.max;
+    const x=t=>ml+(W-ml-mr)*t/data.days, y=v=>mt+(H-mt-mb)*(1-v/this.ymax);this.x=x;this.y=y;
+    let g=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">`;
+    for(const b of (data.bands||[])){g+=`<rect x="${x(b.t0).toFixed(1)}" y="${mt}" width="${Math.max(1,x(b.t1)-x(b.t0)).toFixed(1)}" height="${H-mt-mb}" fill="var(--crit-soft)"/>`;
+      g+=`<text class="mk" x="${(x(b.t0)+3).toFixed(1)}" y="${mt+10}" style="fill:var(--crit)">${b.label}</text>`;}
+    for(const tk of nice.ticks){g+=`<line x1="${ml}" x2="${W-mr}" y1="${y(tk).toFixed(1)}" y2="${y(tk).toFixed(1)}" stroke="var(--grid)" stroke-width="1"/>`;
+      g+=`<text x="${ml-6}" y="${(y(tk)+3.5).toFixed(1)}" text-anchor="end">${nf(tk,tk<10&&nice.step<1?1:0)}</text>`;}
+    for(let yr=0;yr<=data.days/365+1e-6;yr++){const xx=x(yr*365);
+      g+=`<line x1="${xx.toFixed(1)}" x2="${xx.toFixed(1)}" y1="${H-mb}" y2="${H-mb+4}" stroke="var(--axis)"/>`;
+      if(yr<data.days/365-0.01)g+=`<text x="${(x(yr*365+182)).toFixed(1)}" y="${H-6}" text-anchor="middle">año ${yr+1}</text>`;}
+    g+=`<line x1="${ml}" x2="${W-mr}" y1="${H-mb}" y2="${H-mb}" stroke="var(--axis)"/>`;
+    for(const r of (data.refs||[])){if(r.y>this.ymax)continue;g+=`<line x1="${ml}" x2="${W-mr}" y1="${y(r.y).toFixed(1)}" y2="${y(r.y).toFixed(1)}" stroke="var(--muted)" stroke-dasharray="3 4" stroke-width="1"/>`;
+      g+=`<text class="reflab" x="${ml+4}" y="${(y(r.y)-4).toFixed(1)}">${r.label}</text>`;}
+    for(const m of (data.markers||[])){const xx=x(m.t);if(m.t>data.days)continue;
+      g+=`<line x1="${xx.toFixed(1)}" x2="${xx.toFixed(1)}" y1="${mt}" y2="${H-mb}" stroke="var(${m.tok})" stroke-width="1.5" opacity=".9"/>`;}
+    const step=Math.max(1,Math.floor(data.days/(W-ml-mr)/1.5));
+    const ends=[];
+    for(const s of data.series){let d="";for(let i=0;i<s.v.length;i+=step){d+=(i?"L":"M")+x(i).toFixed(1)+" "+y(s.v[i]).toFixed(1);}
+      const last=s.v.length-1;d+="L"+x(last).toFixed(1)+" "+y(s.v[last]).toFixed(1);
+      g+=`<path d="${d}" fill="none" stroke="var(${s.tok})" stroke-width="${s.base?1.5:2}" stroke-linejoin="round" ${s.base?'opacity=".9"':''}/>`;
+      ends.push({y:y(s.v[last]),s,val:s.v[last]});}
+    ends.sort((a,b)=>a.y-b.y);for(let i=1;i<ends.length;i++)if(ends[i].y-ends[i-1].y<24)ends[i].y=ends[i-1].y+24;
+    for(const e of ends){const yy=Math.min(H-mb+2,Math.max(mt+8,e.y));
+      g+=`<circle cx="${x(e.s.v.length-1).toFixed(1)}" cy="${y(e.val).toFixed(1)}" r="3" fill="var(${e.s.tok})" stroke="var(--surface)" stroke-width="1.5"/>`;
+      g+=`<text class="endlab" x="${W-mr+8}" y="${(yy-2).toFixed(1)}">${e.s.short}</text><text class="endval" x="${W-mr+8}" y="${(yy+11).toFixed(1)}">${nf(e.val,e.val<10?1:0)}</text>`;}
+    g+=`<g class="hov"></g><g class="playh"></g></svg>`;
+    this.svgWrap.innerHTML=g;this.hov=this.svgWrap.querySelector(".hov");this.playG=this.svgWrap.querySelector(".playh");
+    this.drawPlay();this.drawHover();
+  }
+  drawPlay(){if(!this.data||!this.playG)return;const t=Math.min(playT,this.data.days);const xx=this.x(t);
+    this.playG.innerHTML=`<line x1="${xx.toFixed(1)}" x2="${xx.toFixed(1)}" y1="${this.mt}" y2="${this.h-this.mb}" stroke="var(--accent)" stroke-width="1.5"/><circle cx="${xx.toFixed(1)}" cy="${this.mt}" r="3" fill="var(--accent)"/>`;}
+  drawHover(own){if(!this.hov)return;
+    if(hoverT==null){this.hov.innerHTML="";this.tip.hidden=true;return;}
+    const i=Math.max(0,Math.min(this.data.days,Math.round(hoverT)));const xx=this.x(i);
+    let g=`<line x1="${xx.toFixed(1)}" x2="${xx.toFixed(1)}" y1="${this.mt}" y2="${this.h-this.mb}" stroke="var(--ink-2)" stroke-width="1" opacity=".5"/>`;
+    let tip=`<div class="d">${fmtT(i)} · día ${i}</div>`;
+    for(const s of this.data.series){const v=s.v[i];g+=`<circle cx="${xx.toFixed(1)}" cy="${this.y(v).toFixed(1)}" r="4" fill="var(${s.tok})" stroke="var(--surface)" stroke-width="2"/>`;
+      tip+=`<div class="r"><span><i style="background:var(${s.tok})"></i>${s.name}</span><b>${nf(v,v<10?1:0)}</b></div>`;}
+    this.hov.innerHTML=g;
+    if(own){this.tip.innerHTML=tip;this.tip.hidden=false;const r=this.svgWrap.getBoundingClientRect();const px=xx*r.width/this.W;
+      const tw=this.tip.offsetWidth;this.tip.style.left=(px+12+tw>r.width?px-12-tw:px+12)+"px";this.tip.style.top="18px";}
+    else this.tip.hidden=true;}
+}
+function niceTicks(max){if(!(max>0))max=1;const raw=max/4;const mag=Math.pow(10,Math.floor(Math.log10(raw)));const n=raw/mag;
+  const step=(n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*mag;const ticks=[];const top=Math.ceil(max/step)*step;for(let v=0;v<=top+1e-9;v+=step)ticks.push(+v.toFixed(6));return{max:top,ticks,step};}
+
+const chChl=new LineChart(document.getElementById("ch-chl"),{});
+const chTP=new LineChart(document.getElementById("ch-tp"),{});
+const chSed=new LineChart(document.getElementById("ch-sed"),{});
+const chMus=new LineChart(document.getElementById("ch-mus"),{});
+
+/* =================== RECOMPUTE =================== */
+let RES=null,BASE=null;
+function recompute(){
+  BASE=simulate(P,false,false,true);
+  RES=simulate(P,P.floc,P.mus,true);
+  const days=RES.days;
+  document.getElementById("scrub").max=days;if(playT>days)playT=0;
+  const sb=document.getElementById("scen-label");sb.textContent=SCEN_NAMES[(P.floc?"1":"0")+(P.mus?"1":"0")];
+  const toArr=(R,f)=>{const a=new Float32Array(R.P.length);for(let i=0;i<a.length;i++)a[i]=f(R,i);return a;};
+  const chlS=toArr(RES.R,(R,i)=>R.A[i]*P.kappa),chlB=toArr(BASE.R,(R,i)=>R.A[i]*P.kappa);
+  const tpS=toArr(RES.R,(R,i)=>R.A[i]+R.P[i]),tpB=toArr(BASE.R,(R,i)=>R.A[i]+R.P[i]);
+  const markers=[];RES.apps.forEach(t=>markers.push({t,tok:"--s-cap"}));if(RES.tStock!=null)markers.push({t:RES.tStock,tok:"--s-mus"});
+  // toxic window bands (X>1)
+  const bands=[];let b0=null;const X=RES.R.X;for(let i=0;i<X.length;i++){if(X[i]>1&&b0==null)b0=i;if((X[i]<=1||i===X.length-1)&&b0!=null){bands.push({t0:b0,t1:i,label:""});b0=null;}}
+  if(bands.length)bands[0].label="residuo tóxico";
+  const sc=SCEN_NAMES[(P.floc?"1":"0")+(P.mus?"1":"0")];
+  chChl.render({days,markers,bands,refs:[{y:7.3,label:"eutrófico > 7,3"},{y:56,label:"hipereutrófico > 56"}],
+    series:[{v:chlB,tok:"--s-base",base:true,name:"Sin tratamiento",short:"Sin trat."},{v:chlS,tok:"--s-chl",name:sc,short:"Escenario"}]});
+  chTP.render({days,markers,bands,refs:[{y:35,label:"eutrófico > 35 (OCDE)"},{y:100,label:"hipertrófico > 100"}],
+    series:[{v:tpB,tok:"--s-base",base:true,name:"Sin tratamiento",short:"Sin trat."},{v:tpS,tok:"--s-tp",name:sc,short:"Escenario"}]});
+  chSed.render({days,markers,bands:[],
+    series:[{v:BASE.R.S,tok:"--s-base",base:true,name:"P móvil, sin tratamiento",short:"Sin trat."},{v:RES.R.S,tok:"--s-sed",name:"P móvil (escenario)",short:"P móvil"},{v:RES.R.C,tok:"--s-cap",name:"Capacidad libre de la capa",short:"Capa"}]});
+  const Nv=RES.R.N;
+  chMus.render({days,markers,bands,ymin:Math.max(10,P.N0),
+    series:[{v:Nv,tok:"--s-mus",name:"Diplodon vivas",short:"Vivas"}]});
+  // KPIs
+  const cS=RES.chlSummer,cB=BASE.chlSummer;const dC=(cS-cB)/cB*100;
+  document.getElementById("k-chl").innerHTML=nf(cS,cS<10?1:0)+"<small>µg/L</small>";
+  document.getElementById("k-chl-s").innerHTML=`<span class="${dC<-1?"delta-good":dC>1?"delta-bad":""}">${fmtPct(dC)}</span> vs ${nf(cB,cB<10?1:0)} sin tratamiento`;
+  const k=tsiClass(cS);document.getElementById("k-tsi").innerHTML=nf(tsiChl(cS))+`<small>TSI</small>`;
+  document.getElementById("k-tsi-s").innerHTML=`<span class="tsi-chip" style="background:transparent;color:inherit;padding:0"><i style="background:var(${k.tok})"></i>${k.name}</span> · Secchi ≈ ${nf(secchi(cS),1)} m`;
+  const dT=(RES.tpMean-BASE.tpMean)/BASE.tpMean*100;
+  document.getElementById("k-tp").innerHTML=nf(RES.tpMean)+"<small>µg/L</small>";
+  document.getElementById("k-tp-s").innerHTML=`<span class="${dT<-1?"delta-good":dT>1?"delta-bad":""}">${fmtPct(dT)}</span> vs ${nf(BASE.tpMean)} sin tratamiento`;
+  const surv=P.mus&&P.N0>0?RES.final.N/P.N0*100:null;
+  document.getElementById("k-n").innerHTML=P.mus?nf(RES.final.N,RES.final.N<10?1:0)+"<small>ind/m²</small>":"—";
+  document.getElementById("k-n-s").textContent=P.mus?(P.N0>0?`${nf(surv)} % de las sembradas`:"no se sembraron"):"escenario sin almejas";
+  const areaM2=P.area*1e4;
+  document.getElementById("k-prod").textContent=P.floc?`${nf(P.dose*areaM2/1e6,1)} t de ${PRODUCTS[P.prod].label.toLowerCase()}`+(RES.apps.length>1?` × ${RES.apps.length} aplicaciones`:""):"ninguno";
+  const nm=P.N0*(P.flit/100)*areaM2;
+  document.getElementById("k-mus").textContent=P.mus?(nm>=1e6?nf(nm/1e6,1)+" millones":nf(nm))+" de ejemplares":"ninguna";
+  const F15=P.CR*P.hf/1000*P.N0*(P.flit/100)*P.emix/P.z;
+  document.getElementById("k-clear").textContent=P.mus&&F15>0?nf(1/F15)+" días (a 15 °C, agua clara)":"—";
+  // toxic note
+  const tn=document.getElementById("toxnote");
+  if(P.mus&&P.N0>0&&surv!=null){
+    const nAtStockEnd=RES.R.N[Math.min(RES.days,Math.round((RES.tStock||0)+60))];
+    const early=P.N0>0?nAtStockEnd/P.N0:1;
+    if(early<0.85){tn.hidden=false;tn.textContent=`Con esta espera el residuo del ${PRODUCTS[P.prod].label.toLowerCase()} mata ${nf((1-early)*100)} % de las almejas en sus primeros dos meses. Aumenta la espera o usa un producto menos tóxico.`;}
+    else tn.hidden=true;
+  } else tn.hidden=true;
+  // protocol strip
+  document.getElementById("pr0").textContent=`carga −${P.red} %`;
+  document.getElementById("pr1").textContent=P.floc?`día ${P.tF} · ${dayToDate(P.tF)} · ${nf(P.dose)} g/m²`:"no se aplica";
+  document.getElementById("pr2").textContent=P.floc&&P.mus?`${P.wait} días`:"—";
+  document.getElementById("pr3").textContent=P.mus?`día ${P.tF+P.wait} · ${dayToDate(P.tF+P.wait)} · ${P.N0} ind/m²`:"no se siembra";
+  document.getElementById("pr4").textContent=P.floc&&P.rep>0?`re-dosis ${FMT.rep(P.rep)}`:"sin re-dosis";
+  renderBudget();renderYearTable();
+  lakeA.setData(BASE,false);lakeB.setData(RES,true);
+  updatePlayUI();
+  if(hmDirty){hmDirty=false;startHeatmap();}else drawHeatmap();
+}
+
+/* =================== BUDGET =================== */
+function renderBudget(){
+  const b=RES.bud,a=BASE.bud;
+  const rows=[
+    {l:"Carga externa (cuenca)",v:b.ext+b.ain,w:a.ext+a.ain,dir:1},
+    {l:"Liberación del sedimento",v:b.int+b.red,w:a.int+a.red,dir:1},
+    {l:"Excreción de Diplodon",v:b.exc,w:a.exc,dir:1},
+    {l:"Salida por el efluente",v:b.out,w:a.out,dir:-1},
+    {l:"Sedimentación (algas y P)",v:b.sed,w:a.sed,dir:-1},
+    {l:"Unión al floculante en el agua",v:b.bind,w:a.bind,dir:-1},
+    {l:"Filtración de Diplodon",v:b.filt,w:a.filt,dir:-1}];
+  const mx=Math.max(...rows.map(r=>Math.max(r.v,r.w)))||1;
+  let h=`<div class="bhead"><span>flujo</span><span class="lr"><span>← sale del agua</span><span>entra al agua →</span></span><span style="text-align:right">mg P/m²·año</span></div>`;
+  for(const r of rows){const wpct=r.v/mx*50,mpct=r.w/mx*50;
+    const left=r.dir>0?50:50-wpct;const mleft=r.dir>0?50+mpct:50-mpct;
+    h+=`<div class="brow"><span class="bl">${r.l}</span><div class="btrack"><span class="axis0"></span><span class="bar ${r.dir>0?"in":"outb"}" style="left:${left}%;width:${Math.max(0,wpct)}%"></span>${r.w>0.5?`<span class="bmark" style="left:calc(${mleft}% - 1px)" title="Sin tratamiento: ${nf(r.w)}"></span>`:""}</div><span class="bv">${Math.round(r.v)===0?"0":(r.dir>0?"+":"−")+nf(r.v)}</span></div>`;}
+  document.getElementById("budget").innerHTML=h;
+}
+function renderYearTable(){
+  const R=RES.R,B=BASE.R;let h=`<thead><tr><th>Año</th><th>Chl verano escenario</th><th>Chl verano sin trat.</th><th>PT medio escenario</th><th>PT medio sin trat.</th><th>P móvil sed. (fin)</th><th>Diplodon (fin)</th></tr></thead><tbody>`;
+  for(let y=0;y<P.years;y++){let cs=0,cb=0,n=0,ts=0,tb=0,m=0;for(let d=y*365;d<(y+1)*365&&d<R.P.length;d++){const doy=d-y*365;ts+=R.P[d]+R.A[d];tb+=B.P[d]+B.A[d];m++;if(doy>=91&&doy<212){cs+=R.A[d]*P.kappa;cb+=B.A[d]*P.kappa;n++;}}
+    const e=Math.min(R.P.length-1,(y+1)*365);
+    h+=`<tr><td>${y+1}</td><td class="v">${nf(cs/n,1)}</td><td class="v">${nf(cb/n,1)}</td><td class="v">${nf(ts/m)}</td><td class="v">${nf(tb/m)}</td><td class="v">${nf(R.S[e])}</td><td class="v">${nf(R.N[e],1)}</td></tr>`;}
+  document.getElementById("ytable").innerHTML=h+"</tbody>";
+}
+
+/* =================== HEATMAP =================== */
+let hmDirty=true,hmJob=0,HM=null;
+const HM_D=[0,100,200,300,400,500,600,700,800,900,1000],HM_N=[0,20,40,60,80,100,120,140,160,180,200];
+function startHeatmap(){
+  const job=++hmJob;const st=document.getElementById("hm-status");
+  HM={job,vals:new Array(HM_D.length*HM_N.length).fill(null),prod:P.prod,years:P.years};
+  const cells=[];for(let j=0;j<HM_N.length;j++)for(let i=0;i<HM_D.length;i++)cells.push([i,j]);
+  let idx=0;st.textContent="calculando 0 de "+cells.length+" simulaciones…";
+  const pFloc=P.floc,pMus=P.mus;
+  function chunk(){
+    if(job!==hmJob)return;const t0=performance.now();
+    while(idx<cells.length&&performance.now()-t0<24){const [i,j]=cells[idx];
+      const q=Object.assign({},P,{dose:HM_D[i],N0:HM_N[j]});
+      HM.vals[j*HM_D.length+i]=simulate(q,HM_D[i]>0,HM_N[j]>0,false).chlSummer;idx++;}
+    drawHeatmap();
+    if(idx<cells.length){st.textContent=`calculando ${idx} de ${cells.length} simulaciones…`;setTimeout(chunk,0);}
+    else st.textContent=`${cells.length} simulaciones · ${PRODUCTS[P.prod].label} · horizonte ${P.years} años · espera ${P.wait} días`;
+  }
+  setTimeout(chunk,30);
+}
+function hexRgb(h){h=h.replace("#","");return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function rampColor(t){const stops=["--r1","--r2","--r3","--r4","--r5"].map(k=>hexRgb(css(k)||"#3987e5"));
+  t=Math.max(0,Math.min(1,t))*(stops.length-1);const i=Math.min(stops.length-2,Math.floor(t));return mix(stops[i],stops[i+1],t-i);}
+const lum=c=>(0.2126*c[0]+0.7152*c[1]+0.0722*c[2])/255;
+function drawHeatmap(){
+  if(!HM)return;const host=document.getElementById("hm");
+  const nx=HM_D.length,ny=HM_N.length;const W=640,H=420,ml=62,mr=12,mt=10,mb=46;
+  const cw=(W-ml-mr)/nx,chh=(H-mt-mb)/ny;
+  const done=HM.vals.filter(v=>v!=null);if(!done.length)return;
+  let lo=Math.min(...done),hi=Math.max(...done);if(!(hi>lo*1.02)){lo=lo*0.9;hi=hi*1.1;}
+  const tOf=v=>(Math.log(v)-Math.log(lo))/(Math.log(hi)-Math.log(lo));
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa de clorofila de verano según dosis de floculante y densidad de Diplodon">`;
+  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){const v=HM.vals[j*nx+i];const x=ml+i*cw,y=mt+(ny-1-j)*chh;
+    if(v==null){g+=`<rect x="${x+1}" y="${y+1}" width="${cw-2}" height="${chh-2}" rx="2" fill="var(--grid)"/>`;continue;}
+    const c=rampColor(tOf(v));const k=tsiClass(v);
+    g+=`<rect class="cell" data-i="${i}" data-j="${j}" x="${(x+1).toFixed(1)}" y="${(y+1).toFixed(1)}" width="${(cw-2).toFixed(1)}" height="${(chh-2).toFixed(1)}" rx="2" fill="${rgb(c)}"><title>Dosis ${HM_D[i]} g/m² · ${HM_N[j]} ind/m² → Chl verano ${nf(v,1)} µg/L (${k.name})</title></rect>`;
+    g+=`<text x="${(x+cw/2).toFixed(1)}" y="${(y+chh/2+3.5).toFixed(1)}" text-anchor="middle" style="fill:${lum(c)>0.5?"#0f2329":"#ffffff"};font-size:10.5px;pointer-events:none">${nf(v,v<10?1:0)}</text>`;}
+  for(let i=0;i<nx;i++)g+=`<text x="${(ml+i*cw+cw/2).toFixed(1)}" y="${H-mb+15}" text-anchor="middle">${HM_D[i]}</text>`;
+  for(let j=0;j<ny;j++)g+=`<text x="${ml-7}" y="${(mt+(ny-1-j)*chh+chh/2+3.5).toFixed(1)}" text-anchor="end">${HM_N[j]}</text>`;
+  g+=`<text class="ax" x="${ml+(W-ml-mr)/2}" y="${H-8}" text-anchor="middle">Dosis de floculante (g/m²)</text>`;
+  g+=`<text class="ax" transform="translate(14 ${mt+(H-mt-mb)/2}) rotate(-90)" text-anchor="middle">Diplodon sembrada (ind/m²)</text>`;
+  const ci=Math.round(Math.min(P.floc?P.dose:0,1000)/100),cj=Math.round(Math.min(P.mus?P.N0:0,200)/20);
+  const rx=ml+ci*cw,ry=mt+(ny-1-cj)*chh;
+  g+=`<rect x="${(rx+1).toFixed(1)}" y="${(ry+1).toFixed(1)}" width="${(cw-2).toFixed(1)}" height="${(chh-2).toFixed(1)}" rx="3" fill="none" stroke="var(--surface)" stroke-width="5"/><rect x="${(rx+1).toFixed(1)}" y="${(ry+1).toFixed(1)}" width="${(cw-2).toFixed(1)}" height="${(chh-2).toFixed(1)}" rx="3" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+  g+="</svg>";host.innerHTML=g;
+  host.querySelectorAll("rect.cell").forEach(r=>r.addEventListener("click",()=>{
+    const i=+r.dataset.i,j=+r.dataset.j;
+    const f=HM_D[i]>0,m=HM_N[j]>0;if(f)setInput("dose",HM_D[i]);if(m)setInput("N0",HM_N[j]);P.floc=f;P.mus=m;
+    scBtns.forEach(b=>b.setAttribute("aria-pressed",(b.dataset.f==="1")===f&&(b.dataset.m==="1")===m?"true":"false"));
+    syncOutputs();schedule(false);document.getElementById("simulador").scrollIntoView({behavior:"smooth"});}));
+  const kl=tsiClass(lo),kh=tsiClass(hi);const grad=[0,.25,.5,.75,1].map(t=>rgb(rampColor(t))+" "+(t*100)+"%").join(",");
+  document.getElementById("hm-legend").innerHTML=`<span class="eyebrow">Clorofila de verano, último año</span>
+    <div style="display:block"><div style="height:14px;border-radius:3px;background:linear-gradient(90deg,${grad})"></div>
+    <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-top:4px"><span>${nf(lo,1)} µg/L</span><span>${nf(hi,1)} µg/L</span></div></div>
+    <p class="note" style="margin-top:2px">Escala logarítmica ajustada al rango del mapa. Clase trófica (Carlson): de <b>${kl.name.toLowerCase()}</b> en la mejor celda a <b>${kh.name.toLowerCase()}</b> en la peor.</p>
+    <p class="note">Lee el mapa en diagonal: hacia la derecha la dosis da la caída inicial; hacia arriba las almejas la sostienen. Si cambias el producto, la espera o el lago, el mapa se recalcula. El recuadro marca tu combinación.</p>`;
+}
+/* =================== LAKE THEATRE (canvas) =================== */
+const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function mix(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];}
+const rgb=(c,al=1)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${al})`;
+class LakeView{
+  constructor(el,isScen){this.el=el;this.cv=el.querySelector("canvas");this.ctx=this.cv.getContext("2d");this.vals=el.querySelector(".vals");this.banner=el.querySelector(".banner");
+    this.isScen=isScen;this.algae=[];this.pdots=[];this.flocs=[];this.bubbles=[];this.res=null;this.lastBanner="";this.bannerUntil=0;
+    this.resize();new ResizeObserver(()=>this.resize()).observe(el);}
+  resize(){const r=this.el.getBoundingClientRect();const dpr=Math.min(2,window.devicePixelRatio||1);this.w=r.width;this.h=r.height;
+    this.cv.width=Math.round(r.width*dpr);this.cv.height=Math.round(r.height*dpr);this.ctx.setTransform(dpr,0,0,dpr,0,0);
+    this.surf=this.h*0.27;this.bot=this.h*0.86;this.x0=this.w*0.03;this.x1=this.w*0.97;
+    this.algae=[];this.pdots=[];this.flocs=[];this.bubbles=[];this.shells=null;}
+  setData(res,isScen){this.res=res;this.shells=null;}
+  depthFrac(x){const u=(x-this.x0)/(this.x1-this.x0);if(u<=0||u>=1)return 0;return Math.pow(Math.sin(Math.PI*u),0.75);}
+  bottomY(x){return this.surf+(this.bot-this.surf)*this.depthFrac(x);}
+  randWater(){for(let k=0;k<20;k++){const x=rnd(this.x0+6,this.x1-6);const by=this.bottomY(x);if(by-this.surf<8)continue;return[x,rnd(this.surf+3,by-3)];}return[this.w/2,(this.surf+this.bot)/2];}
+  inWater(x,y){return x>this.x0&&x<this.x1&&y>this.surf+1&&y<this.bottomY(x)-1;}
+  makeShells(){const arr=[];const n=40;for(let k=0;k<n;k++){const side=k%2;const u=side?rnd(0.79,0.95):rnd(0.05,0.21);const x=this.x0+u*(this.x1-this.x0);
+      arr.push({x,ang:rnd(-0.5,0.5),ph:Math.random()*6.28,dead:Math.random()});}
+    arr.sort((a,b)=>a.dead-b.dead);this.shells=arr;}
+  state(t){const R=this.res.R;const i=Math.max(0,Math.min(R.P.length-1,Math.round(t)));return{i,P:R.P[i],A:R.A[i],S:R.S[i],W:R.W[i],C:R.C[i],I:R.I[i],N:R.N[i],X:R.X[i],Jint:R.Jint[i],F:R.F[i],H:R.H[i],st:R.st[i],T:R.T[i]};}
+  step(t,dtSec){
+    if(!this.res||!this.w)return;const s=this.state(t);const c=this.ctx,w=this.w,h=this.h;
+    const chl=s.A*P.kappa;const gF=Math.max(0,Math.min(1,Math.log(Math.max(chl,1)/1.2)/Math.log(70/1.2)));
+    const season=Math.cos(2*Math.PI*(t-110)/365);
+    // sky
+    const sk=c.createLinearGradient(0,0,0,this.surf);sk.addColorStop(0,css("--sky-top"));sk.addColorStop(1,css("--sky-bot"));c.fillStyle=sk;c.fillRect(0,0,w,this.surf+2);
+    const sunX=w*(0.18+0.64*((t%365)/365)),sunY=this.surf*(0.62-0.32*season);
+    c.fillStyle="rgba(250,200,90,.95)";c.beginPath();c.arc(sunX,sunY,Math.max(5,h*0.026),0,6.283);c.fill();
+    // land
+    c.fillStyle=css("--land");c.beginPath();c.moveTo(0,this.surf);c.lineTo(this.x0,this.surf);
+    for(let x=this.x0;x<=this.x1;x+=4)c.lineTo(x,this.bottomY(x)+14);c.lineTo(this.x1,this.surf);c.lineTo(w,this.surf);c.lineTo(w,h);c.lineTo(0,h);c.closePath();c.fill();
+    // water
+    const clearTop=[126,196,212],clearBot=[38,98,130],greenTop=[124,160,62],greenBot=[48,82,40];
+    const wg=c.createLinearGradient(0,this.surf,0,this.bot);wg.addColorStop(0,rgb(mix(clearTop,greenTop,gF)));wg.addColorStop(1,rgb(mix(clearBot,greenBot,gF)));
+    c.save();c.beginPath();c.moveTo(this.x0,this.surf);for(let x=this.x0;x<=this.x1;x+=4)c.lineTo(x,this.bottomY(x));c.lineTo(this.x1,this.surf);c.closePath();
+    c.fillStyle=wg;c.fill();c.clip();
+    // hypolimnion anoxia
+    const thY=this.surf+(this.bot-this.surf)*0.42;
+    if(s.st>0.08){c.fillStyle=`rgba(70,40,95,${Math.min(0.55,s.H*0.75)})`;c.fillRect(0,thY,w,h);
+      c.strokeStyle="rgba(255,255,255,.45)";c.setLineDash([5,5]);c.lineWidth=1;c.beginPath();c.moveTo(this.x0,thY);c.lineTo(this.x1,thY);c.stroke();c.setLineDash([]);
+      c.fillStyle="rgba(255,255,255,.75)";c.font="10px 'IBM Plex Mono',monospace";c.fillText("termoclina",this.x1-78,thY-4);
+      if(s.H>0.25){c.fillText("hipolimnion anóxico",w*0.40,this.bot-8);}}
+    // toxic haze
+    if(s.X>1){c.fillStyle=`rgba(208,59,59,${Math.min(0.32,0.05*(s.X-1)+0.06)})`;c.fillRect(0,this.surf,w,h);}
+    const sp=reduceMotion?0:1;const fr=Math.min(0.05,dtSec)*60*sp;
+    // algae
+    const nA=Math.round(Math.min(340,chl*4.2));this.sync(this.algae,nA,()=>{const [x,y]=this.randWater();return{x,y,vx:rnd(-.15,.15),vy:rnd(-.1,.1),r:rnd(1.4,2.4)};});
+    const sweep=P.beta*s.W/(s.W+P.KW);
+    c.fillStyle=gF>0.5?"rgba(150,215,80,.9)":"rgba(70,150,40,.9)";
+    for(const a of this.algae){a.vx+=rnd(-.03,.03);a.vy+=rnd(-.03,.03)+0.002*sweep;a.vx*=.96;a.vy*=.96;a.x+=a.vx*fr;a.y+=(a.vy+0.06*sweep)*fr;
+      if(!this.inWater(a.x,a.y)){const [x,y]=this.randWater();a.x=x;a.y=sweep>2?this.surf+rnd(2,20):y;}
+      c.beginPath();c.arc(a.x,a.y,a.r,0,6.283);c.fill();}
+    // dissolved P
+    const nP=Math.round(Math.min(160,s.P*2.2));this.sync(this.pdots,nP,()=>{const [x,y]=this.randWater();return{x,y,ph:Math.random()*6.28};});
+    c.fillStyle="rgba(240,138,60,.95)";
+    for(const d of this.pdots){d.ph+=0.05*fr;d.x+=Math.sin(d.ph)*0.25*fr;d.y+=Math.cos(d.ph*0.7)*0.18*fr;if(!this.inWater(d.x,d.y)){const [x,y]=this.randWater();d.x=x;d.y=y;}
+      c.fillRect(d.x-1.2,d.y-1.2,2.4,2.4);}
+    // floc
+    const nF=Math.round(Math.min(260,s.W/2.2));this.sync(this.flocs,nF,()=>({x:rnd(this.x0+6,this.x1-6),y:this.surf+rnd(0,(this.bot-this.surf)*0.5),v:rnd(.5,1.1),r:rnd(1.6,3.4)}));
+    c.fillStyle="rgba(244,234,205,.92)";
+    for(const f of this.flocs){f.y+=f.v*fr;f.x+=rnd(-.2,.2)*fr;if(f.y>this.bottomY(f.x)-2){f.x=rnd(this.x0+6,this.x1-6);f.y=this.surf+rnd(0,10);}
+      c.fillRect(f.x-f.r/2,f.y-f.r/2,f.r,f.r*0.7);}
+    // internal release bubbles
+    if(sp){const rate=s.Jint*0.35*dtSec*8;let nb=Math.floor(rate)+(Math.random()<rate%1?1:0);
+      while(nb-->0&&this.bubbles.length<120){const x=this.x0+(this.x1-this.x0)*rnd(0.3,0.7);this.bubbles.push({x,y:this.bottomY(x)-2,life:1});}}
+    c.fillStyle="rgba(240,138,60,.85)";
+    this.bubbles=this.bubbles.filter(b=>{const stopY=s.st>0.08?thY+4:this.surf+4;b.y-=0.45*fr;b.x+=rnd(-.3,.3)*fr;if(b.y<stopY){b.y=stopY+rnd(0,14);b.x+=rnd(-1.5,1.5)*fr;b.life-=0.03*fr;}
+      c.globalAlpha=Math.max(0,b.life);c.beginPath();c.arc(b.x,b.y,1.8,0,6.283);c.fill();c.globalAlpha=1;return b.life>0;});
+    // secchi disc
+    const sd=secchi(chl);const maxDepth=2*P.z;const sdY=this.surf+(this.bot-this.surf)*Math.min(1,sd/maxDepth);const sx=w*0.5;
+    c.strokeStyle="rgba(255,255,255,.7)";c.lineWidth=1;c.beginPath();c.moveTo(sx,this.surf);c.lineTo(sx,sdY);c.stroke();
+    c.save();c.translate(sx,sdY);c.scale(1,0.45);const rr=Math.max(7,h*0.032);
+    for(let q=0;q<4;q++){c.fillStyle=q%2?"#111":"#f5f5f5";c.beginPath();c.moveTo(0,0);c.arc(0,0,rr,q*Math.PI/2,(q+1)*Math.PI/2);c.closePath();c.fill();}c.restore();
+    c.fillStyle="rgba(255,255,255,.9)";c.font="10.5px 'IBM Plex Mono',monospace";c.fillText(`Secchi ${nf(sd,1)} m`,sx+rr+5,sdY+3);
+    c.restore();
+    // sediment band + cap
+    c.fillStyle="#6b5845";c.beginPath();c.moveTo(this.x0,this.surf);for(let x=this.x0;x<=this.x1;x+=4)c.lineTo(x,this.bottomY(x));
+    for(let x=this.x1;x>=this.x0;x-=4)c.lineTo(x,this.bottomY(x)+12);c.closePath();c.fill();
+    // mobile P speckles in sediment
+    const nS=Math.round(Math.min(150,s.S/30));c.fillStyle="rgba(240,138,60,.9)";
+    for(let k=0;k<nS;k++){const u=0.06+0.88*((k*0.6180339)%1);const x=this.x0+u*(this.x1-this.x0);const y=this.bottomY(x)+3+((k*0.37)%1)*7;c.fillRect(x-1,y-1,2,2);}
+    const nI=Math.round(Math.min(120,s.I/40));c.fillStyle="rgba(200,205,210,.8)";
+    for(let k=0;k<nI;k++){const u=0.05+0.9*((k*0.7548776+0.3)%1);const x=this.x0+u*(this.x1-this.x0);const y=this.bottomY(x)+4+((k*0.53)%1)*7;c.fillRect(x-1,y-1,2,2);}
+    if(s.C>5){c.strokeStyle=`rgba(233,185,73,${Math.min(0.95,0.35+s.C/2500)})`;c.lineWidth=1+Math.min(6,s.C/450);c.beginPath();
+      for(let x=this.x0+4;x<=this.x1-4;x+=4){const y=this.bottomY(x)+0.5;x===this.x0+4?c.moveTo(x,y):c.lineTo(x,y);}c.stroke();}
+    // mussels
+    if(this.isScen&&P.mus){if(!this.shells)this.makeShells();
+      const live=Math.round(Math.min(40,s.N*(P.flit/100)*1.1));const sown=Math.round(Math.min(40,(t>=(this.res.tStock??1e9)?P.N0:0)*(P.flit/100)*1.1));
+      const dead=Math.max(0,sown-live);
+      for(let k=0;k<sown;k++){const m=this.shells[k];const isDead=k>=live;const by=this.bottomY(m.x);
+        const slope=(this.bottomY(m.x+3)-this.bottomY(m.x-3))/6;const ang=Math.atan(slope)+m.ang*0.3;
+        c.save();c.translate(m.x,by-2.2);c.rotate(ang);
+        if(isDead){c.fillStyle="#9aa0a3";c.beginPath();c.ellipse(-3,0,4.2,1.8,-0.5,0,6.283);c.fill();c.beginPath();c.ellipse(3,0,4.2,1.8,0.5,0,6.283);c.fill();}
+        else{c.fillStyle="#3b2a22";c.beginPath();c.ellipse(0,0,6.2,2.9,0,0,6.283);c.fill();c.strokeStyle="rgba(150,120,90,.8)";c.lineWidth=0.8;c.beginPath();c.ellipse(0,-0.2,4.2,1.7,0,Math.PI,2*Math.PI);c.stroke();
+          if(s.F>0&&sp){const ph=(t*0.9+m.ph)%1;c.strokeStyle=`rgba(255,255,255,${0.55*(1-ph)})`;c.lineWidth=1;c.beginPath();c.arc(-1,-4,4+ph*9,Math.PI*1.1,Math.PI*1.9);c.stroke();}}
+        c.restore();}
+      if(dead>0&&s.X>0.5){c.fillStyle="rgba(255,255,255,.85)";c.font="10px 'IBM Plex Mono',monospace";c.fillText("mortalidad por residuo",this.x0+6,this.bottomY(this.x0+w*0.12)-14);}
+    }
+    // HUD
+    const k=tsiClass(chl);
+    let hv=`<div><b>${nf(chl,chl<10?1:0)}</b> µg/L Chl · <b>${nf(s.P+s.A)}</b> µg/L PT</div><div>${nf(s.T,1)} °C`+(this.isScen&&P.mus?` · <b>${nf(s.N,s.N<10?1:0)}</b> almejas/m²`:"")+`</div>`;
+    hv+=`<div class="chipline"><span class="tsi-chip"><i style="background:var(${k.tok})"></i>${k.name}</span></div>`;
+    if(hv!==this._hv){this.vals.innerHTML=hv;this._hv=hv;}
+    // banners
+    let msg="";const ti=s.i;
+    for(const a of this.res.apps)if(ti>=a&&ti<a+25)msg="Aplicación del floculante: el flóculo barre las algas";
+    if(this.res.tStock!=null&&ti>=this.res.tStock&&ti<this.res.tStock+30)msg="Siembra de Diplodon chilensis";
+    if(!msg&&s.st>0.5&&s.H>0.35&&s.Jint>8)msg="Verano estratificado: el sedimento libera fósforo";
+    if(msg!==this.lastBanner){this.lastBanner=msg;if(msg)this.banner.textContent=msg;this.banner.dataset.off=msg?"0":"1";}
+  }
+  sync(arr,n,mk){while(arr.length<n)arr.push(mk());if(arr.length>n)arr.length=n;}
+}
+const lakeA=new LakeView(document.getElementById("lakeA"),false);
+const lakeB=new LakeView(document.getElementById("lakeB"),true);
+
+/* =================== PLAYER =================== */
+let playing=!reduceMotion,speed=91,lastTs=null;
+const scrub=document.getElementById("scrub");
+function setPlay(t){playT=Math.max(0,Math.min(RES?RES.days:0,t));updatePlayUI();charts.forEach(c=>c.drawPlay());}
+function updatePlayUI(){scrub.value=Math.round(playT);document.getElementById("pdate").textContent=fmtT(playT);
+  document.getElementById("playtxt").textContent=playing?"Pausa":"Reproducir";
+  document.getElementById("playicon").setAttribute("d",playing?"M3.5 2.5h3v11h-3zM9.5 2.5h3v11h-3z":"M4 2.5v11l9-5.5z");
+  document.getElementById("play").setAttribute("aria-label",playing?"Pausa":"Reproducir");}
+document.getElementById("play").addEventListener("click",()=>{playing=!playing;if(playing&&RES&&playT>=RES.days-1)playT=0;updatePlayUI();});
+scrub.addEventListener("input",()=>setPlay(+scrub.value));
+document.querySelectorAll(".speed button").forEach(b=>b.addEventListener("click",()=>{speed=+b.dataset.s;document.querySelectorAll(".speed button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));}));
+let frameCount=0;
+function loop(ts){
+  const dt=lastTs==null?0.016:Math.min(0.1,(ts-lastTs)/1000);lastTs=ts;
+  if(playing&&RES){playT+=speed*dt;if(playT>RES.days){playT=0;}
+    if(++frameCount%3===0){updatePlayUI();charts.forEach(c=>c.drawPlay());}}
+  lakeA.step(playT,dt);lakeB.step(playT,dt);
+  requestAnimationFrame(loop);
+}
+
+/* =================== BOOT =================== */
+syncOutputs();
+if(reduceMotion)playT=150;
+recompute();
+requestAnimationFrame(loop);
+let rT;new ResizeObserver(()=>{clearTimeout(rT);rT=setTimeout(()=>{if(RES)[chChl,chTP,chSed,chMus].forEach(c=>c.data&&c.render(c.data));},120);}).observe(document.querySelector(".charts"));
+</script>
+<script>
+window.MathJax={tex:{inlineMath:[["\\(","\\)"]],displayMath:[["$$","$$"]]},svg:{fontCache:"global"},options:{skipHtmlTags:["script","noscript","style","textarea","pre","code"]}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" async></script>
