@@ -1,0 +1,1247 @@
+<!doctype html><html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pirólisis a Combustibles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sala de control — diagrama de proceso vivo a la izquierda, tablero de mandos a la derecha, tendencias y memoria técnica debajo */
+:root {
+  --bg: #0e1317; --panel: #151c22; --panel2: #1b242c; --line: #2b3843; --fg: #dde5ea; --muted: #8796a2;
+  --heat: #ff7a2f; --cool: #4fb3d9; --steel: #5d6b76; --pipe: #3a4853;
+  --gasoline: #f2b632; --diesel: #d08a3c; --wax: #d8cca6; --gas: #7fd1ff; --char: #6d6661; --n2: #9aa7ff;
+  --ok: #4cc38a; --warn: #f0b429; --crit: #ff5d5d;
+  --f-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #e9eef1; --panel: #ffffff; --panel2: #f3f6f8; --line: #cfd8de; --fg: #172128; --muted: #586874;
+  --heat: #d4541a; --cool: #1c7ea8; --steel: #8f9ca6; --pipe: #b4c0c8;
+  --gasoline: #c68a00; --diesel: #9a5a14; --wax: #9c8b55; --gas: #2489c0; --char: #4d4743; --n2: #4f5fd6;
+  --ok: #1f8f5a; --warn: #b07800; --crit: #c93030; color-scheme: light;
+} }
+:root[data-theme="light"] {
+  --bg: #e9eef1; --panel: #ffffff; --panel2: #f3f6f8; --line: #cfd8de; --fg: #172128; --muted: #586874;
+  --heat: #d4541a; --cool: #1c7ea8; --steel: #8f9ca6; --pipe: #b4c0c8;
+  --gasoline: #c68a00; --diesel: #9a5a14; --wax: #9c8b55; --gas: #2489c0; --char: #4d4743; --n2: #4f5fd6;
+  --ok: #1f8f5a; --warn: #b07800; --crit: #c93030; color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; letter-spacing: .01em; text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 700; }
+h2 { font-size: 26px; }
+h3 { font-size: 19px; }
+p { margin: 0; }
+.mono, output, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+header.top .lede { color: var(--muted); max-width: 64ch; margin-top: 6px; }
+.runbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: 600 14px var(--f-body); border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); padding: 8px 14px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--heat); outline-offset: 2px; }
+button.primary { background: var(--heat); border-color: var(--heat); color: #1a0d05; }
+.speed { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.speed select { font: 500 13px var(--f-mono); background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+
+.status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill { font: 500 12px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.pill.on { color: var(--heat); border-color: var(--heat); }
+.pill.ok { color: var(--ok); border-color: var(--ok); }
+.pill.warn { color: var(--warn); border-color: var(--warn); }
+.pill.crit { color: var(--crit); border-color: var(--crit); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .35; } }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+@media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.scene { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
+.scene canvas { display: block; width: 100%; aspect-ratio: 1000 / 620; max-width: 100%; }
+.scene .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 4px 2px; font-size: 12.5px; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+
+.tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+@media (max-width: 980px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { background: var(--panel); padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
+.tile .k { font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile .v { font: 600 26px var(--f-display); font-variant-numeric: tabular-nums; }
+.tile .u { font: 400 12px var(--f-mono); color: var(--muted); }
+
+aside.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 18px; min-width: 0; }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
+legend { font: 600 17px var(--f-display); padding: 0; margin-bottom: 4px; display: flex; gap: 8px; align-items: baseline; }
+legend small { font: 500 11px var(--f-mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.ctl { display: grid; gap: 4px; font-size: 13.5px; }
+.ctl .row { display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { color: var(--heat); font-size: 13px; }
+.ctl .hint { font-size: 12px; color: var(--muted); }
+input[type=range] { width: 100%; accent-color: var(--heat); }
+.chk { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+.chk input { accent-color: var(--heat); width: 16px; height: 16px; }
+select.full { width: 100%; font: 500 13.5px var(--f-body); background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; }
+.mixbar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; border: 1px solid var(--line); }
+.mixbar span { display: block; height: 100%; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button { font-size: 12.5px; padding: 6px 10px; font-weight: 500; }
+.locked { font-size: 12px; color: var(--warn); }
+
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 980px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; min-width: 0; }
+.chart canvas { width: 100%; height: 230px; display: block; }
+.chart .sub { font-size: 12.5px; color: var(--muted); }
+
+section.doc { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 16px; min-width: 0; }
+section.doc > p, .doc .prose { max-width: 75ch; color: var(--fg); }
+.doc .muted { color: var(--muted); }
+.eqgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 860px) { .eqgrid { grid-template-columns: minmax(0, 1fr); } }
+.eq { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.eq math { font-size: 17px; overflow-x: auto; max-width: 100%; }
+.eq .what { font: 600 15px var(--f-display); letter-spacing: .02em; }
+.eq p { font-size: 13.5px; color: var(--muted); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--panel2); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tag { font: 500 11px var(--f-mono); padding: 2px 7px; border-radius: 99px; border: 1px solid var(--line); white-space: nowrap; }
+.tag.lit { color: var(--ok); border-color: var(--ok); }
+.tag.cal { color: var(--warn); border-color: var(--warn); }
+.stage { font: 600 13px var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--heat); background: var(--panel2); }
+.note { border: 1px dashed var(--warn); border-radius: 8px; padding: 10px 14px; background: var(--panel2); font-size: 13.5px; max-width: 90ch; }
+.sources { display: grid; gap: 6px; font-size: 13.5px; padding-left: 18px; margin: 0; }
+a { color: var(--cool); }
+@media (prefers-reduced-motion: reduce) { .pill.crit { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Planta piloto virtual · reactor semi-batch · plásticos → combustibles</div>
+      <h1>Pirólisis a Combustibles</h1>
+      <p class="lede">Carga plástico, calienta el reactor y mira cómo el polímero se rompe en ceras, diésel, gasolina y gas. Cada número sale de un balance de masa, presión y energía que se resuelve en tiempo real.</p>
+    </div>
+    <div class="runbar">
+      <button class="primary" id="btn-run" type="button">▶ Arrancar</button>
+      <button id="btn-reset" type="button">Reiniciar carga</button>
+      <label class="speed" for="speed">Velocidad
+        <select id="speed">
+          <option value="30">×30</option>
+          <option value="120">×120</option>
+          <option value="300" selected>×300</option>
+          <option value="900">×900</option>
+          <option value="2400">×2400</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <div class="status" id="status" aria-live="polite"></div>
+
+  <div class="tiles">
+    <div class="tile"><span class="k">Tiempo</span><span class="v" id="k-time">0:00</span><span class="u">h:min de proceso</span></div>
+    <div class="tile"><span class="k">TI-101 Reactor</span><span class="v" id="k-T">25</span><span class="u">°C · objetivo <span id="k-Tsp">460</span></span></div>
+    <div class="tile"><span class="k">PI-101 Presión</span><span class="v" id="k-P">1.01</span><span class="u">bar abs · τ vapor <span id="k-tau">—</span></span></div>
+    <div class="tile"><span class="k">Conversión</span><span class="v" id="k-conv">0</span><span class="u">% del plástico</span></div>
+    <div class="tile"><span class="k">Gasolina</span><span class="v" id="k-G" style="color:var(--gasoline)">0.0</span><span class="u">kg · C5–C12</span></div>
+    <div class="tile"><span class="k">Diésel</span><span class="v" id="k-D" style="color:var(--diesel)">0.0</span><span class="u">kg · C13–C22</span></div>
+  </div>
+
+  <div class="layout">
+    <div class="scene">
+      <canvas id="scene" role="img" aria-label="Diagrama animado de la planta: cilindro de nitrógeno, reactor con calentadores, deflegmador, condensador, separador, antorcha, columna de destilación y tanques de gasolina, diésel y ceras"></canvas>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--wax)"></i>Ceras C23+</span>
+        <span><i class="sw" style="background:var(--diesel)"></i>Diésel C13–C22</span>
+        <span><i class="sw" style="background:var(--gasoline)"></i>Gasolina C5–C12</span>
+        <span><i class="sw" style="background:var(--gas)"></i>Gas C1–C4</span>
+        <span><i class="sw" style="background:var(--n2)"></i>Nitrógeno</span>
+        <span><i class="sw" style="background:var(--cool)"></i>Agua de enfriamiento</span>
+      </div>
+    </div>
+
+    <aside class="panel" aria-label="Controles de la planta">
+      <fieldset>
+        <legend>Escenarios <small>un clic</small></legend>
+        <div class="presets">
+          <button type="button" data-preset="mix">Mezcla urbana</button>
+          <button type="button" data-preset="diesel">Máximo diésel</button>
+          <button type="button" data-preset="gasolina">Máxima gasolina</button>
+          <button type="button" data-preset="sinreflujo">Sin reflujo</button>
+          <button type="button" data-preset="ps">Solo PS</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Carga <small>al reiniciar</small></legend>
+        <div class="mixbar" id="mixbar" aria-hidden="true"></div>
+        <label class="ctl" for="m-HDPE"><span class="row">PEAD / HDPE (botellas, cubetas)<output id="o-HDPE"></output></span><input type="range" id="m-HDPE" min="0" max="100" step="5" value="40"></label>
+        <label class="ctl" for="m-LDPE"><span class="row">PEBD / LDPE (bolsas, film)<output id="o-LDPE"></output></span><input type="range" id="m-LDPE" min="0" max="100" step="5" value="20"></label>
+        <label class="ctl" for="m-PP"><span class="row">PP (tapas, envases)<output id="o-PP"></output></span><input type="range" id="m-PP" min="0" max="100" step="5" value="30"></label>
+        <label class="ctl" for="m-PS"><span class="row">PS (unicel, vasos)<output id="o-PS"></output></span><input type="range" id="m-PS" min="0" max="100" step="5" value="10"></label>
+        <label class="ctl" for="mass"><span class="row">Carga de plástico<output id="o-mass"></output></span><input type="range" id="mass" min="10" max="150" step="5" value="50"></label>
+        <label class="ctl" for="Vr"><span class="row">Volumen del reactor<output id="o-Vr"></output></span><input type="range" id="Vr" min="0.15" max="1" step="0.05" value="0.3"><span class="hint" id="h-fill"></span></label>
+        <p class="locked" id="locked" hidden>La carga cambió: pulsa «Reiniciar carga» para aplicarla.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Operación <small>en vivo</small></legend>
+        <label class="ctl" for="Tsp"><span class="row">Temperatura objetivo<output id="o-Tsp"></output></span><input type="range" id="Tsp" min="350" max="600" step="5" value="460"><span class="hint">Más calor = más rápido y más gas.</span></label>
+        <label class="ctl" for="Pmax"><span class="row">Potencia del calentador<output id="o-Pmax"></output></span><input type="range" id="Pmax" min="10" max="120" step="5" value="40"></label>
+        <label class="ctl" for="Pset"><span class="row">Contrapresión PCV-101<output id="o-Pset"></output></span><input type="range" id="Pset" min="1.05" max="5" step="0.05" value="1.2"><span class="hint">Más presión retiene los vapores pesados y los rompe más.</span></label>
+        <label class="ctl" for="n2"><span class="row">Purga de N₂<output id="o-n2"></output></span><input type="range" id="n2" min="0" max="0.05" step="0.0025" value="0.005"></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Separación <small>en vivo</small></legend>
+        <label class="chk" for="reflux"><input type="checkbox" id="reflux" checked> Deflegmador (reflujo de pesados)</label>
+        <label class="ctl" for="Tref"><span class="row">Temperatura del deflegmador<output id="o-Tref"></output></span><input type="range" id="Tref" min="150" max="450" step="5" value="330"><span class="hint">Lo que condensa aquí regresa al reactor a seguir craqueando.</span></label>
+        <label class="ctl" for="Tc"><span class="row">Agua del condensador<output id="o-Tc"></output></span><input type="range" id="Tc" min="5" max="60" step="1" value="25"></label>
+        <label class="chk" for="recirc"><input type="checkbox" id="recirc" checked> Quemar el gas no condensable en el quemador del reactor</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Catalizador <small>en vivo</small></legend>
+        <label class="ctl" for="cat"><span class="row">Tipo</span>
+          <select class="full" id="cat">
+            <option value="none">Sin catalizador (térmico)</option>
+            <option value="FCC">FCC de equilibrio (de refinería)</option>
+            <option value="HY">Zeolita HY</option>
+            <option value="ZSM5">ZSM-5</option>
+          </select>
+        </label>
+        <label class="ctl" for="catLoad"><span class="row">Relación catalizador / plástico<output id="o-catLoad"></output></span><input type="range" id="catLoad" min="0" max="0.2" step="0.01" value="0"></label>
+      </fieldset>
+    </aside>
+  </div>
+
+  <div class="charts">
+    <div class="chart">
+      <h3>Temperatura y presión</h3>
+      <p class="sub">La meseta de temperatura es la reacción absorbiendo calor.</p>
+      <canvas id="ch-tp" aria-label="Gráfica de temperatura y presión contra tiempo"></canvas>
+    </div>
+    <div class="chart">
+      <h3>Producto acumulado</h3>
+      <p class="sub">kg recogidos en cada tanque y gas enviado a quemador o antorcha.</p>
+      <canvas id="ch-prod" aria-label="Gráfica de masa acumulada de cada producto contra tiempo"></canvas>
+    </div>
+    <div class="chart">
+      <h3>Rendimiento y energía</h3>
+      <p class="sub" id="energy-sub">% en masa de la carga.</p>
+      <canvas id="ch-yield" aria-label="Barras de rendimiento por producto"></canvas>
+    </div>
+  </div>
+
+  <section class="doc" id="corridas">
+    <div class="eyebrow">Bitácora</div>
+    <h2>Corridas terminadas</h2>
+    <p class="muted">Cada corrida que llega al final se anota aquí para que compares condiciones. Prueba el mismo plástico con y sin deflegmador, o sube la contrapresión.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Carga</th><th class="num">T °C</th><th class="num">P bar</th><th>Reflujo</th><th>Catalizador</th><th class="num">Gasolina</th><th class="num">Diésel</th><th class="num">Ceras</th><th class="num">Gas</th><th class="num">Coque</th><th class="num">Duración</th><th class="num">kWh/kg</th></tr></thead>
+        <tbody id="runs"><tr><td colspan="13" class="muted">Todavía no termina ninguna corrida. Pulsa «Arrancar»; a ×900 una carga tarda menos de un minuto.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="doc" id="ecuaciones">
+    <div class="eyebrow">Memoria de cálculo</div>
+    <h2>Las ecuaciones del modelo</h2>
+    <p>El simulador usa un modelo de <em>lumps</em> (pseudocomponentes): el plástico se rompe en cuatro familias según su número de carbonos, y cada familia tiene su propia cinética, volatilidad y calor de vaporización. Se integran 14 ecuaciones diferenciales con paso de 0.2 s. El balance de masa cierra al 10⁻¹² en cada corrida.</p>
+
+    <div class="eqgrid">
+      <div class="eq">
+        <span class="what">1 · Velocidad de reacción (Arrhenius)</span>
+        <math display="block"><mi>k</mi><mo>(</mo><mi>T</mi><mo>)</mo><mo>=</mo><mi>A</mi><mspace width="0.2em"/><mi>exp</mi><mo>(</mo><mo>−</mo><mfrac><msub><mi>E</mi><mi>a</mi></msub><mrow><mi>R</mi><mi>T</mi></mrow></mfrac><mo>)</mo></math>
+        <p>Cada 10 °C extra casi duplica la velocidad. Por eso pasar de 420 a 480 °C cambia horas por minutos.</p>
+      </div>
+      <div class="eq">
+        <span class="what">2 · Craqueo primario del polímero</span>
+        <math display="block"><mfrac><mrow><mi>d</mi><msub><mi>m</mi><mrow><mi>P</mi><mo>,</mo><mi>j</mi></mrow></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mo>−</mo><msub><mi>k</mi><mi>j</mi></msub><mo>(</mo><mi>T</mi><mo>)</mo><mspace width="0.15em"/><mo>(</mo><mn>1</mn><mo>+</mo><mi>β</mi><mfrac><mi>φ</mi><mn>0.1</mn></mfrac><mo>)</mo><mspace width="0.15em"/><msub><mi>m</mi><mrow><mi>P</mi><mo>,</mo><mi>j</mi></mrow></msub></math>
+        <p>Primer orden por polímero <i>j</i>. Los productos se reparten con selectividades <i>s<sub>ij</sub></i>; el catalizador (relación φ, actividad β) acelera y desvía parte de las ceras hacia fracciones ligeras.</p>
+      </div>
+      <div class="eq">
+        <span class="what">3 · Balance de cada lump en el líquido</span>
+        <math display="block"><mfrac><mrow><mi>d</mi><msub><mi>L</mi><mi>i</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>s</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><msub><mi>r</mi><mi>j</mi></msub><mo>+</mo><msub><mi>r</mi><mrow><mi>i</mi><mo>,</mo><mtext>entra</mtext></mrow></msub><mo>−</mo><msub><mi>k</mi><mi>i</mi></msub><msub><mi>L</mi><mi>i</mi></msub><mo>−</mo><msub><mi>E</mi><mi>i</mi></msub><mo>+</mo><msub><mi>F</mi><mrow><mi>i</mi><mo>,</mo><mtext>reflujo</mtext></mrow></msub></math>
+        <p>Craqueo en serie ceras → diésel → gasolina → gas, en líquido y (a la mitad de velocidad) en vapor. Ceras y diésel también forman coque.</p>
+      </div>
+      <div class="eq">
+        <span class="what">4 · Evaporación del líquido</span>
+        <math display="block"><msub><mi>E</mi><mi>i</mi></msub><mo>=</mo><msub><mi>k</mi><mtext>ev</mtext></msub><mspace width="0.15em"/><msub><mi>L</mi><mi>i</mi></msub><mspace width="0.15em"/><mi>min</mi><mo>(</mo><mn>1</mn><mo>,</mo><mfrac><mrow><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup><mo>(</mo><mi>T</mi><mo>)</mo></mrow><mi>P</mi></mfrac><mo>)</mo></math>
+        <p>Si la presión del reactor supera la presión de vapor de un lump, ese lump se queda en el líquido más tiempo y se craquea más. Así actúa la contrapresión sobre el producto.</p>
+      </div>
+      <div class="eq">
+        <span class="what">5 · Presión de vapor (Clausius–Clapeyron + Trouton)</span>
+        <math display="block"><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup><mo>=</mo><msup><mi>P</mi><mo>°</mo></msup><mi>exp</mi><mrow><mo>[</mo><mfrac><mrow><mi>Δ</mi><msub><mi>S</mi><mi>v</mi></msub></mrow><mi>R</mi></mfrac><mo>(</mo><mn>1</mn><mo>−</mo><mfrac><msub><mi>T</mi><mrow><mi>b</mi><mo>,</mo><mi>i</mi></mrow></msub><mi>T</mi></mfrac><mo>)</mo><mo>]</mo></mrow><mo>,</mo><mspace width="0.6em"/><mi>Δ</mi><msub><mi>S</mi><mi>v</mi></msub><mo>≈</mo><mn>88</mn><mtext> J/mol·K</mtext></math>
+        <p>Puntos de ebullición representativos: gasolina 400 K (≈ octano), diésel 560 K (≈ cetano), ceras 780 K (≈ C35).</p>
+      </div>
+      <div class="eq">
+        <span class="what">6 · Presión del reactor (gas ideal)</span>
+        <math display="block"><mi>P</mi><mo>=</mo><mfrac><mrow><mo>(</mo><msub><mi>n</mi><msub><mtext>N</mtext><mn>2</mn></msub></msub><mo>+</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>m</mi><mrow><mi>V</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>/</mo><msub><mi>M</mi><mi>i</mi></msub><mo>)</mo><mspace width="0.15em"/><mi>R</mi><mi>T</mi></mrow><msub><mi>V</mi><mi>h</mi></msub></mfrac><mo>,</mo><mspace width="0.6em"/><msub><mi>V</mi><mi>h</mi></msub><mo>=</mo><msub><mi>V</mi><mi>r</mi></msub><mo>−</mo><mfrac><msub><mi>m</mi><mtext>líq</mtext></msub><mi>ρ</mi></mfrac></math>
+        <p>Romper una cadena de 450 g/mol en 15 moléculas de gas multiplica los moles: ese es el origen físico de la presión. Masas molares: ceras 450, diésel 230, gasolina 100, gas 30 g/mol.</p>
+      </div>
+      <div class="eq">
+        <span class="what">7 · Válvula de contrapresión y de alivio</span>
+        <math display="block"><msub><mover><mi>n</mi><mo>˙</mo></mover><mtext>sal</mtext></msub><mo>=</mo><msub><mi>K</mi><mi>v</mi></msub><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>P</mi><mo>−</mo><msub><mi>P</mi><mtext>set</mtext></msub><mo>)</mo><mo>+</mo><msub><mi>K</mi><mi>r</mi></msub><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>P</mi><mo>−</mo><msub><mi>P</mi><mtext>PSV</mtext></msub><mo>)</mo></math>
+        <p>Resuelta de forma implícita para que sea estable aunque el espacio de cabeza sea chico. La PSV dispara a 6 bar abs.</p>
+      </div>
+      <div class="eq">
+        <span class="what">8 · Tiempo de residencia del vapor</span>
+        <math display="block"><mi>τ</mi><mo>=</mo><mfrac><mrow><mi>P</mi><msub><mi>V</mi><mi>h</mi></msub></mrow><mrow><msub><mover><mi>n</mi><mo>˙</mo></mover><mtext>sal</mtext></msub><mi>R</mi><mi>T</mi></mrow></mfrac></math>
+        <p>Más presión o menos purga de N₂ alargan τ: el vapor pasa más tiempo caliente y se rompe más (más gasolina y gas, menos ceras).</p>
+      </div>
+      <div class="eq">
+        <span class="what">9 · Deflegmador (reflujo)</span>
+        <math display="block"><msub><mi>F</mi><mrow><mi>i</mi><mo>,</mo><mtext>reflujo</mtext></mrow></msub><mo>=</mo><mi>η</mi><mspace width="0.15em"/><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>−</mo><mfrac><mrow><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mi>d</mi></msub><mo>)</mo></mrow><mi>P</mi></mfrac><mo>)</mo><mspace width="0.15em"/><msub><mover><mi>m</mi><mo>˙</mo></mover><mrow><mi>i</mi><mo>,</mo><mtext>sal</mtext></mrow></msub><mo>,</mo><mspace width="0.5em"/><mi>η</mi><mo>=</mo><mn>0.9</mn></math>
+        <p>A 330 °C regresa casi toda la cera y deja pasar el diésel: esa es la palanca principal para hacer diésel en vez de parafina.</p>
+      </div>
+      <div class="eq">
+        <span class="what">10 · Pérdida de gasolina en el condensador</span>
+        <math display="block"><msub><mover><mi>m</mi><mo>˙</mo></mover><mrow><mi>G</mi><mo>,</mo><mtext>pérdida</mtext></mrow></msub><mo>=</mo><msub><mover><mi>n</mi><mo>˙</mo></mover><mtext>nc</mtext></msub><mfrac><mrow><msubsup><mi>P</mi><mi>G</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mi>c</mi></msub><mo>)</mo></mrow><mrow><mi>P</mi><mo>−</mo><msubsup><mi>P</mi><mi>G</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mi>c</mi></msub><mo>)</mo></mrow></mfrac><msub><mi>M</mi><mi>G</mi></msub></math>
+        <p>El gas no condensable y el N₂ salen saturados de gasolina. Agua más fría y más presión recuperan más.</p>
+      </div>
+      <div class="eq">
+        <span class="what">11 · Balance de energía del reactor</span>
+        <math display="block"><mi>C</mi><mo>(</mo><mi>T</mi><mo>)</mo><mfrac><mrow><mi>d</mi><mi>T</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msub><mover><mi>Q</mi><mo>˙</mo></mover><mtext>cal</mtext></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><mi>Δ</mi><msub><mi>H</mi><mi>j</mi></msub><msub><mi>r</mi><mi>j</mi></msub><mo>−</mo><munder><mo>∑</mo><mi>i</mi></munder><mi>Δ</mi><msub><mi>H</mi><mrow><mi>v</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>E</mi><mi>i</mi></msub><mo>−</mo><mi>Δ</mi><msub><mi>H</mi><mtext>sec</mtext></msub><msub><mi>r</mi><mtext>sec</mtext></msub><mo>−</mo><mi>U</mi><mi>A</mi><mo>(</mo><mi>T</mi><mo>−</mo><msub><mi>T</mi><mtext>amb</mtext></msub><mo>)</mo></math>
+        <p>La pirólisis es endotérmica. Craqueo más vaporización suman ≈ 1.25 MJ/kg en PEAD, cerca de los 1 375 ± 233 kJ/kg medidos por DSC.</p>
+      </div>
+      <div class="eq">
+        <span class="what">12 · Fusión como calor específico aparente</span>
+        <math display="block"><mi>C</mi><mo>=</mo><msub><mi>m</mi><mtext>acero</mtext></msub><msub><mi>c</mi><mi>p</mi></msub><mo>+</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>m</mi><mrow><mi>P</mi><mo>,</mo><mi>j</mi></mrow></msub><mrow><mo>[</mo><msub><mi>c</mi><mi>p</mi></msub><mo>+</mo><mi>Δ</mi><msub><mi>H</mi><mi>m</mi></msub><mspace width="0.15em"/><mi>𝒩</mi><mo>(</mo><mi>T</mi><mo>;</mo><msub><mi>T</mi><mi>m</mi></msub><mo>,</mo><mn>6</mn><mtext> K</mtext><mo>)</mo><mo>]</mo></mrow><mo>+</mo><mo>…</mo></math>
+        <p>El calor latente de fusión se reparte como una campana alrededor del punto de fusión; por eso la curva de temperatura hace un escalón entre 110 y 165 °C.</p>
+      </div>
+    </div>
+
+    <h3>Parámetros</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Parámetro</th><th class="num">PEAD</th><th class="num">PEBD</th><th class="num">PP</th><th class="num">PS</th><th>Origen</th></tr></thead>
+        <tbody>
+          <tr><td>A, factor preexponencial (s⁻¹)</td><td class="num">1.0×10¹⁶</td><td class="num">2.2×10¹⁴</td><td class="num">1.9×10¹³</td><td class="num">3.0×10¹²</td><td><span class="tag lit">PEAD, PP: Bockhorn 1999</span></td></tr>
+          <tr><td>Eₐ, energía de activación (kJ/mol)</td><td class="num">268</td><td class="num">240</td><td class="num">220</td><td class="num">200</td><td><span class="tag lit">PEAD, PP: Bockhorn 1999</span> <span class="tag cal">PEBD, PS: rango de literatura</span></td></tr>
+          <tr><td>Selectividad primaria ceras / diésel / gasolina / gas / coque (%)</td><td class="num">55/22/13/8/2</td><td class="num">45/27/16/10/2</td><td class="num">30/32/25/11/2</td><td class="num">10/15/65/3/7</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
+          <tr><td>Calor de craqueo sin vaporizar (MJ/kg)</td><td class="num">1.05</td><td class="num">0.95</td><td class="num">0.85</td><td class="num">0.65</td><td><span class="tag lit">DSC PEAD; PS = ΔH despolimerización</span></td></tr>
+          <tr><td>Fusión: T<sub>m</sub> (°C) / ΔH<sub>m</sub> (kJ/kg)</td><td class="num">130 / 190</td><td class="num">110 / 120</td><td class="num">165 / 90</td><td class="num">amorfo</td><td><span class="tag lit">Propiedades típicas</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Craqueo secundario</th><th class="num">A (s⁻¹)</th><th class="num">Eₐ (kJ/mol)</th><th>Productos (masa)</th><th>Origen</th></tr></thead>
+        <tbody>
+          <tr><td>Ceras → ligeros</td><td class="num">2×10¹¹</td><td class="num">180</td><td>75% diésel, 20% gasolina, 5% gas</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
+          <tr><td>Diésel → ligeros</td><td class="num">1×10¹²</td><td class="num">200</td><td>80% gasolina, 20% gas</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
+          <tr><td>Gasolina → gas</td><td class="num">1.2×10¹²</td><td class="num">210</td><td>100% gas</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
+          <tr><td>Ceras, diésel → coque</td><td class="num">1×10⁸</td><td class="num">170</td><td>coque</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Los valores marcados «calibrado a tendencias» no salen de un artículo: están ajustados para que el simulador reproduzca lo que reporta la literatura (líquido de 70–85 %, más ceras sin reflujo, más gasolina y gas con ZSM‑5, alta temperatura o presión). Sirve para entender y comparar condiciones. Para diseñar un equipo real hay que medir la cinética de tu propio plástico con TGA y validar en una planta de banco.</p>
+  </section>
+
+  <section class="doc" id="componentes">
+    <div class="eyebrow">Lista de equipo</div>
+    <h2>Qué necesitas para armar la planta</h2>
+    <p>En el orden en que pasa el material. Las especificaciones son las típicas de una planta piloto de 50–150 kg por lote como la del simulador.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Equipo</th><th>Para qué sirve</th><th>Especificación típica</th></tr></thead>
+        <tbody>
+          <tr><td colspan="3" class="stage">1 · Preparación de la materia prima</td></tr>
+          <tr><td>Trituradora / molino de cuchillas</td><td>Hojuela de tamaño uniforme para que funda parejo</td><td>Criba de 10–20 mm</td></tr>
+          <tr><td>Lavado y secador</td><td>Quitar tierra, papel y agua; el agua genera vapor y presión</td><td>Humedad final &lt; 1 %</td></tr>
+          <tr><td>Separación de PVC y PET</td><td>El PVC libera HCl que corroe el equipo y contamina el aceite; el PET da ácidos y ceras</td><td>Flotación (PVC y PET se hunden en agua) o NIR; PVC &lt; 0.1 %</td></tr>
+          <tr><td colspan="3" class="stage">2 · Reactor</td></tr>
+          <tr><td>Recipiente del reactor</td><td>Contener el plástico fundido a 400–550 °C</td><td>Acero inoxidable 310S o 316L, diseñado a presión (ASME VIII o equivalente) con margen sobre la PSV</td></tr>
+          <tr><td>Calentamiento</td><td>Dar el calor sensible, de fusión y de reacción</td><td>Resistencias de banda o quemador a gas con chaqueta; ≈ 0.7 kWh/kg en teoría, 1.2–2 kWh/kg con pérdidas</td></tr>
+          <tr><td>Agitador de ancla</td><td>Evitar puntos calientes y coque pegado en la pared; el fundido es muy viscoso</td><td>10–40 rpm, sello mecánico para alta temperatura</td></tr>
+          <tr><td>Alimentación con esclusa</td><td>Cargar sin meter aire</td><td>Tolva con doble válvula o tornillo con sello</td></tr>
+          <tr><td>Purga de nitrógeno</td><td>Sacar el oxígeno antes de calentar y barrer vapores</td><td>Cilindro o generador de N₂, rotámetro 0–60 NL/min, analizador de O₂ &lt; 2 %</td></tr>
+          <tr><td>Descarga de coque</td><td>Sacar el residuo sólido entre lotes</td><td>Puerta inferior o tornillo enfriado</td></tr>
+          <tr><td colspan="3" class="stage">3 · Separación de productos</td></tr>
+          <tr><td>Deflegmador (columna de reflujo)</td><td>Condensar y regresar las ceras al reactor para craquearlas a diésel</td><td>Columna empacada o enfriada por aire, control de 250–380 °C</td></tr>
+          <tr><td>Condensador de carcasa y tubos</td><td>Pasar el vapor a líquido</td><td>Agua de enfriamiento 15–30 °C; tubos de inoxidable; trampa de ceras antes para que no se tape</td></tr>
+          <tr><td>Torre de enfriamiento o chiller</td><td>Mantener fría el agua del condensador</td><td>≈ 0.3 kW de enfriamiento por cada kg/h de aceite</td></tr>
+          <tr><td>Separador gas–líquido</td><td>Separar el aceite del gas no condensable</td><td>Tanque vertical con eliminador de niebla</td></tr>
+          <tr><td>Destilación fraccionada</td><td>Cortar el aceite en gasolina (&lt; 180 °C) y diésel (180–360 °C)</td><td>Columna con rehervidor, o destilador por lotes con corte por temperatura</td></tr>
+          <tr><td>Tanques de producto</td><td>Guardar gasolina, diésel y ceras</td><td>Acero al carbono con venteo y arrestaflamas, conectados a tierra</td></tr>
+          <tr><td colspan="3" class="stage">4 · Gas y seguridad</td></tr>
+          <tr><td>Válvula de contrapresión (PCV)</td><td>Fijar la presión del reactor</td><td>Regulador de 1–5 bar abs</td></tr>
+          <tr><td>Válvula de alivio (PSV) y disco de ruptura</td><td>Proteger el recipiente contra sobrepresión</td><td>Disparo por debajo de la presión de diseño, descarga a la antorcha</td></tr>
+          <tr><td>Lavador de gases</td><td>Neutralizar HCl y H₂S</td><td>Columna con NaOH diluido</td></tr>
+          <tr><td>Sello hidráulico y arrestaflamas</td><td>Que la flama de la antorcha no regrese al proceso</td><td>Columna de agua de 10–30 cm</td></tr>
+          <tr><td>Antorcha / quemador del reactor</td><td>Quemar el gas C1–C4; recirculado al quemador cubre buena parte del calor (≈ 40–50 % en el simulador)</td><td>Piloto continuo, detector de flama</td></tr>
+          <tr><td>Detección de gases</td><td>Alarma por fugas</td><td>Sensores de LEL (explosividad) y CO en el cuarto</td></tr>
+          <tr><td colspan="3" class="stage">5 · Instrumentación y control</td></tr>
+          <tr><td>Termopares tipo K</td><td>Temperatura del fundido, pared, vapor y deflegmador</td><td>Con termopozo, 0–800 °C</td></tr>
+          <tr><td>Transmisor de presión</td><td>Medir y registrar la presión del reactor</td><td>0–10 bar, 4–20 mA</td></tr>
+          <tr><td>PLC o controlador PID</td><td>Control de temperatura y paros de emergencia</td><td>Paro automático por alta presión, alta temperatura o falla de agua</td></tr>
+          <tr><td colspan="3" class="stage">6 · Para venderlo como combustible</td></tr>
+          <tr><td>Hidrotratamiento o estabilización</td><td>El aceite de pirólisis tiene olefinas que forman gomas y puede traer azufre y cloro</td><td>Hidrotratamiento catalítico, o mezcla en baja proporción con combustible fósil</td></tr>
+          <tr><td>Laboratorio de calidad</td><td>Comprobar número de cetano u octano, destilación, azufre y punto de inflamación</td><td>En México la norma es la NOM-016-CRE-2016</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Este simulador sirve para aprender y comparar condiciones de operación, no para dimensionar equipo. Un reactor real trabaja con vapores inflamables por encima de su temperatura de autoignición, así que el recipiente a presión, la PSV y la instalación eléctrica deben diseñarse y certificarse por un ingeniero, y probarse primero en frío con nitrógeno.</p>
+  </section>
+
+  <section class="doc" id="fuentes">
+    <div class="eyebrow">Referencias</div>
+    <h2>Fuentes</h2>
+    <ul class="sources">
+      <li>Cinética primaria PEAD y PP (Bockhorn et al., 1999), citada en el modelo de lumps de TU Wien: <a href="https://repositum.tuwien.at/bitstream/20.500.12708/16670/1/MoP3_09.pdf" target="_blank" rel="noopener">repositum.tuwien.at</a></li>
+      <li>Calor de reacción del PEAD por DSC, 1 375 ± 233 kJ/kg (Khedri, 2017): <a href="https://thesis.lakeheadu.ca/jspui/bitstream/2453/4247/1/KhedriS2017d-1a.pdf" target="_blank" rel="noopener">thesis.lakeheadu.ca</a></li>
+      <li>Modelo de nueve lumps para PP, PEBD y PEAD a 440–530 °C y 15 bar (Lorbach et al., 2024): <a href="https://pubs.rsc.org/en/content/articlehtml/2024/re/d4re00075g" target="_blank" rel="noopener">pubs.rsc.org</a></li>
+      <li>Procesos endotérmicos que se traslapan en la pirólisis de PEAD y PEBD (KIT): <a href="https://publikationen.bibliothek.kit.edu/1000172682/154025186" target="_blank" rel="noopener">publikationen.bibliothek.kit.edu</a></li>
+    </ul>
+  </section>
+</div>
+<script>
+// MODEL-START
+// Modelo de lumps para pirólisis semi-batch de plásticos. Unidades SI (kg, K, Pa, mol, J, s).
+const R = 8.314, PATM = 101325;
+const RHO = 750;            // densidad del fundido, kg/m3
+const CP_POLY = 2400, CP_LIQ = 2500, CP_CHAR = 1000, CP_STEEL = 500; // J/kg·K
+const K_EV = 0.15;          // constante de evaporación, 1/s
+const KV = 2e-5;            // válvula de contrapresión, mol/(s·Pa)
+const KR = 1e-3;            // válvula de alivio (PSV), mol/(s·Pa)
+const P_RELIEF = 6e5;       // disparo PSV, Pa abs
+const ETA_R = 0.9;          // eficiencia del deflegmador
+const DH_SEC = 0.3e6;       // calor de craqueo secundario, J/kg
+const LHV_GAS = 46e6, ETA_B = 0.75; // gas C1–C4 y eficiencia del quemador
+const KP = 2500, KI = 8;    // control PI del calentador
+
+const POLY = {
+  HDPE: { name: 'PEAD', A: 1.0e16, Ea: 268e3, s: { W: .55, D: .22, G: .13, Gs: .08, C: .02 }, Tm: 403, dHm: 190e3, dHr: 1.05e6 },
+  LDPE: { name: 'PEBD', A: 2.2e14, Ea: 240e3, s: { W: .45, D: .27, G: .16, Gs: .10, C: .02 }, Tm: 383, dHm: 120e3, dHr: 0.95e6 },
+  PP:   { name: 'PP',   A: 1.9e13, Ea: 220e3, s: { W: .30, D: .32, G: .25, Gs: .11, C: .02 }, Tm: 438, dHm: 90e3,  dHr: 0.85e6 },
+  PS:   { name: 'PS',   A: 3.0e12, Ea: 200e3, s: { W: .10, D: .15, G: .65, Gs: .03, C: .07 }, Tm: 0,   dHm: 0,     dHr: 0.65e6 },
+};
+// Lumps: W ceras C23+, D diésel C13–C22, G gasolina C5–C12, Gs gas C1–C4
+const LUMP = {
+  W:  { M: 0.45, Tb: 780 },
+  D:  { M: 0.23, Tb: 560 },
+  G:  { M: 0.10, Tb: 400 },
+  Gs: { M: 0.03 },
+};
+for (const k of ['W', 'D', 'G']) LUMP[k].dHv = 88 * LUMP[k].Tb / LUMP[k].M; // Trouton, J/kg
+const SEC = {
+  W: { A: 2e11,   Ea: 180e3, to: { D: .75, G: .20, Gs: .05 } },
+  D: { A: 1e12,   Ea: 200e3, to: { G: .80, Gs: .20 } },
+  G: { A: 1.2e12, Ea: 210e3, to: { Gs: 1 } },
+};
+const COKE = { A: 1e8, Ea: 170e3 };
+const CAT = {
+  none: { name: 'Sin catalizador', beta: 0, smax: 0,   to: null },
+  FCC:  { name: 'FCC de equilibrio', beta: 2, smax: .60, to: { D: .45, G: .45, Gs: .07, C: .03 } },
+  HY:   { name: 'Zeolita HY',      beta: 3, smax: .75, to: { D: .30, G: .55, Gs: .10, C: .05 } },
+  ZSM5: { name: 'ZSM-5',           beta: 4, smax: .85, to: { G: .70, Gs: .25, C: .05 } },
+};
+
+function psat(Tb, T) { return PATM * Math.exp(Math.min(40, (88 / R) * (1 - Tb / T))); }
+function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
+
+function makeState(c) {
+  const mP = {};
+  let tot = 0;
+  for (const k in c.mix) tot += c.mix[k];
+  for (const k in c.mix) mP[k] = tot > 0 ? c.mass * c.mix[k] / tot : 0;
+  const s = {
+    t: 0, T: c.Tamb, P: PATM, I: 0, Q: 0, relief: false, done: false, tau: 0,
+    mP, mass0: c.mass, L: { W: 0, D: 0, G: 0 }, V: { W: 0, D: 0, G: 0, Gs: 0 },
+    nN2: 0, char: 0, tank: { G: 0, D: 0, W: 0 }, gasFlare: 0, gasBurn: 0, gasLossG: 0,
+    Eext: 0, Egas: 0, cum: { prim: 0, evap: 0, refl: 0, out: { W: 0, D: 0, G: 0, Gs: 0 } }, tDone: 0,
+  };
+  const Vh = Math.max(0.01, c.Vr - c.mass / RHO);
+  s.nN2 = PATM * Vh / (R * c.Tamb); // espacio de cabeza purgado con N2 a 1 atm
+  return s;
+}
+
+function step(s, c, dt) {
+  const T = s.T, RT = R * T;
+  let mPtot = 0;
+  for (const j in s.mP) mPtot += s.mP[j];
+  const Ltot = s.L.W + s.L.D + s.L.G;
+  const Vh = Math.max(0.01, c.Vr - (mPtot + Ltot + s.char) / RHO);
+  const cat = CAT[c.cat], phi = c.catLoad;
+  const mult = 1 + cat.beta * phi / 0.1;
+  const sig = cat.smax * phi / (phi + 0.05);
+
+  // 1. Craqueo primario del polímero (Arrhenius de primer orden)
+  let Qr = 0;
+  for (const j in s.mP) {
+    const p = POLY[j], m = s.mP[j];
+    if (m <= 0) continue;
+    const r = Math.min(p.A * Math.exp(-p.Ea / RT) * mult * m, m / dt);
+    s.mP[j] = m - r * dt;
+    const x = r * dt, sh = sig * p.s.W;
+    s.L.W += x * (p.s.W - sh); s.L.D += x * p.s.D; s.L.G += x * p.s.G;
+    s.V.Gs += x * p.s.Gs; s.char += x * p.s.C;
+    if (cat.to) {
+      const y = x * sh;
+      s.L.D += y * (cat.to.D || 0); s.L.G += y * (cat.to.G || 0);
+      s.V.Gs += y * (cat.to.Gs || 0); s.char += y * (cat.to.C || 0);
+    }
+    Qr += r * p.dHr;
+    s.cum.prim += x;
+  }
+
+  // 2. Craqueo secundario en líquido y vapor
+  let Qs = 0;
+  for (const i of ['W', 'D', 'G']) {
+    const q = SEC[i], k = q.A * Math.exp(-q.Ea / RT) * mult;
+    const rl = Math.min(k * s.L[i], s.L[i] / dt), rv = Math.min(0.5 * k * s.V[i], s.V[i] / dt);
+    s.L[i] -= rl * dt; s.V[i] -= rv * dt;
+    for (const o in q.to) {
+      const f = q.to[o];
+      if (o === 'Gs') s.V.Gs += (rl + rv) * f * dt;
+      else { s.L[o] += rl * f * dt; s.V[o] += rv * f * dt; }
+    }
+    Qs += (rl + rv) * DH_SEC;
+  }
+  const kc = COKE.A * Math.exp(-COKE.Ea / RT);
+  for (const i of ['W', 'D']) {
+    const r = Math.min(kc * s.L[i], s.L[i] / dt);
+    s.L[i] -= r * dt; s.char += r * dt;
+  }
+
+  // 3. Evaporación del líquido, impulsada por Psat/P
+  let Qv = 0;
+  for (const i of ['W', 'D', 'G']) {
+    const f = Math.min(1, psat(LUMP[i].Tb, T) / s.P);
+    const e = Math.min(K_EV * f * s.L[i], s.L[i] / dt);
+    s.L[i] -= e * dt; s.V[i] += e * dt;
+    Qv += e * LUMP[i].dHv;
+    s.cum.evap += e * dt;
+  }
+
+  // 4. Purga de N2
+  s.nN2 += c.n2 * dt;
+
+  // 5. Presión (gas ideal) y salida por válvula de contrapresión, implícito
+  const N0 = s.nN2 + s.V.W / LUMP.W.M + s.V.D / LUMP.D.M + s.V.G / LUMP.G.M + s.V.Gs / LUMP.Gs.M;
+  const cc = RT / Vh;
+  let N1 = N0;
+  if (cc * N0 > c.Pset) {
+    N1 = (N0 + dt * KV * c.Pset) / (1 + dt * KV * cc);
+    if (cc * N1 > P_RELIEF) N1 = (N0 + dt * (KV * c.Pset + KR * P_RELIEF)) / (1 + dt * (KV + KR) * cc);
+  }
+  s.relief = cc * N1 > P_RELIEF * 0.98;
+  const frac = N0 > 0 ? (N0 - N1) / N0 : 0;
+  const out = {};
+  for (const i of ['W', 'D', 'G', 'Gs']) { out[i] = s.V[i] * frac; s.V[i] -= out[i]; }
+  const outN2 = s.nN2 * frac;
+  s.nN2 -= outN2;
+  s.P = cc * N1;
+  const nOut = (N0 - N1) / dt;
+  s.tau = nOut > 1e-6 ? N1 / nOut : Infinity;
+
+  // 6. Deflegmador: regresa al reactor lo que condensa a Td
+  if (c.reflux) {
+    const Td = Math.min(c.Tref, T);
+    for (const i of ['W', 'D', 'G']) {
+      const b = out[i] * ETA_R * Math.max(0, 1 - psat(LUMP[i].Tb, Td) / s.P);
+      out[i] -= b; s.L[i] += b; s.cum.refl += b;
+    }
+  }
+  for (const i of ['W', 'D', 'G', 'Gs']) s.cum.out[i] += out[i];
+
+  // 7. Condensador: el gas no condensable arrastra gasolina a saturación
+  const PsG = psat(LUMP.G.Tb, c.Tc);
+  let lossG = 0;
+  if (PsG < s.P) {
+    const nNC = outN2 + out.Gs / LUMP.Gs.M;
+    lossG = Math.min(out.G, nNC * PsG / (s.P - PsG) * LUMP.G.M);
+  }
+  s.tank.W += out.W; s.tank.D += out.D; s.tank.G += out.G - lossG;
+  s.gasLossG += lossG;
+  const gasM = out.Gs + lossG;
+
+  // 8. Calentador con control PI y gas recirculado al quemador
+  const e = c.Tsp - T;
+  if (Math.abs(e) < 25) s.I = clamp(s.I + KI * e * dt, 0, c.Pmax);
+  const Q = clamp(KP * e + s.I, 0, c.Pmax);
+  let Qgas = 0, burn = 0;
+  if (c.recirc && gasM > 0) {
+    Qgas = Math.min(Q, gasM / dt * LHV_GAS * ETA_B);
+    burn = Qgas * dt / (LHV_GAS * ETA_B);
+  }
+  s.gasBurn += burn; s.gasFlare += gasM - burn;
+  s.Eext += (Q - Qgas) * dt; s.Egas += Qgas * dt;
+  s.Q = Q; s.Qgas = Qgas;
+
+  // 9. Balance de energía del reactor
+  let C = c.mSteel * CP_STEEL + Ltot * CP_LIQ + s.char * CP_CHAR;
+  for (const j in s.mP) {
+    const p = POLY[j];
+    C += s.mP[j] * CP_POLY;
+    if (p.dHm > 0) { const sg = 6, z = (T - p.Tm) / sg; C += s.mP[j] * p.dHm * Math.exp(-0.5 * z * z) / (sg * 2.5066); }
+  }
+  s.Qloss = c.UA * (T - c.Tamb);
+  s.Qrxn = Qr + Qs + Qv;
+  s.T = T + (Q - Qr - Qs - Qv - s.Qloss) / C * dt;
+  s.t += dt;
+
+  const left = mPtot + Ltot;
+  if (!s.done && s.t > 600 && left < 0.003 * s.mass0) { s.done = true; s.tDone = s.t; }
+}
+
+function summary(s) {
+  let mP = 0;
+  for (const j in s.mP) mP += s.mP[j];
+  const L = s.L.W + s.L.D + s.L.G, V = s.V.W + s.V.D + s.V.G + s.V.Gs;
+  const gas = s.gasFlare + s.gasBurn;
+  const acc = s.tank.G + s.tank.D + s.tank.W + gas + s.char + mP + L + V;
+  return {
+    G: s.tank.G, D: s.tank.D, W: s.tank.W, gas, char: s.char, inside: mP + L + V,
+    conv: 1 - mP / s.mass0, closure: acc / s.mass0 - 1,
+  };
+}
+
+</script>
+<script>
+// ---------- Interfaz ----------
+const $ = (id) => document.getElementById(id);
+const POLYS = ['HDPE', 'LDPE', 'PP', 'PS'];
+const K0 = 273.15;
+let cfg, st, running = false, hist = [], runs = [], lastHist = -1e9, pendingLoad = false;
+
+const PRESETS = {
+  mix:        { HDPE: 40, LDPE: 20, PP: 30, PS: 10, Tsp: 460, Pset: 1.2, reflux: true, Tref: 330, cat: 'none', catLoad: 0, n2: 0.005, Pmax: 40 },
+  diesel:     { HDPE: 60, LDPE: 20, PP: 20, PS: 0, Tsp: 445, Pset: 1.3, reflux: true, Tref: 350, cat: 'none', catLoad: 0, n2: 0.0025, Pmax: 40 },
+  gasolina:   { HDPE: 10, LDPE: 10, PP: 70, PS: 10, Tsp: 470, Pset: 2.5, reflux: true, Tref: 240, cat: 'ZSM5', catLoad: 0.1, n2: 0.005, Pmax: 60 },
+  sinreflujo: { HDPE: 40, LDPE: 20, PP: 30, PS: 10, Tsp: 460, Pset: 1.05, reflux: false, Tref: 330, cat: 'none', catLoad: 0, n2: 0.01, Pmax: 40 },
+  ps:         { HDPE: 0, LDPE: 0, PP: 0, PS: 100, Tsp: 420, Pset: 1.2, reflux: true, Tref: 300, cat: 'none', catLoad: 0, n2: 0.005, Pmax: 40 },
+};
+
+const fmt = {
+  pct: (v) => `${v.toFixed(0)}%`,
+  kg: (v) => `${v.toFixed(0)} kg`,
+  m3: (v) => `${(v * 1000).toFixed(0)} L`,
+  C: (v) => `${v.toFixed(0)} °C`,
+  kW: (v) => `${v.toFixed(0)} kW`,
+  bar: (v) => `${v.toFixed(2)} bar`,
+  n2: (v) => `${(v * 22.414 * 60).toFixed(1)} NL/min`,
+  cat: (v) => `${(v * 100).toFixed(0)} %`,
+};
+const OUT = { mass: fmt.kg, Vr: fmt.m3, Tsp: fmt.C, Pmax: fmt.kW, Pset: fmt.bar, n2: fmt.n2, Tref: fmt.C, Tc: fmt.C, catLoad: fmt.cat };
+
+function readCfg() {
+  const v = (id) => parseFloat($(id).value);
+  const mix = {};
+  POLYS.forEach((p) => { mix[p] = v('m-' + p); });
+  const Vr = v('Vr');
+  return {
+    mix, mass: v('mass'), Vr, mSteel: 400 * Vr + 30, UA: 20 + 30 * Vr, Tamb: 298,
+    Tsp: v('Tsp') + K0, Pmax: v('Pmax') * 1000, Pset: v('Pset') * 1e5, n2: v('n2'),
+    reflux: $('reflux').checked, Tref: v('Tref') + K0, Tc: v('Tc') + K0, recirc: $('recirc').checked,
+    cat: $('cat').value, catLoad: v('catLoad'),
+  };
+}
+
+function refreshOutputs() {
+  const tot = POLYS.reduce((a, p) => a + parseFloat($('m-' + p).value), 0) || 1;
+  const cols = { HDPE: 'var(--wax)', LDPE: 'var(--gas)', PP: 'var(--gasoline)', PS: 'var(--diesel)' };
+  $('mixbar').innerHTML = POLYS.map((p) => `<span style="width:${(100 * $('m-' + p).value / tot).toFixed(1)}%;background:${cols[p]}"></span>`).join('');
+  POLYS.forEach((p) => { $('o-' + p).textContent = fmt.pct(100 * $('m-' + p).value / tot); });
+  for (const k in OUT) $('o-' + k).value = OUT[k](parseFloat($(k).value));
+  const fill = parseFloat($('mass').value) / 750 / parseFloat($('Vr').value);
+  $('h-fill').textContent = `Llenado con plástico fundido: ${(fill * 100).toFixed(0)} %` + (fill > 0.7 ? ' · demasiado lleno, deja ≥ 30 % libre para el vapor' : '');
+  $('h-fill').style.color = fill > 0.7 ? 'var(--crit)' : '';
+  $('Tref').disabled = !$('reflux').checked;
+  $('catLoad').disabled = $('cat').value === 'none';
+}
+
+function reset() {
+  cfg = readCfg();
+  st = makeState(cfg);
+  hist = []; lastHist = -1e9; pendingLoad = false;
+  $('locked').hidden = true;
+  particles.length = 0;
+  pushHist();
+  setRunning(false);
+  render(0);
+}
+
+function setRunning(on) {
+  running = on;
+  $('btn-run').textContent = on ? '❚❚ Pausar' : (st && st.t > 0 ? '▶ Continuar' : '▶ Arrancar');
+}
+
+function applyPreset(name) {
+  const p = PRESETS[name];
+  POLYS.forEach((k) => { $('m-' + k).value = p[k]; });
+  ['Tsp', 'Pset', 'Tref', 'catLoad', 'n2', 'Pmax'].forEach((k) => { $(k).value = p[k]; });
+  $('reflux').checked = p.reflux; $('cat').value = p.cat;
+  if (p.cat !== 'none' && p.catLoad === 0) $('catLoad').value = 0.1;
+  refreshOutputs();
+  reset();
+}
+
+document.querySelectorAll('aside input, aside select').forEach((el) => {
+  el.addEventListener('input', () => {
+    refreshOutputs();
+    const live = readCfg();
+    if (['mass', 'Vr'].includes(el.id) || el.id.startsWith('m-')) {
+      pendingLoad = st.t > 0;
+      $('locked').hidden = !pendingLoad;
+      if (!pendingLoad) reset();
+      return;
+    }
+    if (el.id === 'cat' && el.value !== 'none' && parseFloat($('catLoad').value) === 0) { $('catLoad').value = 0.1; refreshOutputs(); }
+    const keep = { mix: cfg.mix, mass: cfg.mass, Vr: cfg.Vr, mSteel: cfg.mSteel, UA: cfg.UA };
+    cfg = Object.assign(readCfg(), keep);
+    if (live) render(0);
+  });
+});
+document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
+$('btn-run').addEventListener('click', () => {
+  if (st.done) reset();
+  setRunning(!running);
+});
+$('btn-reset').addEventListener('click', () => { reset(); });
+
+function pushHist() {
+  const sm = summary(st);
+  hist.push({ t: st.t, T: st.T - K0, P: st.P / 1e5, G: sm.G, D: sm.D, W: sm.W, gas: sm.gas, char: sm.char });
+  if (hist.length > 1500) hist = hist.filter((_, i) => i % 2 === 0);
+}
+
+function logRun() {
+  const sm = summary(st), m = st.mass0, pc = (x) => (100 * x / m).toFixed(1) + '%';
+  const tot = POLYS.reduce((a, p) => a + cfg.mix[p], 0) || 1;
+  const mix = POLYS.filter((p) => cfg.mix[p] > 0).map((p) => `${POLY[p].name} ${Math.round(100 * cfg.mix[p] / tot)}`).join(' · ');
+  runs.unshift({
+    n: runs.length + 1, mix: `${mix} (${m} kg)`, T: (cfg.Tsp - K0).toFixed(0), P: (cfg.Pset / 1e5).toFixed(2),
+    refl: cfg.reflux ? `${(cfg.Tref - K0).toFixed(0)} °C` : 'no',
+    cat: cfg.cat === 'none' ? '—' : `${CAT[cfg.cat].name} ${(cfg.catLoad * 100).toFixed(0)}%`,
+    G: pc(sm.G), D: pc(sm.D), W: pc(sm.W), gas: pc(sm.gas), ch: pc(sm.char),
+    dur: hm(st.tDone), kwh: (st.Eext / 3.6e6 / m).toFixed(2),
+  });
+  $('runs').innerHTML = runs.map((r) => `<tr><td class="num">${r.n}</td><td>${r.mix}</td><td class="num">${r.T}</td><td class="num">${r.P}</td><td>${r.refl}</td><td>${r.cat}</td><td class="num">${r.G}</td><td class="num">${r.D}</td><td class="num">${r.W}</td><td class="num">${r.gas}</td><td class="num">${r.ch}</td><td class="num">${r.dur}</td><td class="num">${r.kwh}</td></tr>`).join('');
+}
+
+function hm(t) { const m = Math.floor(t / 60); return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`; }
+
+// ---------- Colores del tema ----------
+let C = {};
+function readTheme() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg', 'panel', 'panel2', 'line', 'fg', 'muted', 'heat', 'cool', 'steel', 'pipe', 'gasoline', 'diesel', 'wax', 'gas', 'char', 'n2', 'ok', 'warn', 'crit']
+    .forEach((k) => { C[k] = cs.getPropertyValue('--' + k).trim(); });
+}
+readTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTheme);
+new MutationObserver(readTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function rgba(hex, a) {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map((x) => x + x).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+function mixHex(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const ch = (s) => Math.round(((pa >> s) & 255) * (1 - t) + ((pb >> s) & 255) * t);
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}
+
+function setupCanvas(cv) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const r = cv.getBoundingClientRect();
+  const w = Math.max(10, r.width), h = Math.max(10, r.height);
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+// ---------- Escena del proceso ----------
+const PATHS = {
+  n2:    [[50, 360], [50, 330], [150, 330]],
+  vap:   [[230, 140], [230, 112], [335, 112], [335, 285], [380, 285], [380, 95], [380, 72], [460, 72], [470, 85], [680, 85], [740, 85], [740, 150]],
+  refl:  [[380, 300], [380, 322], [310, 322]],
+  gas:   [[760, 168], [860, 168], [860, 210], [900, 210], [910, 210], [910, 80]],
+  burn:  [[860, 168], [960, 168], [960, 590], [230, 590], [230, 505]],
+  liq:   [[740, 262], [740, 282], [580, 282], [580, 300]],
+  dG:    [[600, 325], [695, 325], [695, 400]],
+  dD:    [[600, 380], [795, 380], [795, 400]],
+  dW:    [[600, 455], [640, 455], [640, 560], [895, 560], [895, 540]],
+  water: [[690, 125], [455, 125]],
+};
+const PLEN = {};
+for (const k in PATHS) {
+  const p = PATHS[k]; let L = 0; const seg = [];
+  for (let i = 1; i < p.length; i++) { const d = Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); seg.push(d); L += d; }
+  PLEN[k] = { L, seg };
+}
+function pointAt(k, d) {
+  const p = PATHS[k], s = PLEN[k].seg;
+  for (let i = 0; i < s.length; i++) {
+    if (d <= s[i]) { const t = d / s[i]; return [p[i][0] + (p[i + 1][0] - p[i][0]) * t, p[i][1] + (p[i + 1][1] - p[i][1]) * t]; }
+    d -= s[i];
+  }
+  return p[p.length - 1];
+}
+
+const particles = [];
+const spawnAcc = {};
+let rates = { vap: {}, refl: 0, gas: 0, burn: 0, liq: {}, n2: 0, evap: 0 };
+const bubbles = [];
+let angle = 0, clock = 0, prevCum = null;
+
+function spawn(path, rate, colorFn, dt, size = 2.6, speed = 140) {
+  spawnAcc[path] = (spawnAcc[path] || 0) + rate * dt;
+  while (spawnAcc[path] >= 1) {
+    spawnAcc[path] -= 1;
+    particles.push({ path, d: Math.random() * 6, v: speed * (0.8 + Math.random() * 0.4), col: colorFn(), r: size * (0.7 + Math.random() * 0.6) });
+  }
+}
+function pickWeighted(w) {
+  let tot = 0; for (const k in w) tot += w[k];
+  let x = Math.random() * tot;
+  for (const k in w) { x -= w[k]; if (x <= 0) return k; }
+  return Object.keys(w)[0];
+}
+const SPCOL = { W: 'wax', D: 'diesel', G: 'gasoline', Gs: 'gas' };
+
+function updateRates(simDt) {
+  const cum = { G: st.tank.G, D: st.tank.D, W: st.tank.W, flare: st.gasFlare, burn: st.gasBurn, refl: st.cum.refl, evap: st.cum.evap,
+    oW: st.cum.out.W, oD: st.cum.out.D, oG: st.cum.out.G, oGs: st.cum.out.Gs };
+  if (prevCum && simDt > 0) {
+    const r = (k) => Math.max(0, (cum[k] - prevCum[k]) / simDt);
+    const a = 0.25; // suavizado
+    const sm = (o, v) => (o || 0) * (1 - a) + v * a;
+    rates.vap = { W: sm(rates.vap.W, r('oW')), D: sm(rates.vap.D, r('oD')), G: sm(rates.vap.G, r('oG')), Gs: sm(rates.vap.Gs, r('oGs')) };
+    rates.liq = { W: sm(rates.liq.W, r('W')), D: sm(rates.liq.D, r('D')), G: sm(rates.liq.G, r('G')) };
+    rates.refl = sm(rates.refl, r('refl')); rates.gas = sm(rates.gas, r('flare')); rates.burn = sm(rates.burn, r('burn')); rates.evap = sm(rates.evap, r('evap'));
+  }
+  prevCum = cum;
+}
+
+function drawScene(dtReal) {
+  const cv = $('scene');
+  const { ctx, w, h } = setupCanvas(cv);
+  const sx = w / 1000, sy = h / 620;
+  ctx.save(); ctx.scale(sx, sy);
+  ctx.clearRect(0, 0, 1000, 620);
+  const T = st.T - K0;
+  const nominal = Math.max(1e-4, st.mass0 / 3600); // kg/s de referencia
+  const vis = (x) => Math.min(60, 40 * x / nominal);
+
+  // tuberías
+  const pipe = (k, col = C.pipe, wdt = 7) => {
+    const p = PATHS[k];
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.strokeStyle = col; ctx.lineWidth = wdt; ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length; i++) ctx.lineTo(p[i][0], p[i][1]);
+    ctx.stroke();
+    ctx.strokeStyle = C.bg; ctx.lineWidth = wdt - 4; ctx.stroke();
+  };
+  ['n2', 'vap', 'gas', 'liq', 'dG', 'dD', 'dW'].forEach((k) => pipe(k));
+  if (cfg.reflux) pipe('refl');
+  if (cfg.recirc) pipe('burn');
+
+  const label = (txt, x, y, col = C.muted, align = 'left', size = 12) => {
+    ctx.fillStyle = col; ctx.font = `500 ${size}px "IBM Plex Mono", monospace`; ctx.textAlign = align; ctx.fillText(txt, x, y);
+  };
+  const title = (txt, x, y, align = 'left') => {
+    ctx.fillStyle = C.fg; ctx.font = `600 15px "Saira Condensed", sans-serif`; ctx.textAlign = align; ctx.fillText(txt.toUpperCase(), x, y);
+  };
+
+  // cilindro N2
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.n2; ctx.lineWidth = 2;
+  roundRect(ctx, 30, 370, 40, 150, 18); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = C.n2; ctx.fillRect(42, 360, 16, 12);
+  title('N₂', 50, 545, 'center');
+  label(fmt.n2(cfg.n2), 50, 562, C.muted, 'center', 11);
+
+  // reactor
+  const rx = 150, ry = 140, rw = 160, rh = 320;
+  const fill = Math.min(0.92, (sumObj(st.mP) + st.L.W + st.L.D + st.L.G) / 750 / cfg.Vr);
+  const heatFrac = cfg.Pmax > 0 ? st.Q / cfg.Pmax : 0;
+  // pared
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 3;
+  vessel(ctx, rx, ry, rw, rh); ctx.fill();
+  // contenido
+  ctx.save(); vessel(ctx, rx + 4, ry + 4, rw - 8, rh - 8); ctx.clip();
+  const vapA = Math.min(0.5, (st.V.W + st.V.D + st.V.G + st.V.Gs) * 3 / Math.max(1, st.mass0) * 20);
+  const hg = ctx.createLinearGradient(0, ry, 0, ry + rh);
+  hg.addColorStop(0, rgba(C.heat, vapA * 0.9)); hg.addColorStop(1, rgba(C.heat, vapA * 0.2));
+  ctx.fillStyle = hg; ctx.fillRect(rx, ry, rw, rh);
+  const lvl = ry + rh - 4 - fill * (rh - 8);
+  const meltT = Math.max(0, Math.min(1, (T - 120) / 330));
+  let solidFrac = 0;
+  for (const j in st.mP) if (POLY[j].Tm > 0 && st.T < POLY[j].Tm) solidFrac += st.mP[j];
+  solidFrac /= Math.max(1e-6, sumObj(st.mP) + st.L.W + st.L.D + st.L.G);
+  const meltCol = mixHex('#d9c27a', '#4a2a10', meltT);
+  ctx.fillStyle = meltCol; ctx.fillRect(rx, lvl, rw, ry + rh - lvl);
+  // hojuelas sólidas
+  if (solidFrac > 0.02) {
+    ctx.fillStyle = rgba('#f4f1ea', 0.85 * solidFrac);
+    for (let i = 0; i < 70 * solidFrac; i++) {
+      const fx = rx + 8 + ((i * 53) % (rw - 16)), fy = lvl + 6 + ((i * 37) % Math.max(6, ry + rh - lvl - 12));
+      ctx.save(); ctx.translate(fx, fy); ctx.rotate(i); ctx.fillRect(-5, -2, 10, 4); ctx.restore();
+    }
+  }
+  // burbujas proporcionales a la evaporación
+  const bRate = vis(rates.evap) * 1.2;
+  spawnAcc.bub = (spawnAcc.bub || 0) + bRate * dtReal;
+  while (spawnAcc.bub >= 1) { spawnAcc.bub -= 1; bubbles.push({ x: rx + 12 + Math.random() * (rw - 24), y: ry + rh - 10, r: 1.5 + Math.random() * 3, v: 30 + Math.random() * 40 }); }
+  ctx.strokeStyle = rgba(C.gasoline, 0.8); ctx.lineWidth = 1.2;
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const b = bubbles[i]; b.y -= b.v * dtReal; b.x += Math.sin((b.y + i) / 9) * 0.4;
+    if (b.y < lvl) { bubbles.splice(i, 1); continue; }
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 6.283); ctx.stroke();
+  }
+  // agitador
+  angle += dtReal * (running ? 2.2 : 0);
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(rx + rw / 2, ry - 20); ctx.lineTo(rx + rw / 2, ry + rh - 30); ctx.stroke();
+  const aw = (rw / 2 - 16) * Math.cos(angle);
+  ctx.beginPath(); ctx.moveTo(rx + rw / 2 - aw, ry + rh - 110); ctx.lineTo(rx + rw / 2 - aw, ry + rh - 26); ctx.lineTo(rx + rw / 2 + aw, ry + rh - 26); ctx.lineTo(rx + rw / 2 + aw, ry + rh - 110); ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 3; vessel(ctx, rx, ry, rw, rh); ctx.stroke();
+  // motor
+  ctx.fillStyle = C.steel; ctx.fillRect(rx + rw / 2 - 14, ry - 44, 28, 22);
+  // bandas calefactoras
+  for (let i = 0; i < 5; i++) {
+    const by = ry + 70 + i * 48;
+    ctx.fillStyle = mixHex(C.steel.startsWith('#') ? C.steel : '#5d6b76', C.heat.startsWith('#') ? C.heat : '#ff7a2f', Math.min(1, heatFrac));
+    ctx.globalAlpha = 0.5 + 0.5 * heatFrac;
+    ctx.fillRect(rx - 8, by, 8, 26); ctx.fillRect(rx + rw, by, 8, 26);
+    ctx.globalAlpha = 1;
+    if (heatFrac > 0.05) { ctx.shadowColor = C.heat; ctx.shadowBlur = 14 * heatFrac; ctx.fillStyle = rgba(C.heat, 0.6 * heatFrac); ctx.fillRect(rx - 8, by, 8, 26); ctx.fillRect(rx + rw, by, 8, 26); ctx.shadowBlur = 0; }
+  }
+  title('Reactor R-101', rx + rw / 2, ry + rh + 34, 'center');
+  label(`${(st.Q / 1000).toFixed(1)} kW` + (st.Qgas > 1 ? ` · ${(st.Qgas / 1000).toFixed(1)} del gas` : ''), rx + rw / 2, ry + rh + 50, C.heat, 'center', 11);
+
+  // quemador con gas recirculado
+  if (cfg.recirc) {
+    const f = Math.min(1, rates.burn * LHV_GAS * ETA_B / Math.max(1, cfg.Pmax));
+    flame(ctx, 230, 505, 30 * (0.3 + f), 26 * f + 3, f > 0.01);
+  }
+
+  // coque
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 2; ctx.strokeRect(95, 560, 50, 40);
+  const chFill = Math.min(1, st.char / Math.max(1, st.mass0 * 0.08));
+  ctx.fillStyle = C.char; ctx.fillRect(97, 598 - 36 * chFill, 46, 36 * chFill);
+  ctx.strokeStyle = C.pipe; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(170, 470); ctx.lineTo(120, 470); ctx.lineTo(120, 560); ctx.stroke();
+  label(`coque ${st.char.toFixed(1)} kg`, 150, 614, C.muted, 'left', 11);
+
+  // manómetro
+  gauge(ctx, 95, 215, 34, st.P / 1e5, 0, 7, cfg.Pset / 1e5, 6);
+  label('PI-101', 95, 268, C.muted, 'center', 11);
+  ctx.strokeStyle = C.pipe; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(129, 215); ctx.lineTo(150, 215); ctx.stroke();
+  // termómetro
+  label('TI-101', 280, 128, C.muted, 'right', 11);
+  ctx.fillStyle = C.heat; ctx.font = '600 22px "Saira Condensed", sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText(`${T.toFixed(0)} °C`, 300, 100);
+  // PSV
+  ctx.fillStyle = st.relief ? C.crit : C.steel;
+  ctx.beginPath(); ctx.moveTo(280, 140); ctx.lineTo(272, 122); ctx.lineTo(288, 122); ctx.closePath(); ctx.fill();
+  label('PSV', 292, 136, st.relief ? C.crit : C.muted, 'left', 10);
+
+  // deflegmador
+  const cx = 360, cy = 90, cw = 40, chh = 215;
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = cfg.reflux ? C.steel : C.line; ctx.lineWidth = 2;
+  roundRect(ctx, cx, cy, cw, chh, 10); ctx.fill(); ctx.stroke();
+  ctx.save(); roundRect(ctx, cx, cy, cw, chh, 10); ctx.clip();
+  ctx.strokeStyle = rgba(cfg.reflux ? C.muted : C.line, 0.6); ctx.lineWidth = 1;
+  for (let y = cy + 40; y < cy + chh - 30; y += 9) { ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx + cw, y + 9); ctx.moveTo(cx + cw, y); ctx.lineTo(cx, y + 9); ctx.stroke(); }
+  ctx.restore();
+  title('Deflegmador', 380, 62, 'center');
+  label(cfg.reflux ? `TI-102 ${(Math.min(cfg.Tref, st.T) - K0).toFixed(0)} °C` : 'apagado', 410, 120, cfg.reflux ? C.heat : C.muted, 'left', 11);
+
+  // condensador
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.cool; ctx.lineWidth = 2;
+  roundRect(ctx, 460, 60, 220, 52, 26); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = rgba(C.cool, 0.5); ctx.lineWidth = 1;
+  for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(480, 72 + i * 9); ctx.lineTo(660, 72 + i * 9); ctx.stroke(); }
+  // agua de enfriamiento
+  ctx.strokeStyle = C.cool; ctx.lineWidth = 3; ctx.setLineDash([8, 7]); ctx.lineDashOffset = -clock * 30;
+  ctx.beginPath(); ctx.moveTo(690, 140); ctx.lineTo(650, 140); ctx.lineTo(650, 112); ctx.moveTo(490, 112); ctx.lineTo(490, 140); ctx.lineTo(450, 140); ctx.stroke();
+  ctx.setLineDash([]);
+  title('Condensador E-101', 570, 50, 'center');
+  label(`agua ${(cfg.Tc - K0).toFixed(0)} °C`, 570, 158, C.cool, 'center', 11);
+
+  // separador
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 2;
+  roundRect(ctx, 720, 150, 40, 112, 14); ctx.fill(); ctx.stroke();
+  const liqRate = (rates.liq.G || 0) + (rates.liq.D || 0) + (rates.liq.W || 0);
+  const sepL = Math.min(0.8, 0.12 + vis(liqRate) / 80);
+  ctx.fillStyle = rgba(C.diesel, 0.8); ctx.fillRect(722, 260 - 108 * sepL, 36, 108 * sepL);
+  title('V-101', 740, 140, 'center');
+
+  // PCV
+  valve(ctx, 820, 168, C.steel);
+  label(`PCV ${(cfg.Pset / 1e5).toFixed(2)} bar`, 820, 192, C.muted, 'center', 11);
+
+  // antorcha
+  ctx.fillStyle = C.steel; ctx.fillRect(903, 80, 14, 200);
+  const fl = Math.min(1, vis(rates.gas) / 25);
+  flame(ctx, 910, 80, 18 + 30 * fl, 40 * fl + 4, fl > 0.01);
+  title('Antorcha', 910, 300, 'center');
+  label(`${(rates.gas * 3600).toFixed(1)} kg/h`, 910, 316, C.gas, 'center', 11);
+
+  // columna de destilación
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 2;
+  roundRect(ctx, 560, 300, 40, 170, 14); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = rgba(C.muted, 0.5); ctx.lineWidth = 1;
+  for (let y = 320; y < 460; y += 14) { ctx.beginPath(); ctx.moveTo(564, y); ctx.lineTo(596, y); ctx.stroke(); }
+  title('Destilación', 580, 492, 'center');
+  label('<180 °C', 608, 318, C.gasoline, 'left', 10);
+  label('180–360 °C', 608, 373, C.diesel, 'left', 10);
+  label('>360 °C', 608, 448, C.wax, 'left', 10);
+
+  // tanques
+  const cap = Math.max(1, st.mass0 * 0.6);
+  tank(ctx, 665, 400, 60, 140, st.tank.G / cap, C.gasoline, 'Gasolina', st.tank.G);
+  tank(ctx, 765, 400, 60, 140, st.tank.D / cap, C.diesel, 'Diésel', st.tank.D);
+  tank(ctx, 865, 400, 60, 140, st.tank.W / cap, C.wax, 'Ceras', st.tank.W);
+
+  // partículas
+  if (running) {
+    spawn('n2', cfg.n2 > 0 ? 3 + 300 * cfg.n2 : 0, () => C.n2, dtReal, 2.2, 90);
+    const vtot = rates.vap.W + rates.vap.D + rates.vap.G + rates.vap.Gs;
+    spawn('vap', vis(vtot), () => C[SPCOL[pickWeighted(rates.vap)]], dtReal, 3, 160);
+    if (cfg.reflux) spawn('refl', vis(rates.refl), () => C.wax, dtReal, 3, 60);
+    spawn('gas', vis(rates.gas), () => C.gas, dtReal, 2.6, 170);
+    if (cfg.recirc) spawn('burn', vis(rates.burn), () => C.gas, dtReal, 2.6, 220);
+    spawn('liq', vis(liqRate), () => C[SPCOL[pickWeighted(rates.liq)]], dtReal, 3.2, 90);
+    spawn('dG', vis(rates.liq.G || 0), () => C.gasoline, dtReal, 3, 80);
+    spawn('dD', vis(rates.liq.D || 0), () => C.diesel, dtReal, 3, 80);
+    spawn('dW', vis(rates.liq.W || 0), () => C.wax, dtReal, 3, 80);
+  }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    if (running) p.d += p.v * dtReal;
+    if (p.d >= PLEN[p.path].L) { particles.splice(i, 1); continue; }
+    const [x, y] = pointAt(p.path, p.d);
+    ctx.fillStyle = p.col; ctx.beginPath(); ctx.arc(x, y, p.r, 0, 6.283); ctx.fill();
+  }
+  if (particles.length > 1400) particles.splice(0, particles.length - 1400);
+
+  // banner de alivio
+  if (st.relief) {
+    ctx.fillStyle = rgba(C.crit, 0.15); ctx.fillRect(140, 20, 300, 30);
+    label('PSV ABIERTA · SOBREPRESIÓN', 290, 40, C.crit, 'center', 13);
+  }
+  ctx.restore();
+}
+
+function sumObj(o) { let s = 0; for (const k in o) s += o[k]; return s; }
+function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+function vessel(ctx, x, y, w, h) {
+  const r = 30; ctx.beginPath();
+  ctx.moveTo(x, y + r); ctx.quadraticCurveTo(x, y, x + w / 2, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w / 2, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.closePath();
+}
+function flame(ctx, x, y, w, h, on) {
+  if (!on) return;
+  const t = clock * 9;
+  const hh = h * (0.85 + 0.15 * Math.sin(t) + 0.08 * Math.sin(t * 2.7));
+  const g = ctx.createLinearGradient(0, y, 0, y - hh);
+  g.addColorStop(0, rgba(C.gas, 0.9)); g.addColorStop(0.35, rgba(C.heat, 0.9)); g.addColorStop(1, rgba(C.gasoline, 0));
+  ctx.fillStyle = g; ctx.beginPath();
+  ctx.moveTo(x - w / 2, y); ctx.quadraticCurveTo(x - w / 2, y - hh * 0.5, x + Math.sin(t) * 3, y - hh);
+  ctx.quadraticCurveTo(x + w / 2, y - hh * 0.5, x + w / 2, y); ctx.closePath(); ctx.fill();
+}
+function valve(ctx, x, y, col) {
+  ctx.fillStyle = col; ctx.beginPath();
+  ctx.moveTo(x - 12, y - 9); ctx.lineTo(x + 12, y + 9); ctx.lineTo(x + 12, y - 9); ctx.lineTo(x - 12, y + 9); ctx.closePath(); ctx.fill();
+}
+function tank(ctx, x, y, w, h, frac, col, name, kg) {
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 2;
+  roundRect(ctx, x, y, w, h, 8); ctx.fill();
+  const f = Math.min(1, frac);
+  const top = y + h - 2 - (h - 4) * f;
+  ctx.save(); roundRect(ctx, x + 2, y + 2, w - 4, h - 4, 6); ctx.clip();
+  ctx.fillStyle = col; ctx.globalAlpha = 0.85; ctx.fillRect(x, top, w, y + h - top);
+  ctx.globalAlpha = 0.35; ctx.fillStyle = '#ffffff'; ctx.fillRect(x, top, w, 2);
+  ctx.globalAlpha = 1; ctx.restore();
+  roundRect(ctx, x, y, w, h, 8); ctx.stroke();
+  ctx.fillStyle = C.fg; ctx.font = '600 15px "Saira Condensed", sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(name.toUpperCase(), x + w / 2, y + h + 18);
+  ctx.fillStyle = col; ctx.font = '500 13px "IBM Plex Mono", monospace';
+  ctx.fillText(`${kg.toFixed(1)} kg`, x + w / 2, y + h + 34);
+}
+function gauge(ctx, x, y, r, v, min, max, set, red) {
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill(); ctx.stroke();
+  const a0 = Math.PI * 0.75, a1 = Math.PI * 2.25, ang = (u) => a0 + (a1 - a0) * (u - min) / (max - min);
+  ctx.lineWidth = 4; ctx.strokeStyle = rgba(C.crit, 0.8); ctx.beginPath(); ctx.arc(x, y, r - 6, ang(red), a1); ctx.stroke();
+  ctx.strokeStyle = C.muted; ctx.lineWidth = 1;
+  for (let u = min; u <= max; u++) { const a = ang(u); ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * (r - 10), y + Math.sin(a) * (r - 10)); ctx.lineTo(x + Math.cos(a) * (r - 4), y + Math.sin(a) * (r - 4)); ctx.stroke(); }
+  const as = ang(set); ctx.fillStyle = C.ok; ctx.beginPath(); ctx.arc(x + Math.cos(as) * (r - 7), y + Math.sin(as) * (r - 7), 2.5, 0, 6.283); ctx.fill();
+  const a = ang(Math.min(max, Math.max(min, v)));
+  ctx.strokeStyle = C.heat; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * (r - 8), y + Math.sin(a) * (r - 8)); ctx.stroke();
+  ctx.fillStyle = C.fg; ctx.beginPath(); ctx.arc(x, y, 3, 0, 6.283); ctx.fill();
+  ctx.font = '500 11px "IBM Plex Mono", monospace'; ctx.textAlign = 'center'; ctx.fillStyle = C.fg;
+  ctx.fillText(`${v.toFixed(2)}`, x, y + r - 9);
+}
+
+// ---------- Gráficas ----------
+function niceMax(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
+
+function axes(ctx, w, h, pad, xmax, ymax, yfmt, y2) {
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.font = '500 10.5px "IBM Plex Mono", monospace'; ctx.fillStyle = C.muted;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (h - pad.t - pad.b) * (1 - i / 4);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.fillText(yfmt(ymax * i / 4), pad.l - 6, y + 3);
+    if (y2) { ctx.textAlign = 'left'; ctx.fillText(y2.fmt(y2.max * i / 4), w - pad.r + 6, y + 3); }
+  }
+  ctx.textAlign = 'center';
+  const stepH = xmax <= 3600 ? 900 : xmax <= 4 * 3600 ? 1800 : 3600;
+  for (let t = 0; t <= xmax + 1; t += stepH) {
+    const x = pad.l + (w - pad.l - pad.r) * t / xmax;
+    ctx.fillText(hm(t), x, h - pad.b + 15);
+  }
+}
+function line(ctx, w, h, pad, xmax, ymax, key, col, wdt = 2, area = false) {
+  if (hist.length < 2) return;
+  const X = (t) => pad.l + (w - pad.l - pad.r) * t / xmax, Y = (v) => pad.t + (h - pad.t - pad.b) * (1 - v / ymax);
+  ctx.beginPath(); hist.forEach((p, i) => (i ? ctx.lineTo(X(p.t), Y(p[key])) : ctx.moveTo(X(p.t), Y(p[key]))));
+  if (area) { ctx.save(); ctx.lineTo(X(hist[hist.length - 1].t), Y(0)); ctx.lineTo(X(hist[0].t), Y(0)); ctx.closePath(); ctx.fillStyle = rgba(col, 0.12); ctx.fill(); ctx.restore(); ctx.beginPath(); hist.forEach((p, i) => (i ? ctx.lineTo(X(p.t), Y(p[key])) : ctx.moveTo(X(p.t), Y(p[key])))); }
+  ctx.strokeStyle = col; ctx.lineWidth = wdt; ctx.stroke();
+  const last = hist[hist.length - 1];
+  ctx.fillStyle = col; ctx.beginPath(); ctx.arc(X(last.t), Y(last[key]), 3.5, 0, 6.283); ctx.fill();
+}
+
+function drawCharts() {
+  const xmax = Math.max(3600, Math.ceil(st.t / 1800) * 1800);
+  // T y P
+  {
+    const { ctx, w, h } = setupCanvas($('ch-tp'));
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 40, r: 40, t: 18, b: 24 };
+    const tmax = 600, pmax = Math.max(2, niceMax(Math.max(...hist.map((p) => p.P)) * 1.1));
+    axes(ctx, w, h, pad, xmax, tmax, (v) => v.toFixed(0), { max: pmax, fmt: (v) => v.toFixed(1) });
+    const Y = (v) => pad.t + (h - pad.t - pad.b) * (1 - v / tmax);
+    ctx.setLineDash([4, 4]); ctx.strokeStyle = rgba(C.heat, 0.6); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(cfg.Tsp - K0)); ctx.lineTo(w - pad.r, Y(cfg.Tsp - K0)); ctx.stroke(); ctx.setLineDash([]);
+    line(ctx, w, h, pad, xmax, tmax, 'T', C.heat, 2.2, true);
+    line(ctx, w, h, pad, xmax, pmax, 'P', C.cool, 2);
+    ctx.font = '500 10.5px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = C.heat; ctx.fillText('°C', pad.l - 34, 10);
+    ctx.fillStyle = C.cool; ctx.textAlign = 'right'; ctx.fillText('bar', w - 4, 10);
+  }
+  // productos
+  {
+    const { ctx, w, h } = setupCanvas($('ch-prod'));
+    ctx.clearRect(0, 0, w, h);
+    const pad = { l: 40, r: 64, t: 18, b: 24 };
+    const last = hist[hist.length - 1];
+    const ymax = niceMax(Math.max(1, last.G, last.D, last.W, last.gas, last.char) * 1.1);
+    axes(ctx, w, h, pad, xmax, ymax, (v) => v.toFixed(0));
+    const ser = [['D', C.diesel, 'diésel'], ['G', C.gasoline, 'gasolina'], ['W', C.wax, 'ceras'], ['gas', C.gas, 'gas'], ['char', C.char, 'coque']];
+    ser.forEach(([k, c]) => line(ctx, w, h, pad, xmax, ymax, k, c, 2.2));
+    // etiquetas al final, sin encimarse
+    const Y = (v) => pad.t + (h - pad.t - pad.b) * (1 - v / ymax);
+    const labs = ser.map(([k, c, n]) => ({ y: Y(last[k]), c, n })).sort((a, b) => a.y - b.y);
+    for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 12) labs[i].y = labs[i - 1].y + 12;
+    ctx.font = '500 10.5px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+    labs.forEach((l) => { ctx.fillStyle = l.c; ctx.fillText(l.n, w - pad.r + 6, Math.min(h - pad.b, l.y + 3)); });
+    ctx.fillStyle = C.muted; ctx.fillText('kg', 4, 10);
+  }
+  // rendimiento
+  {
+    const { ctx, w, h } = setupCanvas($('ch-yield'));
+    ctx.clearRect(0, 0, w, h);
+    const sm = summary(st), m = st.mass0;
+    const bars = [['Gasolina', sm.G, C.gasoline], ['Diésel', sm.D, C.diesel], ['Ceras', sm.W, C.wax], ['Gas', sm.gas, C.gas], ['Coque', sm.char, C.char], ['En reactor', sm.inside, C.steel]];
+    const pad = { l: 86, r: 52, t: 6, b: 6 };
+    const bh = (h - pad.t - pad.b) / bars.length;
+    const xmaxB = 60;
+    ctx.font = '500 12px "IBM Plex Sans", sans-serif';
+    bars.forEach(([n, v, c], i) => {
+      const y = pad.t + i * bh, pc = 100 * v / m;
+      ctx.fillStyle = C.fg; ctx.textAlign = 'right'; ctx.fillText(n, pad.l - 8, y + bh / 2 + 4);
+      ctx.fillStyle = rgba(C.line.startsWith('#') ? C.line : '#2b3843', 0.6); ctx.fillRect(pad.l, y + bh * 0.2, w - pad.l - pad.r, bh * 0.6);
+      ctx.fillStyle = c; ctx.fillRect(pad.l, y + bh * 0.2, Math.max(1, (w - pad.l - pad.r) * Math.min(1, pc / xmaxB)), bh * 0.6);
+      ctx.fillStyle = C.fg; ctx.textAlign = 'left'; ctx.font = '500 12px "IBM Plex Mono", monospace';
+      ctx.fillText(`${pc.toFixed(1)}%`, w - pad.r + 6, y + bh / 2 + 4);
+      ctx.font = '500 12px "IBM Plex Sans", sans-serif';
+    });
+    const liq = sm.G + sm.D;
+    const ext = st.Eext / 3.6e6, gas = st.Egas / 3.6e6;
+    $('energy-sub').textContent = `Energía externa ${ext.toFixed(1)} kWh · del gas propio ${gas.toFixed(1)} kWh · ${liq > 0.5 ? (ext / liq).toFixed(2) + ' kWh por kg de combustible' : '—'}`;
+  }
+}
+
+// ---------- Estado y lazo principal ----------
+function renderStatus() {
+  const T = st.T - K0;
+  const conv = summary(st).conv;
+  const pills = [];
+  let phase;
+  if (st.done) phase = ['Lote terminado', 'ok'];
+  else if (!running && st.t === 0) phase = ['Listo para arrancar', ''];
+  else if (!running) phase = ['En pausa', 'warn'];
+  else if (T < 100) phase = ['Calentando', 'on'];
+  else if (T < 180 && conv < 0.01) phase = ['Fundiendo el plástico', 'on'];
+  else if (conv < 0.01) phase = ['Calentando el fundido', 'on'];
+  else phase = ['Pirolizando', 'on'];
+  pills.push(phase);
+  if (st.relief) pills.push(['PSV abierta: sobrepresión', 'crit']);
+  else if (st.P > 5e5) pills.push(['Presión alta', 'warn']);
+  if (cfg.n2 === 0) pills.push(['Sin purga de N₂', 'warn']);
+  if (T > 560) pills.push(['Temperatura alta: mucho gas y coque', 'warn']);
+  if (cfg.reflux && cfg.Tref - K0 < 230) pills.push(['Deflegmador frío: regresa diésel', 'warn']);
+  const fill = st.mass0 / 750 / cfg.Vr;
+  if (fill > 0.7) pills.push(['Reactor sobrecargado', 'crit']);
+  $('status').innerHTML = pills.map(([t, c]) => `<span class="pill ${c}">${t}</span>`).join('');
+}
+
+function render(dtReal) {
+  const sm = summary(st);
+  $('k-time').textContent = hm(st.t);
+  $('k-T').textContent = (st.T - K0).toFixed(0);
+  $('k-Tsp').textContent = (cfg.Tsp - K0).toFixed(0);
+  $('k-P').textContent = (st.P / 1e5).toFixed(2);
+  $('k-tau').textContent = isFinite(st.tau) && st.tau < 1e4 ? `${st.tau.toFixed(0)} s` : '—';
+  $('k-conv').textContent = (100 * sm.conv).toFixed(0);
+  $('k-G').textContent = sm.G.toFixed(1);
+  $('k-D').textContent = sm.D.toFixed(1);
+  renderStatus();
+  drawScene(dtReal);
+  drawCharts();
+}
+
+let lastFrame = performance.now();
+function frame(now) {
+  const dtReal = Math.min(0.1, (now - lastFrame) / 1000);
+  lastFrame = now; clock += dtReal;
+  if (running && !st.done) {
+    const speed = parseFloat($('speed').value);
+    const simDt = speed * dtReal;
+    const n = Math.min(3000, Math.ceil(simDt / 0.2));
+    const h = simDt / n;
+    for (let i = 0; i < n; i++) {
+      step(st, cfg, h);
+      if (st.t - lastHist >= 20) { pushHist(); lastHist = st.t; }
+      if (st.done) break;
+    }
+    updateRates(simDt);
+    if (st.done) { pushHist(); logRun(); setRunning(false); rates = { vap: {}, refl: 0, gas: 0, burn: 0, liq: {}, n2: 0, evap: 0 }; }
+  }
+  render(dtReal);
+  requestAnimationFrame(frame);
+}
+
+refreshOutputs();
+reset();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
