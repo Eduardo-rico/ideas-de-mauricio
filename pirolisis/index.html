@@ -119,6 +119,17 @@ td.num, th.num { text-align: right; font-family: var(--f-mono); font-variant-num
 .note { border: 1px dashed var(--warn); border-radius: 8px; padding: 10px 14px; background: var(--panel2); font-size: 13.5px; max-width: 90ch; }
 .sources { display: grid; gap: 6px; font-size: 13.5px; padding-left: 18px; margin: 0; }
 a { color: var(--cool); }
+.routes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 860px) { .routes { grid-template-columns: minmax(0, 1fr); } }
+.route { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.route p { font-size: 13.5px; color: var(--muted); }
+.route a, .routetotal { font-size: 13.5px; font-weight: 600; }
+.routetotal strong { color: var(--heat); }
+table.buy .bn { font-weight: 500; }
+table.buy .bd { font-size: 12.5px; color: var(--muted); }
+input.qty { width: 64px; font: 500 13px var(--f-mono); text-align: right; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+tfoot td { background: var(--panel2); }
+
 @media (prefers-reduced-motion: reduce) { .pill.crit { animation: none; } }
 </style>
 </head>
@@ -393,6 +404,42 @@ a { color: var(--cool); }
       </table>
     </div>
     <p class="note">Este simulador sirve para aprender y comparar condiciones de operación, no para dimensionar equipo. Un reactor real trabaja con vapores inflamables por encima de su temperatura de autoignición, así que el recipiente a presión, la PSV y la instalación eléctrica deben diseñarse y certificarse por un ingeniero, y probarse primero en frío con nitrógeno.</p>
+  </section>
+
+    <section class="doc" id="compras">
+    <div class="eyebrow">Presupuesto</div>
+    <h2>Qué comprar, cuánto cuesta y dónde</h2>
+    <p>Precios en pesos consultados el 22 de octubre de 2026 en Mercado Libre, Amazon México, DepotMX y Alibaba. Cambian seguido, y varios links llevan a una búsqueda con varios vendedores para que compares. Cambia las cantidades y el total se recalcula.</p>
+
+    <div class="routes">
+      <div class="route">
+        <span class="eyebrow">Ruta 1 · para empezar</span>
+        <h3>Reactor de banco, 10–20 L</h3>
+        <p>Reactor de laboratorio de acero inoxidable para probar tu plástico con 2–5 kg por corrida antes de invertir en grande. En Alibaba: 20 L ≈ US$2,800–3,000; con tornillo sinfín ≈ US$4,900.</p>
+        <a href="https://www.alibaba.com/showroom/reactor-pirolisis-plasticos.html" target="_blank" rel="noopener">Ver reactores en Alibaba</a>
+      </div>
+      <div class="route">
+        <span class="eyebrow">Ruta 2 · llave en mano</span>
+        <h3>Planta mini de 100 kg por lote</h3>
+        <p>Planta montada en patín con reactor, condensador y tanques. En Alibaba ≈ US$18,000–21,000 (≈ $330,000–390,000 MXN a ~$18.5 por dólar), más flete, impuestos de importación e instalación.</p>
+        <a href="https://www.alibaba.com/showroom/plastic-pyrolysis-reactor-low-cost.html" target="_blank" rel="noopener">Ver plantas en Alibaba</a>
+      </div>
+      <div class="route">
+        <span class="eyebrow">Ruta 3 · armarla</span>
+        <h3>Planta piloto de 50 kg por lote</h3>
+        <p>La del simulador, con el reactor hecho en un taller de pailería y el resto de las piezas compradas aparte. Es la lista de abajo.</p>
+        <span class="routetotal">Total estimado: <strong id="buy-total-top" class="num">—</strong></span>
+      </div>
+    </div>
+
+    <div class="tablewrap">
+      <table class="buy">
+        <thead><tr><th>Artículo</th><th class="num">Cant.</th><th class="num">Precio unit.</th><th class="num">Subtotal</th><th>Dónde</th></tr></thead>
+        <tbody id="buy-body"></tbody>
+        <tfoot><tr><td colspan="3"><strong>Total estimado de la ruta 3</strong></td><td class="num"><strong id="buy-total">—</strong></td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <p class="note">Lo que no está en la lista y sí cuesta: la instalación eléctrica trifásica para 25–40 kW, un electricista, el pailero certificado que fabrique y pruebe el reactor a presión (prueba hidrostática), la obra civil y los análisis de laboratorio del combustible. Las piezas genéricas de Mercado Libre (arrestaflamas de oxicorte, válvulas con asiento de PTFE) sirven para la parte fría de la planta. Del lado caliente, arriba de 200 °C, pide válvulas con asiento de grafito o metal.</p>
   </section>
 
   <section class="doc" id="fuentes">
@@ -1242,6 +1289,69 @@ function frame(now) {
 refreshOutputs();
 reset();
 requestAnimationFrame(frame);
+
+// ---------- Lista de compras ----------
+const ML = 'https://listado.mercadolibre.com.mx/';
+const BUY = [
+  { g: '1 · Preparación de la materia prima' },
+  { n: 'Molino triturador de plástico, 5 HP', d: 'Usados desde $20,000; nuevos de 2.2 kW entre $59,000 y $99,000', q: 1, p: 57000, u: ML + 'molino-triturador-de-plastico-de-pet', s: 'Mercado Libre' },
+  { g: '2 · Reactor' },
+  { n: 'Reactor de acero inoxidable 316 con agitador, ~300 L', d: 'Usados $78,000–135,000; mejor uno hecho por pailero, diseñado y probado a presión', q: 1, p: 110000, u: ML + 'tanque-reactor-con-agitador-de-acero-inoxidable-con-agitador', s: 'Mercado Libre / pailería' },
+  { n: 'Resistencia de banda cerámica 220 V, 2,100 W', d: '12 piezas ≈ 25 kW; el gas recirculado aporta el resto', q: 12, p: 690, u: 'https://articulo.mercadolibre.com.mx/MLM-3347008842-resistencias-electricas-tipo-banda-ceramica-220v-2100w-_JM', s: 'Mercado Libre' },
+  { n: 'Kit control PID REX-C100 + SSR 40 A + termopar K', d: 'Uno para el reactor y otro para el deflegmador; pide la versión de 0–1200 °C', q: 2, p: 390, u: 'https://articulo.mercadolibre.com.mx/MLM-1375707284-kit-pirometro-rex-c100-control-temperatura-relay-ssr-k-_JM', s: 'Mercado Libre' },
+  { n: 'Motorreductor industrial AC de baja velocidad', d: 'Para el agitador de ancla; los de 12 V de juguete no aguantan el fundido', q: 1, p: 1546, u: ML + 'motorreductor-30-rpm', s: 'Mercado Libre' },
+  { n: 'Rollo de fibra cerámica 1260 °C, 7.6 m', d: 'Aislante alrededor del reactor y las bandas', q: 2, p: 2500, u: ML + 'rollo-de-fibra-ceramica', s: 'Mercado Libre' },
+  { g: '3 · Nitrógeno' },
+  { n: 'Cilindro de nitrógeno 9.5 m³, válvula CGA580', d: 'El primer llenado va aparte; la recarga se hace con Infra o Praxair', q: 1, p: 8499, u: ML + 'tanques-nitrogeno', s: 'Mercado Libre' },
+  { n: 'Regulador para nitrógeno con flujómetro, CGA580', d: 'Opciones de $860 a $3,250', q: 1, p: 2058, u: ML + 'regulador-de-nitr%C3%B3geno', s: 'Mercado Libre' },
+  { n: 'Rotámetro de gas 0–10 L/min', d: 'Para medir la purga de N₂', q: 1, p: 545, u: 'https://articulo.mercadolibre.com.mx/MLM-1376398758-medidor-de-flujo-de-aire-y-oxigeno-con-valvula-rotametro-lpm-_JM', s: 'Mercado Libre' },
+  { g: '4 · Separación de productos' },
+  { n: 'Serpentín de enfriamiento inox 304, 3″ triple clamp', d: 'Como deflegmador (columna de reflujo)', q: 1, p: 5845, u: 'https://www.amazon.com.mx/Serpent%C3%ADn-Enfriamiento-Destilador-Abrazadera-Condensador/dp/B0D989RDSN', s: 'Amazon MX' },
+  { n: 'Condensador de acero inoxidable', d: 'Dos en serie; para la planta piloto conviene uno de carcasa y tubos del pailero', q: 2, p: 1150, u: ML + 'condensador-destilador', s: 'Mercado Libre' },
+  { n: 'Bomba sumergible metálica 1/2 HP', d: 'Recircula el agua del condensador desde un tambo o tinaco', q: 1, p: 811, u: ML + 'bombas-sumergibles', s: 'Mercado Libre' },
+  { n: 'Tanque de acero inoxidable 100 L', d: 'Separador gas–líquido y trampa de ceras', q: 2, p: 2546, u: ML + 'tanques-de-acero-inoxidable-100-litros', s: 'Mercado Libre' },
+  { n: 'Destilador de acero inoxidable 38 L', d: 'Para cortar el aceite en gasolina y diésel por lotes', q: 1, p: 4831, u: ML + 'destilador-acero-inoxidable', s: 'Mercado Libre' },
+  { n: 'Bidón metálico para combustible 20 L', d: 'Gasolina, diésel y ceras por separado', q: 4, p: 799, u: ML + 'bidon-metalico-para-combustible-20-litros', s: 'Mercado Libre' },
+  { g: '5 · Tubería, válvulas e instrumentos' },
+  { n: 'Tubo inox 316L 1/2″ cédula 40, tramo de 6.1 m', d: 'Para las líneas de vapor y producto', q: 2, p: 2236, u: 'https://depotmx.com/categoria-producto/tuberias/inoxidable/', s: 'DepotMX' },
+  { n: 'Válvula de bola inox 316 1/2″ NPT', d: 'Para la parte fría; del lado caliente pide asiento de grafito', q: 6, p: 499, u: ML + 'valvula-bola-acero-inoxidable-316', s: 'Mercado Libre' },
+  { n: 'Válvula de alivio (PSV) inox 1/2″ NPT', d: 'Pide que la calibren por debajo de la presión de diseño del reactor', q: 1, p: 7125, u: ML + 'valvula-de-alivio-acero-inoxidable', s: 'Mercado Libre' },
+  { n: 'Manómetro de glicerina 0–10 bar', d: 'Reactor y línea de gas', q: 2, p: 330, u: ML + 'herramientas-y-construccion/herramientas/manometro-de-glicerina-10-bares', s: 'Mercado Libre' },
+  { n: 'Transmisor de presión 0–10 bar, 4–20 mA, inox', d: 'Para registrar la presión y disparar el paro por alta presión', q: 1, p: 899, u: 'https://www.mercadolibre.com.mx/transductor-presion-420ma--14---010bar/up/MLMU3681032950', s: 'Mercado Libre' },
+  { g: '6 · Seguridad' },
+  { n: 'Arrestaflamas', d: 'Entre el separador y la antorcha', q: 1, p: 1300, u: ML + 'arrestaflamas', s: 'Mercado Libre' },
+  { n: 'Detector de gas combustible (explosímetro)', d: 'Uno profesional multigás (Altair 4XR) cuesta ≈ $30,000', q: 1, p: 1499, u: ML + 'detector-de-gas-combustible', s: 'Mercado Libre' },
+  { n: 'Extintor PQS tipo ABC 9 kg', d: 'Uno junto al reactor y otro junto a los tanques', q: 2, p: 1137, u: 'https://articulo.mercadolibre.com.mx/MLM-739037594-extintor-9-kg-de-pqs-tipo-abc-certificado-nacional-garantia-_JM', s: 'Mercado Libre' },
+  { n: 'Respirador 3M 6200 con cartuchos de vapores orgánicos', d: 'Kit con cartuchos y prefiltros', q: 1, p: 1196, u: ML + 'respirador-media-cara-3m', s: 'Mercado Libre' },
+  { n: 'Guantes aluminizados para alta temperatura', d: 'Para abrir el reactor y sacar el coque', q: 1, p: 685, u: ML + 'guantes-altas-temperaturas', s: 'Mercado Libre' },
+  { n: 'Careta facial para alta temperatura', d: '', q: 1, p: 355, u: ML + 'careta-facial-para-altas-temperatura', s: 'Mercado Libre' },
+  { g: '7 · Opcional: catalizador' },
+  { n: 'Zeolita ZSM-5 en polvo, por kg', d: 'Mínimo 100 kg a US$5.50/kg con el fabricante; para pruebas hay de 1 kg en Alibaba (≈ €26/kg). 0 = no se compra', q: 0, p: 102, u: 'https://jiulongchemical.en.made-in-china.com/product/jGEpAYBVOJky/China-Zeolite-Catalyst-Zsm-5-Zsm5-Zsm-5-Powder-Si-Al-38-70-170-350-400-500-Factory-Price-for-FCC.html', s: 'Made-in-China' },
+];
+const mxn = (v) => '$' + Math.round(v).toLocaleString('es-MX');
+function renderBuy() {
+  let html = '';
+  BUY.forEach((it, i) => {
+    if (it.g) { html += `<tr><td colspan="5" class="stage">${it.g}</td></tr>`; return; }
+    html += `<tr><td><div class="bn">${it.n}</div>${it.d ? `<div class="bd">${it.d}</div>` : ''}</td>`
+      + `<td class="num"><input class="qty" type="number" min="0" step="1" id="qty-${i}" value="${it.q}" aria-label="Cantidad de ${it.n}"></td>`
+      + `<td class="num">${mxn(it.p)}</td><td class="num" id="sub-${i}">${mxn(it.p * it.q)}</td>`
+      + `<td><a href="${it.u}" target="_blank" rel="noopener">${it.s}</a></td></tr>`;
+  });
+  $('buy-body').innerHTML = html;
+  BUY.forEach((it, i) => {
+    if (it.g) return;
+    $('qty-' + i).addEventListener('input', (e) => { it.q = Math.max(0, parseFloat(e.target.value) || 0); updateBuy(); });
+  });
+  updateBuy();
+}
+function updateBuy() {
+  let tot = 0;
+  BUY.forEach((it, i) => { if (it.g) return; const s = it.p * it.q; tot += s; $('sub-' + i).textContent = mxn(s); });
+  $('buy-total').textContent = mxn(tot) + ' MXN';
+  $('buy-total-top').textContent = mxn(tot) + ' MXN';
+}
+renderBuy();
 </script>
 </body>
 </html>
