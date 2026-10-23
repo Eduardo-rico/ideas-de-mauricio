@@ -13,7 +13,7 @@ Cada componente tiene su propio modelo:
 
 - `index.html` — la página: corte animado del búnker, línea de tiempo de 3 años, gráficas, qué se acaba y cuándo, ecuaciones y presupuesto con precios.
 - `model.js` — el modelo.
-- `escenarios.test.js` — 26 pruebas: `node escenarios.test.js`.
+- `escenarios.test.js` — 25 pruebas: `node escenarios.test.js`.
   - Los balances de energía, batería, agua, O₂ y CO₂ cierran en 7 casos.
   - El O₂ y el CO₂ por persona coinciden con NASA BVAD.
   - La regla 7:10 se cumple, y también las tendencias.
