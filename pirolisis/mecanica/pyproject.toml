@@ -1,0 +1,16 @@
+[project]
+name = "mecanica-reactor"
+version = "0.1.0"
+description = "Espesor ASME VIII, válvula de alivio API 520/521 y transferencia de calor del reactor de pirólisis"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
