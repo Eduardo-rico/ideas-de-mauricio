@@ -13,6 +13,10 @@ Planta piloto virtual que convierte plástico (PEAD, PEBD, PP, PS) en gasolina, 
 
 El modelo es de lumps y semicuantitativo: sirve para aprender y comparar condiciones, no para dimensionar equipo. La cinética del PEAD y PP viene de Bockhorn (1999); las selectividades y el craqueo secundario están calibrados a tendencias de la literatura. Las fuentes están al final de la página.
 
+## Skill para hacer más simuladores (`skills/`)
+
+`skills/simulador-de-proceso/` le enseña a Claude Code a repetir este trabajo con cualquier proceso: investigar, diseñar, sacar y probar las ecuaciones, armar la página y cotizar en Mercado Libre. Ver `skills/README.md` para instalarlo.
+
 ## Re-refinado de Aceite Usado (`aceite-usado/`)
 
 Recuperar aceite base del aceite de motor usado: sedimentación, deshidratación, tratamiento con solvente y floculante, fosfato o ácido, destilación al vacío y acabado con arcilla o hidroacabado. Simulador visual, ecuaciones, calidad contra referencia, equipo y consumibles con precios. Ver `aceite-usado/README.md`.
