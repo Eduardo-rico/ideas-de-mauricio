@@ -64,5 +64,17 @@ const normal = run({ escenario: '5Tg', dias: 30 });
 ok(Math.abs(normal.days[10].Tmin - 7) < 1.5, `mínima de enero sin invierno nuclear: ${normal.days[10].Tmin.toFixed(1)} °C (SMN: ≈ 7)`);
 ok(base.days.slice(365, 730).filter((d) => d.Tmin < 0).length > 30, 'con 150 Tg hay más de un mes de noches bajo cero en el año 2');
 
+// Pecera: sin calentador a ~19 °C los peces casi no crecen; con calentador, gasta energía
+const fria = run({ calentarPecera: false }), tibia = run({});
+ok(fria.tot.pescadoKg < 0.7 * tibia.tot.pescadoKg, `sin calentador se cosecha menos tilapia (${fria.tot.pescadoKg.toFixed(0)} contra ${tibia.tot.pescadoKg.toFixed(0)} kg en 3 años)`);
+ok(tibia.days[300].Taq > 25, `con calentador el agua está a ${tibia.days[300].Taq.toFixed(1)} °C`);
+// Flujos de agua: lo que entra y sale del tanque cuadra con el desglose
+const w = tibia.days[200].w;
+ok(Math.abs((w.beber + w.cocina + w.higiene + w.perros + w.plantas + w.pecera) - (tibia.c.aguaPersona * tibia.c.personas + tibia.c.aguaPerro * tibia.c.perros + w.plantas + w.pecera)) < 1e-6, 'el desglose del consumo de agua suma el consumo total');
+// 10 personas y 10 perros
+const grande = run({ personas: 10, perros: 10, area: 220, vent: 250 });
+ok(grande.days[100].co2max < 0.005, `10 personas y 10 perros con 250 m³/h: CO₂ máx ${(grande.days[100].co2max * 1e6).toFixed(0)} ppm`);
+ok(Math.abs(M.necesidades(M.config({ personas: 10 })).comidaKg / M.necesidades(M.config({ personas: 5 })).comidaKg - 2) < 1e-9, 'la comida escala con el número de personas');
+
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo en verde');
 process.exit(fallas ? 1 : 0);

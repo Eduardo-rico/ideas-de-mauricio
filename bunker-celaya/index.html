@@ -199,6 +199,7 @@ tfoot td { background: var(--panel2); }
           <button type="button" data-preset="regional">Guerra regional</button>
           <button type="button" data-preset="granja">Granja máxima</button>
           <button type="button" data-preset="minimo">Sólo lo guardado</button>
+          <button type="button" data-preset="grande">10 personas y 10 perros</button>
         </div>
       </fieldset>
       <fieldset>
@@ -222,8 +223,8 @@ tfoot td { background: var(--panel2); }
       </fieldset>
       <fieldset>
         <legend>Habitantes</legend>
-        <label class="ctl" for="personas"><span class="row">Personas<output id="o-personas"></output></span><input type="range" id="personas" min="1" max="10" step="1" value="5"></label>
-        <label class="ctl" for="perros"><span class="row">Perros<output id="o-perros"></output></span><input type="range" id="perros" min="0" max="8" step="1" value="4"></label>
+        <label class="ctl" for="personas"><span class="row">Personas<output id="o-personas"></output></span><input type="range" id="personas" min="1" max="10" step="1" value="5"><span class="hint">Hasta 10 personas y 10 perros. Al subir, sube también la superficie, la ventilación y lo guardado (o usa el escenario «10 + 10»).</span></label>
+        <label class="ctl" for="perros"><span class="row">Perros<output id="o-perros"></output></span><input type="range" id="perros" min="0" max="10" step="1" value="4"></label>
         <label class="ctl" for="pesoPerro"><span class="row">Peso de cada perro<output id="o-pesoPerro"></output></span><input type="range" id="pesoPerro" min="5" max="45" step="1" value="20"></label>
         <label class="ctl" for="kcalPersona"><span class="row">Comida por persona<output id="o-kcalPersona"></output></span><input type="range" id="kcalPersona" min="1600" max="3000" step="50" value="2200"></label>
       </fieldset>
@@ -246,6 +247,7 @@ tfoot td { background: var(--panel2); }
         <label class="ctl" for="algasL"><span class="row">Fotobiorreactor de algas<output id="o-algasL"></output></span><input type="range" id="algasL" min="0" max="2000" step="50" value="200"></label>
         <label class="chk" for="algasEnPecera"><input type="checkbox" id="algasEnPecera"> Algas dentro de la pecera (en vez de su propio fotobiorreactor)</label>
         <label class="ctl" for="acuarioL"><span class="row">Pecera (tilapia)<output id="o-acuarioL"></output></span><input type="range" id="acuarioL" min="0" max="3000" step="100" value="500"></label>
+        <label class="chk" for="calentarPecera"><input type="checkbox" id="calentarPecera" checked> Calentar la pecera a 28 °C (la tilapia muere abajo de ~11 °C)</label>
         <label class="ctl" for="alimentoPeces"><span class="row">Alimento para tilapia<output id="o-alimentoPeces"></output></span><input type="range" id="alimentoPeces" min="0" max="1000" step="25" value="300"><span class="hint">Si se acaba, los peces se cosechan y se comen.</span></label>
       </fieldset>
       <fieldset>
@@ -266,7 +268,7 @@ tfoot td { background: var(--panel2); }
       <fieldset>
         <legend>Comida guardada</legend>
         <label class="ctl" for="comidaDias"><span class="row">Para las personas<output id="o-comidaDias"></output></span><input type="range" id="comidaDias" min="0" max="1100" step="10" value="900"></label>
-        <label class="ctl" for="croquetasKg"><span class="row">Croquetas para los perros<output id="o-croquetasKg"></output></span><input type="range" id="croquetasKg" min="0" max="3000" step="50" value="1500"></label>
+        <label class="ctl" for="croquetasKg"><span class="row">Croquetas para los perros<output id="o-croquetasKg"></output></span><input type="range" id="croquetasKg" min="0" max="6000" step="50" value="1500"></label>
       </fieldset>
     </aside>
   </div>
@@ -298,6 +300,29 @@ tfoot td { background: var(--panel2); }
     <p id="plan-note">Plano esquemático a escala. Se dibuja con el diseño actual: si cambias personas, área de cultivo o comida guardada, los cuartos cambian de tamaño.</p>
     <div class="tablewrap" style="border:0"><div id="plan" style="min-width:640px"></div></div>
     <ul class="events" id="plan-legend" style="max-width:640px"></ul>
+  </section>
+
+  <section class="doc" id="agua">
+    <div class="eyebrow">Agua</div>
+    <h2>Cómo se recicla el agua</h2>
+    <p>Litros por día en el día que tengas seleccionado. El agua más limpia es la que condensa el deshumidificador: es casi destilada. Las aguas grises sólo vuelven para higiene y plantas, nunca para beber. La orina y las heces no se reciclan como agua: van a un baño seco.</p>
+    <div class="tablewrap" style="border:0"><div id="water-flow" style="min-width:640px"></div></div>
+    <div class="tablewrap"><table><thead><tr><th>Corriente</th><th>Tratamiento</th><th>Para qué se usa</th></tr></thead><tbody>
+      <tr><td>Lluvia del techo</td><td>Se tira el primer mes después de la lluvia radiactiva y la primera lluvia de cada tormenta (separador de primeras aguas) → filtro de sedimento 20 y 5 µm → carbón activado → luz UV</td><td>Todo, también para beber</td></tr>
+      <tr><td>Condensado del deshumidificador (respiración, sudor, plantas, pecera)</td><td>Carbón activado → luz UV → un poco de sal mineral para que no sepa a destilada</td><td>Todo; es la mejor agua para beber</td></tr>
+      <tr><td>Aguas grises (regadera, lavabo, trastes)</td><td>Trampa de grasa → filtro de arena o biofiltro → carbón → UV; se usa en pocos días</td><td>Regadera, ropa, trapear, riego de cultivos en sustrato</td></tr>
+      <tr><td>Orina (baño con separación)</td><td>Se guarda en garrafón cerrado 1 mes y se diluye 1 : 3 a 1 : 10 con agua</td><td>Abono de nitrógeno para cultivos en tierra; no para la hidroponía</td></tr>
+      <tr><td>Heces</td><td>Baño seco con aserrín o fibra de coco y ventilación propia; se composta un año</td><td>No va a los cultivos de comida dentro del búnker</td></tr>
+      <tr><td>Agua de la pecera</td><td>Recambio de 1–2 % al día; la que sale es abono para las algas y las plantas (acuaponía) pasándola por un filtro</td><td>Riego y algas</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="doc" id="salud">
+    <div class="eyebrow">Salud</div>
+    <h2>Botiquín, suplementos y alimentación</h2>
+    <p id="salud-intro"></p>
+    <div class="tablewrap"><table><thead><tr><th>Qué</th><th>Por qué</th><th class="num">Cantidad para el periodo</th></tr></thead><tbody id="salud-body"></tbody></table></div>
+    <p class="note">Esta lista es para planear con tu médico y tu veterinario, no sustituye su receta. Las dosis de suplementos son las recomendadas para la población general. Los antibióticos y las medicinas de enfermedades crónicas necesitan receta, y conviene pedir una reserva extra. El yoduro de potasio sólo se toma si lo indican las autoridades de salud.</p>
   </section>
 
   <section class="doc" id="clima">
@@ -343,6 +368,9 @@ tfoot td { background: var(--panel2); }
       <div class="eq"><span class="what">8c · Algas dentro o fuera de la pecera</span>
         <math display="block"><msub><mtext>O</mtext><mrow><mn>2</mn><mo>,</mo><mtext>neto</mtext></mrow></msub><mo>=</mo><mn>1.4</mn><mo>(</mo><msub><mi>B</mi><mtext>día</mtext></msub><mo>−</mo><mn>0.25</mn><msub><mi>B</mi><mtext>día</mtext></msub><mo>)</mo><mo>,</mo><mspace width="0.5em"/><msub><mi>p</mi><mtext>pecera</mtext></msub><mo>≈</mo><mn>0.3</mn><mspace width="0.1em"/><msub><mi>p</mi><mtext>reactor</mtext></msub></math>
         <p>Separadas es mejor. Dentro de la pecera el agua turbia y la sombra bajan su producción a ~30 %. De noche respiran ~25 % de lo que hicieron de día y le quitan oxígeno al agua justo cuando los peces más lo necesitan; un florecimiento que se muere puede asfixiar a toda la pecera. El agua de los peces sí sirve para fertilizar las algas y las plantas (acuaponía) si se pasa por un filtro.</p></div>
+      <div class="eq"><span class="what">8d · Calentador de la pecera</span>
+        <math display="block"><msub><mi>P</mi><mtext>pecera</mtext></msub><mo>=</mo><mi>U</mi><msub><mi>A</mi><mtext>pecera</mtext></msub><mo>(</mo><mn>28</mn><mtext> °C</mtext><mo>−</mo><msub><mi>T</mi><mtext>cuarto</mtext></msub><mo>)</mo><mo>,</mo><mspace width="0.4em"/><mi>U</mi><mi>A</mi><mo>≈</mo><mn>20</mn><mtext> W/K por 500 L</mtext><mo>,</mo><mspace width="0.4em"/><msub><mi>g</mi><mi>T</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>T</mi><mtext>agua</mtext></msub><mo>−</mo><mn>18</mn></mrow><mn>10</mn></mfrac></math>
+        <p>La tilapia crece mejor entre 28 y 31 °C y muere abajo de ~11 °C. Con el cuarto a ~19 °C, calentar 500 L cuesta ~4 kWh al día y va con las cargas vitales. Sin calentador come y crece en proporción a lo tibia que esté el agua. No necesita sal; 1–3 g/L la protege del estrés y de algunos parásitos.</p></div>
       <div class="eq"><span class="what">9 · Energía por prioridades</span>
         <math display="block"><mtext>sol</mtext><mo>=</mo><msub><mtext>kWp</mtext><mrow></mrow></msub><mo>×</mo><msub><mi>Y</mi><mtext>mes</mtext></msub><mo>×</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mi>f</mi><mo>)</mo><mo>,</mo><mspace width="0.4em"/><msub><mi>Y</mi><mtext>Celaya</mtext></msub><mo>≈</mo><mn>5.8</mn><mo>–</mo><mn>8</mn><mtext> kWh/kWp·día</mtext></math>
         <p>Primero ventilación, luz y refrigerador (pueden usar la batería hasta 10 % y el generador). Luego se carga la batería a 60 %. Lo que sobra va a los cultivos, las algas y el deshumidificador. Si falta, se apagan de abajo hacia arriba.</p></div>
@@ -369,6 +397,8 @@ tfoot td { background: var(--panel2); }
       <tr><td>Algas</td><td>0.5 g/L·día; 1.4 g de O₂ por g</td><td><span class="tag cal">Calibrado (literatura: 10–100 L por persona para el O₂)</span></td></tr>
       <tr><td>Tilapia</td><td>150 mg O₂/kg·h; conversión 1.8; 25 kg/m³</td><td><span class="tag lit">Estudios de acuaponía</span></td></tr>
       <tr><td>Alimento de tilapia</td><td>1.5 % del peso al día; bulto de 25 kg con 32 % de proteína</td><td><span class="tag lit">Etiqueta del alimento (3 % para juveniles)</span></td></tr>
+      <tr><td>Temperatura de la tilapia</td><td>óptima 28–31 °C; letal abajo de 10–11 °C; sal opcional 1–3 g/L (tolera hasta 15)</td><td><span class="tag lit">Estudios de crecimiento de tilapia del Nilo</span></td></tr>
+      <tr><td>Vitamina C de los cultivos</td><td>lechuga 9 mg/100 g; papa 20 mg/100 g (frescos)</td><td><span class="tag lit">Tablas de composición</span> <span class="tag cal">por g de materia seca</span></td></tr>
       <tr><td>Solubilidad del CO₂ en agua</td><td>0.039 mol/L·atm a ~20 °C</td><td><span class="tag lit">Ley de Henry</span></td></tr>
       <tr><td>Algas en la pecera</td><td>30 % de la productividad; respiración nocturna 25 %</td><td><span class="tag cal">Calibrado</span></td></tr>
       <tr><td>Mínimas de Celaya</td><td>enero ≈ 7 °C; oscilación diaria 12–16 °C</td><td><span class="tag lit">Normales SMN 1991–2020 (vía Climate-Zone)</span> <span class="tag cal">meses intermedios estimados</span></td></tr>
@@ -462,10 +492,11 @@ const CTH = 12;                  // kWh/K: masa térmica interior (concreto y co
 
 // Cultivos: eficiencia del uso de la luz (NASA BPC, Wheeler 2008), g de materia seca por mol de luz
 const CROPS = {
-  lechuga: { name: 'Lechuga y hojas', lueTot: 0.46, lueEd: 0.42, kcal: 2.9, cycle: 30, prot: 0.25 },
-  papa:    { name: 'Papa', lueTot: 0.64, lueEd: 0.44, kcal: 3.6, cycle: 90, prot: 0.09 },
-  trigo:   { name: 'Trigo', lueTot: 0.59, lueEd: 0.17, kcal: 3.4, cycle: 80, prot: 0.13 },
-  frijol:  { name: 'Frijol de soya', lueTot: 0.43, lueEd: 0.16, kcal: 4.2, cycle: 90, prot: 0.36 },
+  // vitC: mg por g de materia seca comestible (lechuga 9 mg/100 g fresco al 5 % MS; papa 20 mg/100 g al 21 % MS)
+  lechuga: { name: 'Lechuga y hojas', lueTot: 0.46, lueEd: 0.42, kcal: 2.9, cycle: 30, prot: 0.25, vitC: 1.8 },
+  papa:    { name: 'Papa', lueTot: 0.64, lueEd: 0.44, kcal: 3.6, cycle: 90, prot: 0.09, vitC: 0.95 },
+  trigo:   { name: 'Trigo', lueTot: 0.59, lueEd: 0.17, kcal: 3.4, cycle: 80, prot: 0.13, vitC: 0 },
+  frijol:  { name: 'Frijol de soya', lueTot: 0.43, lueEd: 0.16, kcal: 4.2, cycle: 90, prot: 0.36, vitC: 0.2 },
 };
 const O2_PER_G_BIOMASS = 32 / 30;   // CH2O: 1 g de biomasa libera 1.07 g de O2
 const CO2_PER_G_BIOMASS = 44 / 30;
@@ -484,7 +515,7 @@ function config(o = {}) {
     hidroArea: 10, hidroCultivo: 'lechuga', hidroPPFD: 250,
     aeroArea: 10, aeroCultivo: 'papa', aeroPPFD: 400, fotoperiodo: 16, ledEff: 2.7,
     algasL: 200, algasProd: 0.5, algasW: 1.0, algasEnPecera: false, algasNoche: 0.25,
-    acuarioL: 500, peces: 10, alimentoPeces: 300,
+    acuarioL: 500, peces: 10, alimentoPeces: 300, calentarPecera: true, tPecera: 28, salPecera: 2,
     panelW: 550, paneles: 20, bateriaKWh: 20.5, generadorKW: 7, combustible: 'gaslp', combustibleL: 600,
     cargaBase: 0.25, tSet: 17, calefKW: 3,
     aguaL: 20000, aguaPersona: 15, aguaPerro: 1.0, reciclaGris: 0.5, deshum: 0.8, deshumKWhL: 0.55, techo: 100, lluviaDia: 30,
@@ -527,7 +558,7 @@ function simular(cin) {
   };
   const s0 = { soc: s.soc, agua: s.agua, o2: s.o2, co2: s.co2, co2aq: s.co2aq };
   const days = [];
-  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0 };
+  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0, pescadoKg: 0 };
   const firsts = {};
   const mark = (k, d) => { if (firsts[k] === undefined) firsts[k] = d; };
   const ventQ = c.vent * 1000; // L/h
@@ -547,7 +578,8 @@ function simular(cin) {
     const luz = 1 - sc.light * f;
     const lluviaFac = 1 - sc.rain * fT / 0.8;
     const day = { d, f, fT, Tout, Tmin, luz, rainFac: lluviaFac, o2min: 1, co2max: 0, o2: 0, co2: 0, T: 0, pv: 0, gen: 0, shed: 0, kcalProd: 0,
-      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0, co2Aq: 0 };
+      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0, co2Aq: 0, Taq: 0, vitC: 0,
+      w: { lluvia: 0, condensado: 0, grises: 0, beber: 0, cocina: 0, higiene: 0, perros: 0, plantas: 0, pecera: 0, vaporPerdido: 0, negras: 0 } };
     const sealed = d < c.sellarDias;
     s.Tg += ((18.3 - sc.dT * fT / 0.8) - s.Tg) / 365;   // la tierra alrededor se enfría despacio
     let ledHours = 0;
@@ -568,7 +600,10 @@ function simular(cin) {
       const cool = !sealed && s.T > 25 && Tout < s.T - 2;
       const ventFlow = sealed ? 0 : cool ? Math.max(c.vent, c.ventMax) : c.vent;
       const ventKW = sealed ? 0.02 : ventFlow * c.ventW / 1000;
-      const vital = [['vent', ventKW], ['base', c.cargaBase], ['calef', s.T < c.tSet ? c.calefKW : 0]];
+      // pecera: pierde ~20 W/K por cada 500 L (con tapa y aislamiento lateral); la tilapia muere abajo de ~11 °C
+      const UAaq = c.acuarioL > 0 ? 0.020 * Math.pow(c.acuarioL / 500, 2 / 3) : 0;
+      const aqKW = c.calentarPecera ? Math.max(0, UAaq * (c.tPecera - s.T)) : 0;
+      const vital = [['vent', ventKW], ['base', c.cargaBase], ['calef', s.T < c.tSet ? c.calefKW : 0], ['pecera', aqKW]];
       const extra = [['deshum', s.lastRecov * c.deshumKWhL], ['algas', lights ? algKW : 0], ['led', lights ? ledKW : 0]];
       const served = {};
       let pvLeft = pv, gen = 0, short = 0, ch = 0;
@@ -611,6 +646,9 @@ function simular(cin) {
       const algFrac = lights && algKW > 0 ? served.algas / algKW : 0;
       const ventOn = sealed ? 0 : (ventKW > 0 ? served.vent / ventKW : 1) * ventFlow / Math.max(1e-9, c.vent);
       const deshFrac = extra[0][1] > 0 ? served.deshum / extra[0][1] : 1;
+      const aqFrac = aqKW > 0 ? served.pecera / aqKW : (c.calentarPecera ? 1 : 0);
+      const Taq = c.calentarPecera ? s.T + aqFrac * (c.tPecera - s.T) : s.T;
+      day.Taq += Taq / 24;
       if (lights) ledHours += ledFrac;
 
       // 3. Fotosíntesis de plantas y algas (sólo con luz)
@@ -620,7 +658,7 @@ function simular(cin) {
         const mol = k.ppfd * 3600e-6 * k.area * ledFrac;  // mol de fotones en la hora
         const bio = mol * k.cr.lueTot;                     // g de biomasa seca
         o2P += bio * O2_PER_G_BIOMASS / 32; co2P += bio * CO2_PER_G_BIOMASS / 44; transp += bio * TRANSP_L_PER_G;
-        if (d >= k.cr.cycle) kcalH += mol * k.cr.lueEd * k.cr.kcal;
+        if (d >= k.cr.cycle) { kcalH += mol * k.cr.lueEd * k.cr.kcal; day.vitC += mol * k.cr.lueEd * k.cr.vitC; }
       }
       // en la pecera el agua es turbia y está sombreada: ~30 % de la productividad de un fotobiorreactor
       const algProd = c.algasProd * (c.algasEnPecera ? 0.3 : 1);
@@ -680,7 +718,10 @@ function simular(cin) {
       const vapor = vaporMet + transp + evapAcu;
       const recov = vapor * c.deshum * deshFrac;
       s.lastRecov = vapor * c.deshum;
-      const grey = c.aguaPersona * c.personas * 0.6 / 24 * c.reciclaGris;
+      // de cada persona: 3 L para beber, 3 L para cocinar, el resto para higiene; las grises son higiene y la mitad de la cocina
+      const beber = Math.min(3, c.aguaPersona) * c.personas / 24, cocina = Math.min(3, Math.max(0, c.aguaPersona - 3)) * c.personas / 24;
+      const higiene = Math.max(0, c.aguaPersona - 6) * c.personas / 24;
+      const grey = (higiene + 0.5 * cocina) * c.reciclaGris;
       const rain = d >= c.lluviaDia ? c.techo * RAIN_MM[m] / 30.42 / 24 * 0.8 * lluviaFac : 0;
       const inflow = recov + grey + rain, outflow = use + transp + evapAcu;
       const want = s.agua + inflow - outflow;
@@ -688,18 +729,24 @@ function simular(cin) {
       tot.aguaIn += inflow; tot.aguaOut += outflow; tot.aguaRebose += Math.max(0, want - next); tot.aguaFalta += Math.max(0, next - want);
       day.aguaFalta += Math.max(0, next - want);
       s.agua = next; day.lluvia += rain;
+      const w = day.w;
+      w.lluvia += rain; w.condensado += recov; w.grises += grey; w.beber += beber; w.cocina += cocina; w.higiene += higiene;
+      w.perros += c.aguaPerro * c.perros / 24; w.plantas += transp; w.pecera += evapAcu; w.vaporPerdido += vapor - recov;
+      w.negras += Math.max(0, beber + 0.5 * cocina - vaporMet * c.personas * 2.0 / (2.0 * c.personas + 0.4 * c.perros || 1));
       day.kcalProd += kcalH;
     }
     if (day.aguaFalta > 0) mark('agua', d);
     // comida del día
-    const feedNeed = s.peces * 0.015;                                  // 1.5 % del peso al día
+    const gT = clamp((day.Taq - 18) / 10, 0, 1);                       // crecen bien a 28 °C, casi nada a 18 °C
+    if (s.peces > 0 && day.Taq < 11) { mark('peces mueren de frío', d); day.kcalProd += s.peces * 960; s.peces = 0; }
+    const feedNeed = s.peces * 0.015 * gT;                             // 1.5 % del peso al día si el agua está tibia
     const fishFeed = Math.min(s.alimPeces, feedNeed);
     s.alimPeces -= fishFeed; s.peces += fishFeed / 1.8;                // conversión alimenticia 1.8
-    if (s.peces > 0 && fishFeed < feedNeed * 0.999) {                  // sin alimento: se cosechan todos
+    if (s.peces > 0 && feedNeed > 0 && fishFeed < feedNeed * 0.999) {  // sin alimento: se cosechan todos
       mark('alimento de peces', d); day.kcalProd += s.peces * 960; s.peces = 0;
     }
     const maxFish = c.acuarioL / 1000 * 25;
-    if (s.peces > maxFish) { day.kcalProd += (s.peces - maxFish) * 960; s.peces = maxFish; }
+    if (s.peces > maxFish) { day.kcalProd += (s.peces - maxFish) * 960; tot.pescadoKg += s.peces - maxFish; s.peces = maxFish; }
     const need = kcalHum - day.kcalProd;
     tot.kcalProd += Math.min(day.kcalProd, kcalHum);
     if (need > 0) { const take = Math.min(s.comida, need); s.comida -= take; if (take < need) { tot.kcalFalta += need - take; mark('comida', d); } }
@@ -737,6 +784,8 @@ function necesidades(c) {
     ventPara1000ppm: r.co2Met * R_GAS * T_REF / (P_ALT * 1000) / 0.00058,   // m3/h
     areaO2: r.o2Met * 24 * 32 / O2_PER_G_BIOMASS / (c.aeroPPFD * 3600e-6 * c.fotoperiodo * CROPS.papa.lueTot),
     areaComida: c.kcalPersona * c.personas / (c.aeroPPFD * 3600e-6 * c.fotoperiodo * CROPS.papa.lueEd * CROPS.papa.kcal),
+    salPersonasKg: 0.005 * c.personas * c.dias,                                  // 5 g por persona al día
+    salPeceraKg: c.acuarioL * c.salPecera / 1000 * (1 + 0.015 * c.dias),         // carga inicial + recambio de 1.5 % al día
   };
 }
 
@@ -762,6 +811,7 @@ const PRESETS = {
   regional: { escenario: '5Tg', tasaH1: 1 },
   granja: { hidroArea: 40, aeroArea: 60, paneles: 60, bateriaKWh: 61.44, algasL: 1000, acuarioL: 2000, comidaDias: 600 },
   minimo: { hidroArea: 0, aeroArea: 0, algasL: 0, acuarioL: 0, paneles: 8, comidaDias: 1100, croquetasKg: 1300 },
+  grande: { personas: 10, perros: 10, area: 220, vent: 250, aguaL: 40000, techo: 200, paneles: 36, bateriaKWh: 40.96, comidaDias: 900, croquetasKg: 3200, combustibleL: 1200, calSodada: 200, hidroArea: 20, aeroArea: 20 },
 };
 const DEFAULTS = {};
 let cfg, res, day = 0, running = false, clock = 0;
@@ -773,6 +823,7 @@ function readCfg() {
   o.tasaH1 = Math.pow(10, o.tasaH1);
   o.peces = o.acuarioL / 1000 * 20;
   o.algasEnPecera = $('algasEnPecera').checked;
+  o.calentarPecera = $('calentarPecera').checked;
   return config(o);
 }
 function refreshOutputs() { for (const k of NUM) $('o-' + k).value = UNITS[k]($(k).value); $('o-day').value = `día ${day}`; }
@@ -795,7 +846,7 @@ function phaseOf(d) {
 document.querySelectorAll('aside input, aside select').forEach((el) => el.addEventListener('input', () => { refreshOutputs(); recompute(); }));
 document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
   for (const k in DEFAULTS) $(k).value = DEFAULTS[k];
-  $('algasEnPecera').checked = false;
+  $('algasEnPecera').checked = false; $('calentarPecera').checked = true;
   const p = PRESETS[b.dataset.preset];
   for (const k in p) $(k).value = p[k];   // tasaH1 va en escala logarítmica (1 = 10 R/h)
   refreshOutputs(); recompute(); day = 0; running = true; setRun();
@@ -930,7 +981,7 @@ function drawScene(dt) {
     const nf = Math.min(8, Math.max(1, Math.round(x.peces / 2)));
     for (let k = 0; k < nf; k++) { const fx = 330 + ((clock * 30 + k * 37) % 240), fy = aqY + 15 + (k % 3) * 14; ctx.fillStyle = C.food; ctx.beginPath(); ctx.ellipse(fx, fy, 7, 4, 0, 0, 6.283); ctx.fill(); }
     lab(`pecera ${fmtN(c.acuarioL)} L · ${x.peces.toFixed(1)} kg de tilapia · alimento ${fmtN(x.alimPeces)} kg`, 316, aqY + 76, x.alimPeces < 10 ? C.warn : C.muted, 'left', 10);
-    lab(`CO₂ disuelto: ${(x.co2aqMol * 44).toFixed(1)} g`, 316, aqY + 90, C.muted, 'left', 10);
+    lab(`agua ${x.Taq.toFixed(1)} °C · CO₂ disuelto ${(x.co2aqMol * 44).toFixed(1)} g`, 316, aqY + 90, x.Taq < 20 ? C.warn : C.muted, 'left', 10);
   }
   const o2bio = (x.o2Plant + x.o2Alg - x.o2Fish) / x.o2Met;
   lab(`O₂ de este cuarto: ${(100 * o2bio).toFixed(1)} % de lo que se respira`, 316, aqY - 10, o2bio > 0.2 ? C.plant : C.warn, 'left', 11, 600);
@@ -1054,7 +1105,7 @@ const LIMITS = { 'cal sodada': 'Se acaba la cal sodada', agua: 'Falta agua', com
   combustible: 'Se acaba el combustible del generador', 'combustible caducado': 'El combustible guardado caduca', 'CO₂ arriba de 5 000 ppm': 'CO₂ arriba de 5 000 ppm (límite de 8 h)',
   'CO₂ peligroso (3 %)': 'CO₂ arriba de 3 %: peligroso', 'oxígeno bajo (19.5 %)': 'Oxígeno abajo de 19.5 %', 'frío dentro (< 12 °C)': 'Frío dentro (menos de 12 °C)',
   'calor dentro (> 30 °C)': 'Calor dentro (más de 30 °C)', 'se apagan cargas vitales': 'No alcanza la energía para ventilar y lo básico',
-  'cultivos con menos de la mitad de luz': 'Los cultivos reciben menos de la mitad de su luz', 'alimento de peces': 'Se acaba el alimento de la tilapia (se cosecha)' };
+  'cultivos con menos de la mitad de luz': 'Los cultivos reciben menos de la mitad de su luz', 'alimento de peces': 'Se acaba el alimento de la tilapia (se cosecha)', 'peces mueren de frío': 'La pecera se enfría abajo de 11 °C: mueren los peces' };
 function renderStatic() {
   const f = res.firsts, n = res.need, c = cfg;
   const ev = Object.entries(f).sort((a, b) => a[1] - b[1]);
@@ -1069,6 +1120,7 @@ function renderStatic() {
     ['Ventilación para CO₂ ≤ 1 000 ppm', `${fmtN(n.ventPara1000ppm)} m³/h`],
     ['Cal sodada por día si se sella', `${n.calSodadaSellado.toFixed(1)} kg`],
     ['Papa bajo LED para todo el O₂', `${fmtN(n.areaO2)} m²`],
+    ['Sal para personas y pecera', `${fmtN(n.salPersonasKg)} + ${fmtN(n.salPeceraKg)} kg`],
     ['Papa bajo LED para toda la comida', `${fmtN(n.areaComida)} m² y ${fmtN(n.areaComida * c.aeroPPFD / c.ledEff * c.fotoperiodo * 3600 / 3.6e6)} kWh/día de focos`],
   ].map(([a, b]) => `<li><span>${a}</span><span class="when" style="color:var(--fg)">${b}</span></li>`).join('');
   // hallazgos
@@ -1091,7 +1143,7 @@ function renderStatic() {
   }
   $('phases').innerHTML = html;
   $('tl-legend').innerHTML = [['crit', 'detonación'], ['warn', 'encierro por radiación'], ['on', 'invierno nuclear'], ['ok', 'recuperación']].map(([k, n]) => `<span><i class="sw" style="background:${cols[k]}"></i>${n}</span>`).join('');
-  renderBuy(); renderPlan(); renderClimaTable();
+  renderBuy(); renderPlan(); renderClimaTable(); renderSalud(); lastWaterDay = -1;
 }
 function renderTiles() {
   const x = res.days[day], [ph, cl] = phaseOf(day);
@@ -1155,6 +1207,11 @@ function presupuesto() {
     { n: 'Arroz, bulto de 25 kg', d: '60 % de las calorías guardadas', q: Math.ceil(rice / 25), p: 857, u: ML + 'arroz-25-kg', s: 'Mercado Libre' },
     { n: 'Frijol pinto, bulto de 25 kg', d: '40 % de las calorías guardadas; agrega aceite, sal, avena y vitaminas', q: Math.ceil(beans / 25), p: 1185, u: ML + 'bulto-de-frijol-pinto', s: 'Mercado Libre' },
     { n: 'Croquetas para perro, 20 kg', d: '', q: Math.ceil(c.croquetasKg / 20), p: 669, u: ML + 'croquetas-20-kg', s: 'Mercado Libre' },
+    { n: 'Sal de grano, bulto de 25 kg', d: 'Para cocinar y para la pecera (la de la pecera, sin yodo)', q: Math.ceil((n.salPersonasKg + n.salPeceraKg) / 25), p: 580, u: ML + 'sal-de-grano', s: 'Mercado Libre' },
+    { g: 'Salud' },
+    { n: 'Vitamina D3 2000 UI, 350 cápsulas', d: 'Sin sol, la piel no la produce', q: Math.ceil(c.personas * c.dias / 350), p: 292, u: ML + 'vitamina-d3-2000-iu', s: 'Mercado Libre' },
+    { n: 'Multivitamínico con B12, 365 tabletas', d: 'El arroz y el frijol no traen B12', q: Math.ceil(c.personas * c.dias / 365), p: 695, u: 'https://www.mercadolibre.com.mx/multivitaminico-diario-completo-365-tabletas-eg-p58-sabor-sin-sabor/p/MLM27968349', s: 'Mercado Libre' },
+    { n: 'Botiquín, medicinas y vitamina C', d: 'Sin precio: depende de lo que recete tu médico (ver «Botiquín, suplementos y alimentación»)', q: 1, p: null, u: ML + 'botiquin-primeros-auxilios', s: 'Cotizar' },
   ];
 }
 let eqQty = {};
@@ -1230,10 +1287,10 @@ function renderPlan() {
   for (let r = 0; r < rowsP; r++) for (let k = 0; k < Math.min(10, c.paneles - r * 10); k++) svg += rect(x0 + k * 1.15, yP + r * 2.4, 1.1, 2.2, 'var(--o2)', 0.35);
   if (c.paneles) svg += text(x0 + 5.7, yP + rowsP * 2.4 + 0.8, `${c.paneles} paneles (≈ ${(c.paneles * 2.4 * 1.4).toFixed(0)} m² de terreno)`, 'pl-d');
   const tw = Math.sqrt(c.techo);
-  svg += rect(-tw - 3.5, D - tw, tw, tw, 'var(--steel)', 0.25) + text(-tw / 2 - 3.5, D - tw / 2, `techo ${c.techo} m²`, 'pl-d');
+  svg += rect(-tw - 7, D - tw, tw, tw, 'var(--steel)', 0.25) + text(-tw / 2 - 7, D - tw / 2, `techo ${c.techo} m²`, 'pl-d');
   // escala
   svg += `<line x1="${ox}" y1="${oy + (D + 1.5) * px}" x2="${ox + 5 * px}" y2="${oy + (D + 1.5) * px}" stroke="var(--fg)" stroke-width="2"/>` + text(2.5, D + 2.4, '5 m', 'pl-d');
-  const minX = -(tw + 4), maxX = x0 + 12, maxY = Math.max(D + 3, yP + rowsP * 2.4 + 2);
+  const minX = -(tw + 7.5), maxX = x0 + 12, maxY = Math.max(D + 3, yP + rowsP * 2.4 + 2);
   const vb = `${ox + minX * px} 0 ${(maxX - minX) * px + 40} ${oy + maxY * px}`;
   $('plan').innerHTML = `<svg viewBox="${vb}" width="100%" role="img" aria-label="Plano esquemático del búnker y del terreno"><style>.pl-n{font:600 13px 'Saira Condensed',sans-serif;fill:var(--fg)}.pl-d{font:500 10.5px 'IBM Plex Mono',monospace;fill:var(--muted)}.pl-num{font:700 12px 'IBM Plex Mono',monospace;fill:#1a1205}</style>${svg}</svg>`;
   $('plan-legend').innerHTML = legend.join('') + `<li><span>Total interior</span><span class="when" style="color:var(--fg)">${total.toFixed(0)} m² · ${W.toFixed(1)} × ${D.toFixed(1)} m, 2.6 m de alto</span></li>`;
@@ -1296,12 +1353,71 @@ function drawClima() {
   leg.forEach(([col, n]) => { ctx.fillStyle = col; ctx.fillRect(lx, pad.t + 3, 10, 6); ctx.fillStyle = C.muted; ctx.fillText(n, lx + 14, pad.t + 9); lx += ctx.measureText(n).width + 30; });
 }
 
+// ---------- Agua: diagrama de flujos ----------
+let lastWaterDay = -1;
+function renderWater() {
+  if (lastWaterDay === day) return; lastWaterDay = day;
+  const w = res.days[day].w, f = (v) => fmtN(v, v < 10 ? 1 : 0);
+  const maxW = Math.max(1, ...Object.values(w));
+  const sw = (v) => 1.5 + 14 * Math.sqrt(Math.max(0, v) / maxW);
+  const box = (x, y, wd, h, title, val, col) => `<rect x="${x}" y="${y}" width="${wd}" height="${h}" rx="8" fill="var(--panel2)" stroke="${col}" stroke-width="2"/><text x="${x + wd / 2}" y="${y + (val ? 20 : 25)}" text-anchor="middle" class="wf-t">${title}</text>${val ? `<text x="${x + wd / 2}" y="${y + 38}" text-anchor="middle" class="wf-v">${val}</text>` : ''}`;
+  const arrow = (d, v, col, label, lx, ly) => `<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw(v)}" stroke-opacity="0.7" stroke-linecap="round"/>${label ? `<text x="${lx}" y="${ly}" class="wf-v" text-anchor="middle">${label}</text>` : ''}`;
+  let svg = '';
+  // de dónde entra el agua a las cisternas
+  svg += arrow('M 150 50 C 230 50, 230 150, 300 150', w.lluvia, 'var(--water)', `lluvia ${f(w.lluvia)} L`, 220, 40);
+  svg += arrow('M 150 150 L 300 170', w.condensado, 'var(--o2)', `condensado ${f(w.condensado)} L`, 225, 140);
+  svg += arrow('M 150 260 C 230 260, 230 190, 300 190', w.grises, 'var(--steel)', `grises tratadas ${f(w.grises)} L`, 225, 290);
+  svg += box(20, 25, 130, 50, 'Techo', '', 'var(--water)') + box(20, 125, 130, 50, 'Deshumidificador', '', 'var(--o2)') + box(20, 235, 130, 50, 'Arena, carbón, UV', '', 'var(--steel)');
+  svg += box(300, 130, 140, 80, 'Cisternas', `${fmtN(res.days[day].agua)} L`, 'var(--water)');
+  // en qué se usa
+  const uses = [['Beber', w.beber, 30], ['Cocinar', w.cocina, 85], ['Higiene', w.higiene, 140], ['Perros', w.perros, 195], ['Plantas', w.plantas, 250], ['Pecera', w.pecera, 305]];
+  uses.forEach(([n, v, y]) => { svg += arrow(`M 440 170 C 500 170, 500 ${y + 20}, 560 ${y + 20}`, v, 'var(--water)'); svg += box(560, y, 120, 40, n, '', 'var(--water)') + `<text x="690" y="${y + 25}" class="wf-v">${f(v)} L</text>`; });
+  // a dónde se va
+  svg += arrow('M 740 120 C 780 120, 790 70, 820 70', w.condensado + w.vaporPerdido, 'var(--o2)');
+  svg += box(820, 45, 150, 50, 'Vapor al aire', `${f(w.condensado + w.vaporPerdido)} L`, 'var(--o2)');
+  svg += `<text x="895" y="112" text-anchor="middle" class="wf-v">${f(w.vaporPerdido)} L se van al ventilar</text>`;
+  svg += arrow('M 740 175 C 780 175, 790 190, 820 190', w.higiene + w.cocina * 0.5, 'var(--steel)');
+  svg += box(820, 165, 150, 50, 'Aguas grises', `${f(w.higiene + w.cocina * 0.5)} L`, 'var(--steel)');
+  svg += arrow('M 740 230 C 780 230, 790 300, 820 300', w.negras, 'var(--food)');
+  svg += box(820, 275, 150, 50, 'Baño seco', `${f(w.negras)} L de orina`, 'var(--food)');
+  // ciclos de regreso
+  svg += `<path d="M 895 45 C 895 0, 85 0, 85 125" fill="none" stroke="var(--o2)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="480" y="16" text-anchor="middle" class="wf-v">el deshumidificador recupera ${Math.round(100 * w.condensado / Math.max(1e-9, w.condensado + w.vaporPerdido))} % del vapor</text>`;
+  svg += `<path d="M 895 215 C 895 250, 830 255, 830 255 M 820 340 C 400 360, 85 350, 85 285" fill="none" stroke="var(--steel)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="480" y="356" text-anchor="middle" class="wf-v">se trata y regresa ${Math.round(100 * cfg.reciclaGris)} % de las grises</text>`;
+  $('water-flow').innerHTML = `<svg viewBox="0 0 990 365" width="100%" role="img" aria-label="Diagrama de flujos de agua del día"><style>.wf-t{font:600 13px 'Saira Condensed',sans-serif;fill:var(--fg)}.wf-v{font:500 11px 'IBM Plex Mono',monospace;fill:var(--muted)}</style>${svg}</svg>`;
+}
+
+// ---------- Salud ----------
+function renderSalud() {
+  const c = cfg, P = c.personas, D = c.dias, G = c.perros, yrs = Math.max(1, Math.ceil(D / 365));
+  const from = Math.min(120, D - 1);
+  const vc = res.days.slice(from).reduce((a, d) => a + d.vitC, 0) / Math.max(1, D - from) / P;
+  $('salud-intro').textContent = `Bajo tierra no hay sol para producir vitamina D, y la comida guardada (arroz, frijol) no trae vitamina B12 y casi nada de vitamina C. Con tu diseño los cultivos dan ~${fmtN(vc)} mg de vitamina C por persona al día; se recomiendan 75–90 mg y abajo de ~10 mg aparece el escorbuto. Cantidades para ${P} personas, ${G} perros y ${D} días.`;
+  const rows = [
+    ['Vitamina D3, 1 000–2 000 UI al día', 'No hay sol. Lo recomendado son 600–800 UI; sin sol se suele usar 1 000–2 000 UI. No pasar de 4 000 UI.', `${fmtN(P * D)} cápsulas`],
+    ['Multivitamínico con B12 (2.4 µg) y hierro', 'Completa lo que no trae una dieta de granos; la B12 sólo viene de alimentos animales.', `${fmtN(P * D)} tabletas`],
+    ['Vitamina C, 100–250 mg al día', vc >= 75 ? `Los cultivos ya dan ~${fmtN(vc)} mg; tener una reserva por si fallan.` : `Los cultivos dan ~${fmtN(vc)} mg por persona; faltan ~${fmtN(Math.max(0, 75 - vc))} mg diarios.`, vc >= 75 ? `${fmtN(P * 90)} tabletas de reserva` : `${fmtN(P * D)} tabletas`],
+    ['Sales de rehidratación oral', 'Diarrea o vómito con agua limitada.', `${fmtN(P * yrs * 15)} sobres`],
+    ['Analgésicos y antifebriles (paracetamol, ibuprofeno)', 'Dolor, fiebre, inflamación.', 'según tu médico'],
+    ['Antialérgico, antidiarreico y antiácido', 'Polvo, comida diferente, encierro.', 'según tu médico'],
+    ['Antibióticos de amplio espectro', 'Infecciones de piel, dientes, vías urinarias y respiratorias. Con receta.', 'según tu médico'],
+    ['Medicinas crónicas de cada persona', 'Presión, diabetes, tiroides, anticonceptivos, inhaladores, etc.', `${D} días + 10 % de cada una`],
+    ['Yoduro de potasio 130 mg (adultos)', 'Protege la tiroides del yodo radiactivo por 24 h. Sólo si lo indican las autoridades; sobre todo para menores de 40 años, embarazadas y lactancia.', 'pide a tu médico la reserva'],
+    ['Curación', 'Gasas, vendas, cinta, clorhexidina, suturas adhesivas, guantes, tijeras, termómetro, baumanómetro, oxímetro.', `${yrs} botiquines completos`],
+    ['Dientes', 'Pasta con flúor, hilo, cepillos; un dolor de muelas sin dentista es grave.', `${fmtN(P * Math.ceil(D / 90))} cepillos`],
+    ['Higiene menstrual y de bebé si aplica', 'Las copas menstruales reutilizables ahorran espacio y agua.', 'según cada persona'],
+    ['Lentes y aparatos', 'Lentes de repuesto, baterías de aparatos auditivos.', '2 juegos por persona que los use'],
+    ['Perros: desparasitante y antipulgas', 'Según el calendario de tu veterinario; el encierro favorece pulgas y parásitos.', `${fmtN(G * Math.ceil(D / 90))} dosis de cada uno (cada 3 meses)`],
+    ['Perros: botiquín y medicinas crónicas', 'Vendas, clorhexidina, collar isabelino, sus medicinas.', `${D} días + 10 %`],
+  ];
+  $('salud-body').innerHTML = rows.map(([a, b, q]) => `<tr><td><strong>${a}</strong></td><td>${b}</td><td class="num">${q}</td></tr>`).join('');
+}
+
 // ---------- Lazo ----------
 let last = performance.now(), acc = 0;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now; clock += dt;
   if (running) { acc += dt * parseFloat($('speed').value); while (acc >= 1) { acc -= 1; day++; } if (day >= cfg.dias - 1) { day = cfg.dias - 1; running = false; setRun(); } }
-  renderTiles(); drawScene(dt); drawCharts(); drawClima();
+  renderTiles(); drawScene(dt); drawCharts(); drawClima(); renderWater();
   requestAnimationFrame(frame);
 }
 for (const k of [...NUM, ...SEL]) DEFAULTS[k] = $(k).value;
