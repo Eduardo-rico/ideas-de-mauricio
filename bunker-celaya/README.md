@@ -10,10 +10,12 @@ Cada componente tiene su propio modelo:
 - **Energía:** paneles con el sol reducido por el hollín, baterías y generador, con prioridades de carga.
 - **Agua:** cisternas, lluvia, deshumidificador y aguas grises.
 - **Comida guardada y temperatura.**
+- **Pecera:** absorbe CO₂ sólo hasta el equilibrio de Henry; las algas pueden ir dentro o en su propio fotobiorreactor, y el alimento de la tilapia se acaba.
+- **Plano a escala y clima de Celaya mes por mes** contra cada año del escenario.
 
 - `index.html` — la página: corte animado del búnker, línea de tiempo de 3 años, gráficas, qué se acaba y cuándo, ecuaciones y presupuesto con precios.
 - `model.js` — el modelo.
-- `escenarios.test.js` — 25 pruebas: `node escenarios.test.js`.
+- `escenarios.test.js` — 30 pruebas: `node escenarios.test.js`.
   - Los balances de energía, batería, agua, O₂ y CO₂ cierran en 7 casos.
   - El O₂ y el CO₂ por persona coinciden con NASA BVAD.
   - La regla 7:10 se cumple, y también las tendencias.

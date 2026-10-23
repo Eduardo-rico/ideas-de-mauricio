@@ -26,8 +26,9 @@ for (const o of casos) {
   const soc = Math.abs((e.soc - s0.soc) - (0.95 * t.ch - t.dis));
   const agua = Math.abs((e.agua - s0.agua) - (t.aguaIn - t.aguaOut - t.aguaRebose + t.aguaFalta));
   const o2 = Math.abs((e.o2 - s0.o2) - (t.o2Src + t.o2Vent + t.o2Bottle)) / r.molAir;
-  const co2 = Math.abs((e.co2 - s0.co2) - (t.co2Src + t.co2Vent - t.co2Scrub)) / r.molAir;
-  ok(eb < 1e-9 && soc < 1e-6 * Math.max(1, cb) && agua < 1e-6 && o2 < 1e-9 && co2 < 1e-9, `balances de energía, batería, agua, O₂ y CO₂ cierran: ${JSON.stringify(o)}`);
+  const co2 = Math.abs((e.co2 - s0.co2) - (t.co2Src + t.co2Vent - t.co2Scrub - t.co2Aq)) / r.molAir;
+  const aq = Math.abs((e.co2aq - s0.co2aq) - t.co2Aq);
+  ok(eb < 1e-9 && soc < 1e-6 * Math.max(1, cb) && agua < 1e-6 && o2 < 1e-9 && co2 < 1e-9 && aq < 1e-9, `balances de energía, batería, agua, O₂ y CO₂ cierran: ${JSON.stringify(o)}`);
 }
 
 // Tendencias físicas
@@ -47,6 +48,21 @@ ok(run({ vueltas: 0 }).days[30].dosis > 10 * base.days[30].dosis, 'entrada recta
 ok(run({ techo: 0, reciclaGris: 0, deshum: 0 }).firsts.agua !== undefined, 'sin lluvia ni reciclaje el agua se acaba');
 const d7 = base.days[7].rateOut, d49 = base.days[49].rateOut;
 ok(rel(d49 / d7, Math.pow(49 / 7, -1.2)) < 0.05, 'regla 7:10: siete veces más tiempo, una décima de la radiación');
+
+// Pecera: el agua absorbe CO2 sólo hasta el equilibrio de Henry
+const aq = run({ acuarioL: 3000 }), d30 = aq.days[30];
+const gAbs = (d30.co2aqMol - aq.s0.co2aq) * 44;
+ok(gAbs < 50, `3 000 L de pecera guardan sólo ${gAbs.toFixed(0)} g de CO₂ en total, contra ${(aq.co2Met * 24 * 44 / 1000).toFixed(1)} kg exhalados al día`);
+// Algas dentro de la pecera: rinden menos y respiran de noche
+const sep = run({}), dentro = run({ algasEnPecera: true });
+ok(dentro.days[400].o2Alg < 0.5 * sep.days[400].o2Alg, 'algas dentro de la pecera dan menos de la mitad del O₂ que en su fotobiorreactor');
+// Alimento de peces: al acabarse se cosechan
+const pocos = run({ alimentoPeces: 20 });
+ok(pocos.firsts['alimento de peces'] !== undefined && pocos.days[pocos.firsts['alimento de peces'] + 1].peces === 0, 'sin alimento, la tilapia se cosecha y se come');
+// Clima: mínimas de enero cerca de 7 °C sin guerra y heladas con 150 Tg
+const normal = run({ escenario: '5Tg', dias: 30 });
+ok(Math.abs(normal.days[10].Tmin - 7) < 1.5, `mínima de enero sin invierno nuclear: ${normal.days[10].Tmin.toFixed(1)} °C (SMN: ≈ 7)`);
+ok(base.days.slice(365, 730).filter((d) => d.Tmin < 0).length > 30, 'con 150 Tg hay más de un mes de noches bajo cero en el año 2');
 
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo en verde');
 process.exit(fallas ? 1 : 0);

@@ -3,6 +3,7 @@
 // Unidades internas: kg, L, mol, kWh, kcal, °C, horas. Cada componente es un bloque del paso horario.
 
 const KCAL_PER_L_O2 = 4.83;      // kcal por litro de O2 consumido (equivalente calórico)
+const KH_CO2 = 0.039;            // mol/(L·atm): solubilidad del CO2 en agua a ~20 °C (Henry)
 const RQ = 0.87;                 // cociente respiratorio (NASA BVAD)
 const MOL_PER_L_STP = 1 / 22.414;
 const P_ALT = 81.8;              // kPa a 1 767 m (Celaya)
@@ -12,6 +13,8 @@ const R_GAS = 8.314;
 // Clima normal de Celaya (climate-data.org, aproximado mes a mes; media anual 18.3 °C, 689 mm)
 const T_NORMAL = [14.7, 16.2, 18.6, 20.9, 22.1, 21.6, 20.1, 20.0, 19.6, 18.2, 16.3, 15.0];
 const RAIN_MM = [12, 6, 7, 12, 35, 128, 148, 138, 120, 52, 12, 4];
+// Oscilación diaria (máx − mín): ~16 °C en secas y ~12 °C en lluvias; mínima de enero ≈ 7 °C (normales SMN 1991–2020)
+const DTR = [15.5, 16, 16, 16, 15, 12.5, 12, 12, 12, 13.5, 15, 15.5];
 // Producción fotovoltaica normal, kWh por kWp por día (ProfileSolar, por estación)
 const PV_YIELD = [6.04, 6.04, 7.97, 7.97, 7.97, 6.32, 6.32, 6.32, 5.81, 5.81, 5.81, 6.04];
 
@@ -49,8 +52,8 @@ function config(o = {}) {
     o2kg: 0, // oxígeno embotellado de reserva
     hidroArea: 10, hidroCultivo: 'lechuga', hidroPPFD: 250,
     aeroArea: 10, aeroCultivo: 'papa', aeroPPFD: 400, fotoperiodo: 16, ledEff: 2.7,
-    algasL: 200, algasProd: 0.5, algasW: 1.0,
-    acuarioL: 500, peces: 10, alimentoPeces: 100,
+    algasL: 200, algasProd: 0.5, algasW: 1.0, algasEnPecera: false, algasNoche: 0.25,
+    acuarioL: 500, peces: 10, alimentoPeces: 300,
     panelW: 550, paneles: 20, bateriaKWh: 20.5, generadorKW: 7, combustible: 'gaslp', combustibleL: 600,
     cargaBase: 0.25, tSet: 17, calefKW: 3,
     aguaL: 20000, aguaPersona: 15, aguaPerro: 1.0, reciclaGris: 0.5, deshum: 0.8, deshumKWhL: 0.55, techo: 100, lluviaDia: 30,
@@ -89,10 +92,11 @@ function simular(cin) {
     o2: 0.2095 * molAir, co2: 420e-6 * molAir, T: 18.3, Tg: 18.3, soc: 0.8 * c.bateriaKWh, fuel: c.combustibleL,
     agua: c.aguaL, comida: c.comidaDias * kcalHum, croq: c.croquetasKg, cal: c.calSodada, o2kg: c.o2kg,
     peces: c.peces, alimPeces: c.alimentoPeces, dosis: 0, dosisOut: 0, lastRecov: 0,
+    co2aq: KH_CO2 * 420e-6 * P_ALT / 101.325 * c.acuarioL,   // mol de CO2 disuelto en la pecera
   };
-  const s0 = { soc: s.soc, agua: s.agua, o2: s.o2, co2: s.co2 };
+  const s0 = { soc: s.soc, agua: s.agua, o2: s.o2, co2: s.co2, co2aq: s.co2aq };
   const days = [];
-  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0 };
+  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0 };
   const firsts = {};
   const mark = (k, d) => { if (firsts[k] === undefined) firsts[k] = d; };
   const ventQ = c.vent * 1000; // L/h
@@ -107,10 +111,12 @@ function simular(cin) {
     const f = (1 - Math.exp(-d / SOOT_RISE_D)) * Math.exp(-d / SOOT_EFOLD_D);
     const fT = d === 0 ? 0 : days[d - 1].fT + (f - days[d - 1].fT) / TEMP_LAG_D;
     const Tout = T_NORMAL[m] - sc.dT * fT / 0.8;
+    // con el cielo oscuro el día calienta menos y la oscilación diaria se achica
+    const Tmin = Tout - DTR[m] / 2 * Math.sqrt(1 - sc.light * f);
     const luz = 1 - sc.light * f;
     const lluviaFac = 1 - sc.rain * fT / 0.8;
-    const day = { d, f, fT, Tout, luz, o2min: 1, co2max: 0, o2: 0, co2: 0, T: 0, pv: 0, gen: 0, shed: 0, kcalProd: 0,
-      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0 };
+    const day = { d, f, fT, Tout, Tmin, luz, rainFac: lluviaFac, o2min: 1, co2max: 0, o2: 0, co2: 0, T: 0, pv: 0, gen: 0, shed: 0, kcalProd: 0,
+      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0, co2Aq: 0 };
     const sealed = d < c.sellarDias;
     s.Tg += ((18.3 - sc.dT * fT / 0.8) - s.Tg) / 365;   // la tierra alrededor se enfría despacio
     let ledHours = 0;
@@ -185,8 +191,13 @@ function simular(cin) {
         o2P += bio * O2_PER_G_BIOMASS / 32; co2P += bio * CO2_PER_G_BIOMASS / 44; transp += bio * TRANSP_L_PER_G;
         if (d >= k.cr.cycle) kcalH += mol * k.cr.lueEd * k.cr.kcal;
       }
-      const algBio = lights && c.algasL > 0 ? c.algasL * c.algasProd / c.fotoperiodo * algFrac : 0;
-      const o2A = algBio * 1.4 / 32, co2A = algBio * 1.9 / 44;   // con nitrato como fuente de N (calibrado)
+      // en la pecera el agua es turbia y está sombreada: ~30 % de la productividad de un fotobiorreactor
+      const algProd = c.algasProd * (c.algasEnPecera ? 0.3 : 1);
+      const algDay = c.algasL * algProd / c.fotoperiodo;
+      const algBio = lights && c.algasL > 0 ? algDay * algFrac : 0;
+      // de noche las algas respiran una parte de lo que produjeron de día
+      const algResp = !lights && c.algasL > 0 ? algDay * c.fotoperiodo * c.algasNoche / (24 - c.fotoperiodo) : 0;
+      const o2A = (algBio - algResp) * 1.4 / 32, co2A = (algBio - algResp) * 1.9 / 44;   // con nitrato como fuente de N (calibrado)
       if (d >= 14) kcalH += algBio * 3.0;
       // 4. Peces: respiran todo el día (150 mg O2/kg/h)
       const fishO2 = s.peces * 150e-3 / 32;
@@ -201,6 +212,12 @@ function simular(cin) {
       s.co2 = (s.co2 + co2Src + Qn * co2Out) / (1 + Qn);
       tot.o2Src += o2Src; tot.o2Vent += s.o2 - o2Prev - o2Src;
       tot.co2Src += co2Src; tot.co2Vent += s.co2 - co2Prev - co2Src;
+      // la pecera disuelve CO2 hasta el equilibrio de Henry y luego ya no absorbe más
+      if (c.acuarioL > 0) {
+        const eq = KH_CO2 * (s.co2 / molAir) * P_ALT / 101.325 * c.acuarioL;
+        const flux = (eq - s.co2aq) * (1 - Math.exp(-1));   // kLa·dt = 1
+        s.co2aq += flux; s.co2 -= flux; tot.co2Aq += flux; day.co2Aq += flux;
+      }
       // depurador de cal sodada (0.5 kg CO2/kg) cuando el CO2 pasa de 5 000 ppm
       let calUse = 0;
       if (s.co2 / molAir > 0.005 && s.cal > 0) {
@@ -244,8 +261,12 @@ function simular(cin) {
     }
     if (day.aguaFalta > 0) mark('agua', d);
     // comida del día
-    const fishFeed = Math.min(s.alimPeces, s.peces * 0.015);
+    const feedNeed = s.peces * 0.015;                                  // 1.5 % del peso al día
+    const fishFeed = Math.min(s.alimPeces, feedNeed);
     s.alimPeces -= fishFeed; s.peces += fishFeed / 1.8;                // conversión alimenticia 1.8
+    if (s.peces > 0 && fishFeed < feedNeed * 0.999) {                  // sin alimento: se cosechan todos
+      mark('alimento de peces', d); day.kcalProd += s.peces * 960; s.peces = 0;
+    }
     const maxFish = c.acuarioL / 1000 * 25;
     if (s.peces > maxFish) { day.kcalProd += (s.peces - maxFish) * 960; s.peces = maxFish; }
     const need = kcalHum - day.kcalProd;
@@ -266,7 +287,7 @@ function simular(cin) {
     if (day.ledOnFrac < 0.5) mark('cultivos con menos de la mitad de luz', d);
     Object.assign(day, {
       agua: s.agua, comida: s.comida / kcalHum, croq: s.croq / croqNeed, fuel: s.fuel, soc: c.bateriaKWh ? s.soc / c.bateriaKWh : 0,
-      cal: s.cal, dosis: s.dosis, peces: s.peces, ledOnFrac: c.fotoperiodo ? ledHours / c.fotoperiodo : 0, o2kg: s.o2kg,
+      cal: s.cal, dosis: s.dosis, peces: s.peces, alimPeces: s.alimPeces, co2aqMol: s.co2aq, ledOnFrac: c.fotoperiodo ? ledHours / c.fotoperiodo : 0, o2kg: s.o2kg,
     });
     days.push(day);
   }
@@ -288,4 +309,4 @@ function necesidades(c) {
   };
 }
 // MODEL-END
-if (typeof module !== 'undefined') module.exports = { simular, config, necesidades, shieldPF, SCEN, CROPS };
+if (typeof module !== 'undefined') module.exports = { simular, config, necesidades, shieldPF, SCEN, CROPS, T_NORMAL, RAIN_MM, DTR };
