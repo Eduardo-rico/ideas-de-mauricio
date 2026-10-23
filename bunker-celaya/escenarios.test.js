@@ -19,11 +19,11 @@ ok(M.shieldPF(M.config()) === 1000, 'factor de protección limitado por una entr
 ok(M.shieldPF(M.config({ tierra: 0.091, concreto: 0, vueltas: 3 })) === 2, 'un espesor de medio valor de tierra = factor 2');
 
 // Balances en el caso base y en casos extremos
-const casos = [{}, { escenario: '5Tg' }, { sellarDias: 14, calSodada: 50 }, { paneles: 0, generadorKW: 0 }, { aguaL: 2000, techo: 0 }, { hidroArea: 0, aeroArea: 0, algasL: 0, acuarioL: 0, peces: 0 }, { dias: 30 }];
+const casos = [{}, { escenario: '5Tg' }, { sellarDias: 14, calSodada: 50 }, { paneles: 0, generadorKW: 0 }, { aguaL: 2000, techo: 0 }, { falla: 'inversor', fallaDia: 20 }, { bateriaAno: 0.2, paneles: 40 }, { hidroArea: 0, aeroArea: 0, algasL: 0, acuarioL: 0, peces: 0 }, { dias: 30 }];
 for (const o of casos) {
   const r = run(o), t = r.tot, e = r.end, s0 = r.s0, cb = r.c.bateriaKWh;
   const eb = rel(t.pv + t.gen + t.dis, t.load + t.ch + t.lossDis);
-  const soc = Math.abs((e.soc - s0.soc) - (0.95 * t.ch - t.dis));
+  const soc = Math.abs((e.soc - s0.soc) - (0.95 * t.ch - t.dis - t.lossFade));
   const agua = Math.abs((e.agua - s0.agua) - (t.aguaIn - t.aguaOut - t.aguaRebose + t.aguaFalta));
   const o2 = Math.abs((e.o2 - s0.o2) - (t.o2Src + t.o2Vent + t.o2Bottle)) / r.molAir;
   const co2 = Math.abs((e.co2 - s0.co2) - (t.co2Src + t.co2Vent - t.co2Scrub - t.co2Aq)) / r.molAir;
@@ -94,6 +94,40 @@ ok(san.tot.restosKg > 0 && san.tot.lombrizKg > 0, `restos de cultivo ${san.tot.r
 const sinDucha = run({ duchasSemana: 0 }), muchas = run({ duchasSemana: 7 });
 ok(muchas.tot.kcalProd < sinDucha.tot.kcalProd, `el agua caliente le quita energía a los cultivos (${(sinDucha.tot.kcalProd / 1e3).toFixed(0)} → ${(muchas.tot.kcalProd / 1e3).toFixed(0)} mil kcal cultivadas)`);
 ok(M.necesidades(M.config({ personas: 10 })).banos === 2, '10 personas: 2 baños secos');
+
+// Cocina, generador y desgaste
+const r0 = run({});
+const rp = run({ perros: 0 });
+ok(rel(rp.tot.cocina, 0.25 * 5 * 1095) < 1e-6, `cocinar para 5 personas gasta ${rp.tot.cocina.toFixed(0)} kWh en 3 años (0.25 kWh por persona al día)`);
+ok(r0.tot.cocina > rp.tot.cocina, `si los perros comen de la despensa también hay que cocinarles: ${r0.tot.cocina.toFixed(0)} kWh`);
+const g = run({ paneles: 0, bateriaKWh: 5.12, combustibleL: 3000, dias: 30 });
+ok(g.tot.genFuel > g.tot.gen * 0.55 * 1.0001, `con poca carga el generador gasta más por kWh: ${(g.tot.genFuel / g.tot.gen).toFixed(2)} L/kWh contra 0.55 a plena carga`);
+const gv = run({ paneles: 0, combustibleL: 30000, genVidaH: 500 });
+ok(gv.firsts['generador al fin de su vida'] !== undefined && gv.days[gv.days.length - 1].genH === 500, 'un motor enfriado por aire se acaba a las horas de vida que se le den');
+ok(r0.days[1094].B < 0.95 * r0.c.bateriaKWh, `la batería pierde capacidad: ${r0.days[1094].B.toFixed(1)} de ${r0.c.bateriaKWh} kWh a los 3 años`);
+ok(r0.days[1094].ledFac < 1, 'los LED pierden luz con las horas');
+// Polvo en los paneles
+ok(r0.days[25].limpio < 0.85 && r0.days[60].limpio > r0.days[25].limpio, `sin poder salir los paneles se ensucian (${(100 * r0.days[25].limpio).toFixed(0)} % limpios el día 25) y al salir se limpian`);
+ok(run({ limpiezaDias: 60 }).tot.pv < r0.tot.pv, 'limpiar menos seguido da menos energía');
+// Caducidad
+ok(r0.firsts['croquetas caducan'] === 540 && r0.tot.croqCaducaKg > 0, `las croquetas caducan a los 18 meses y se tiran ${r0.tot.croqCaducaKg.toFixed(0)} kg`);
+ok(r0.tot.kcalPerrosDespensa > 0 && r0.firsts.comida < run({ perros: 0 }).firsts.comida + 1e9, 'sin croquetas los perros comen de la despensa de las personas');
+ok(r0.firsts['aceite caduca'] === 730 && r0.tot.kcalCaduca > 0, 'el aceite se enrancia a los 2 años');
+const nd = M.necesidades(M.config());
+ok(Math.abs(Object.values(nd.despensa).reduce((a, it) => a + it.kg * it.kcal, 0) / (900 * 2200 * 5) - 1) < 1e-9, 'la despensa suma las calorías guardadas');
+ok(nd.protDia > 56, `proteína de la despensa: ${nd.protDia.toFixed(0)} g por persona al día (se recomiendan ≥ 56 g)`);
+// Radón: equilibrio con ventilación constante C = E / (Q/V + λ)
+const rnEq = 7 / (120 / (130 * 2.6) + Math.LN2 / (3.82 * 24));
+ok(rel(r0.days[300].rn, rnEq / (1 + 0) ) < 0.1, `radón con ventilación: ${r0.days[300].rn.toFixed(0)} Bq/m³ (a mano ${rnEq.toFixed(0)})`);
+const rs = run({ sellarDias: 14, calSodada: 300 });
+ok(Math.max(...rs.days.slice(0, 14).map((d) => d.rnMax)) > 300, 'sellado 14 días, el radón pasa de 300 Bq/m³ (nivel de referencia de la OMS)');
+// Fallas y repuestos
+const fv = run({ falla: 'ventilador', fallaDia: 200 }), fvr = run({ falla: 'ventilador', fallaDia: 200, repuesto: true });
+ok(fv.days[215].co2max > 0.005 && fvr.days[215].co2max < 0.005, 'sin ventilador de repuesto el CO₂ sube; con repuesto se arregla en un día');
+const fa = run({ falla: 'aireador', fallaDia: 100 });
+ok(fa.firsts['peces sin aire'] === 100, 'sin aireador la tilapia se asfixia el mismo día');
+const fi = run({ falla: 'inversor', fallaDia: 100, combustibleL: 3000 });
+ok(fi.days[101].pv === 0 && fi.days[101].gen > 0, 'sin inversor no hay sol ni batería: sólo el generador');
 
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo en verde');
 process.exit(fallas ? 1 : 0);

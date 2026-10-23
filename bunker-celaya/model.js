@@ -44,7 +44,20 @@ const ALGAS = {
   espirulina: { name: 'Espirulina', tOpt: 32, tMin: 20, kcal: 2.9, prot: 0.6, enPecera: false },
   chlorella:  { name: 'Chlorella', tOpt: 28, tMin: 15, kcal: 3.0, prot: 0.5, enPecera: true },
 };
-const TRANSP_L_PER_G = 0.25;        // agua transpirada por g de biomasa seca (≈ 4 g/kg de eficiencia)
+const TRANSP_L_PER_G = 0.25;
+// Despensa: reparto de las calorías guardadas. kcal y proteína por kg; vida en días guardado fresco y sellado; densidad a granel kg/L
+// La vida del aceite (1–2 años sin abrir) y de la leche descremada en latas o Mylar (BYU) son de literatura; el resto, de ejemplo
+const DESPENSA = {
+  arroz:  { name: 'Arroz blanco', frac: 0.41, kcal: 3600, prot: 70, vida: 9000, dens: 0.85 },
+  frijol: { name: 'Frijol', frac: 0.20, kcal: 3400, prot: 220, vida: 3650, dens: 0.75 },
+  avena:  { name: 'Avena', frac: 0.10, kcal: 3800, prot: 130, vida: 3650, dens: 0.45 },
+  aceite: { name: 'Aceite vegetal', frac: 0.10, kcal: 8840, prot: 0, vida: 730, dens: 0.92 },
+  azucar: { name: 'Azúcar y miel', frac: 0.07, kcal: 3870, prot: 0, vida: 99999, dens: 0.85 },
+  leche:  { name: 'Leche descremada en polvo', frac: 0.07, kcal: 3600, prot: 350, vida: 3650, dens: 0.5 },
+  atun:   { name: 'Atún y sardina en lata', frac: 0.05, kcal: 1900, prot: 250, vida: 1460, dens: 0.7 },
+};
+const RN_DOSE = 6.7e-6;   // mSv por Bq·h/m³ de radón con factor de equilibrio 0.4 (ICRP 137)
+const RN_LAMBDA = Math.LN2 / (3.82 * 24);   // 1/h, vida media del radón-222        // agua transpirada por g de biomasa seca (≈ 4 g/kg de eficiencia)
 
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
 
@@ -66,6 +79,20 @@ function config(o = {}) {
     comidaDias: 900, croquetasKg: 1500,
     duchasSemana: 3.5, duchaMin: 3, regaderaLmin: 6, tDucha: 38, lombricomposta: true,
     salidaDia: 30, salidaH: 0.5, umbralSalida: 0.5,
+    // cocina eléctrica (olla exprés o de inducción): ~0.5 kWh por olla de frijol; 0.25 kWh por persona al día (adaptado)
+    cocinaKWh: 0.25,
+    // generador: consumo en vacío 24 % del de plena carga (8 kW: 0.9 L/h al 25 %, 2.1 L/h al 100 %); vida de un motor enfriado por aire
+    genVacio: 0.24, genVidaH: 1500, aceiteCadaH: 100, aceiteL: 1.1,
+    // desgaste: batería LiFePO4 6 000 ciclos al 80 % y ~2 %/año por calendario (ejemplo); paneles 0.5 %/año; LED pierden 30 % a 50 000 h
+    bateriaCiclos: 6000, bateriaAno: 0.02, pvAno: 0.005, ledL70: 50000,
+    // polvo en los paneles: 0.5 %/día de polvo normal (Qatar) más ceniza y lluvia radiactiva mientras hay hollín (ejemplo); se limpian al salir
+    polvoDia: 0.005, polvoHollin: 0.015, limpiezaDias: 7,
+    // caducidad: croquetas 12–18 meses desde que se fabrican; re-empacadas al vacío con absorbedor de O2 (ejemplo) ~2 años
+    croqVida: 540, aceiteVida: 730,
+    // radón que entra del suelo: 7 Bq/m³·h en un sótano (adaptado); se diluye con la ventilación
+    radonEntrada: 7,
+    // falla de un equipo: 'inversor', 'ventilador', 'generador', 'aireador' o 'deshum'; con repuesto se arregla en un día
+    falla: '', fallaDia: 180, repuesto: false,
   }, o);
 }
 
@@ -77,6 +104,12 @@ function shieldPF(c) {
 }
 
 function fuelLperKWh(f) { return { gaslp: 0.55, gasolina: 0.42, diesel: 0.28 }[f]; }
+function despensaKg(c) {
+  const kcal = c.comidaDias * c.kcalPersona * c.personas;
+  const out = {};
+  for (const k in DESPENSA) { const it = DESPENSA[k]; const kg = kcal * it.frac / it.kcal; out[k] = { ...it, kg, L: kg / it.dens }; }
+  return out;
+}
 function fuelLife(f) { return { gaslp: Infinity, gasolina: 365, diesel: 730 }[f]; }
 
 function simular(cin) {
@@ -88,22 +121,26 @@ function simular(cin) {
   // metabolismo: kcal → O2 y CO2 (mol/h)
   const kcalPerros = 105 * Math.pow(c.pesoPerro, 0.75) * c.perros;
   const kcalHum = c.kcalPersona * c.personas;
+  const res_perrosEq = kcalPerros / c.kcalPersona;   // cuántas «personas» de comida cocinada comen los perros
   const o2Met = (kcalHum + kcalPerros) / KCAL_PER_L_O2 * MOL_PER_L_STP / 24; // mol/h
   const co2Met = o2Met * RQ;
   const heatMet = (136.7 * c.personas + (kcalPerros * 4184 / 86400)) / 1000; // kW
   const vaporMet = (2.0 * c.personas + 0.4 * c.perros) / 24; // L/h
 
   const pvKWp = c.panelW * c.paneles / 1000;
-  const fuelRate = fuelLperKWh(c.combustible);
+  const fuelRate = fuelLperKWh(c.combustible);          // L/kWh a plena carga
+  const roto = (k, d) => c.falla === k && d >= c.fallaDia && d < c.fallaDia + (c.repuesto ? 1 : Infinity);
   const s = {
     o2: 0.2095 * molAir, co2: 420e-6 * molAir, T: 18.3, Tg: 18.3, soc: 0.8 * c.bateriaKWh, fuel: c.combustibleL,
     agua: c.aguaL, comida: c.comidaDias * kcalHum, croq: c.croquetasKg, cal: c.calSodada, o2kg: c.o2kg,
-    peces: c.peces, alimPeces: c.alimentoPeces, dosis: 0, dosisOut: 0, lastRecov: 0,
+    peces: c.peces, alimPeces: c.alimentoPeces, dosis: 0, dosisOut: 0, dosisRn: 0, lastRecov: 0,
+    limpio: 1, genH: 0, genMuerto: false, ledH: 0, rn: 0, sinAire: 0,
     co2aq: KH_CO2 * 420e-6 * P_ALT / 101.325 * c.acuarioL,   // mol de CO2 disuelto en la pecera
   };
   const s0 = { soc: s.soc, agua: s.agua, o2: s.o2, co2: s.co2, co2aq: s.co2aq };
   const days = [];
-  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0, pescadoKg: 0, algasComidaKg: 0, algasPecesKg: 0, lombrizKg: 0 };
+  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0, pescadoKg: 0, algasComidaKg: 0, algasPecesKg: 0, lombrizKg: 0,
+    lossFade: 0, cocina: 0, genFuel: 0, genH: 0, croqCaducaKg: 0, kcalCaduca: 0, kcalPerrosDespensa: 0, biomasaKg: 0, pvSucio: 0 };
   const firsts = {};
   const mark = (k, d) => { if (firsts[k] === undefined) firsts[k] = d; };
   const ventQ = c.vent * 1000; // L/h
@@ -122,10 +159,19 @@ function simular(cin) {
     const Tmin = Tout - DTR[m] / 2 * Math.sqrt(1 - sc.light * f);
     const luz = 1 - sc.light * f;
     const lluviaFac = 1 - sc.rain * fT / 0.8;
-    const day = { d, f, fT, Tout, Tmin, luz, rainFac: lluviaFac, o2min: 1, co2max: 0, o2: 0, co2: 0, T: 0, pv: 0, gen: 0, shed: 0, kcalProd: 0,
+    const day = { d, f, fT, Tout, Tmin, luz, rainFac: lluviaFac, rnMax: 0, cocina: 0, o2min: 1, co2max: 0, o2: 0, co2: 0, T: 0, pv: 0, gen: 0, shed: 0, kcalProd: 0,
       o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0, co2Aq: 0, Taq: 0, vitC: 0, algasG: 0, algasComidaG: 0, duchaFrac: 0, residuosG: 0,
       w: { recambio: 0, lluvia: 0, condensado: 0, grises: 0, beber: 0, cocina: 0, higiene: 0, perros: 0, plantas: 0, pecera: 0, vaporPerdido: 0, negras: 0 } };
-    const sealed = d < c.sellarDias;
+    const sealed = d < c.sellarDias || roto('ventilador', d);
+    const sinInv = roto('inversor', d), sinGen = roto('generador', d) || s.genMuerto;
+    // desgaste: la batería pierde capacidad con los años y los ciclos; los paneles, con los años
+    const B = c.bateriaKWh * Math.max(0.3, 1 - c.bateriaAno * d / 365 - 0.2 * (tot.dis / Math.max(1e-9, c.bateriaKWh)) / c.bateriaCiclos);
+    if (s.soc > 0.95 * B) { tot.lossFade += s.soc - 0.95 * B; s.soc = 0.95 * B; }
+    // polvo: se ensucian cada día, la lluvia lava la mitad y al salir se limpian
+    s.limpio *= 1 - (c.polvoDia + c.polvoHollin * f);
+    if (d >= c.lluviaDia && RAIN_MM[m] / 30.42 * lluviaFac > 3) s.limpio += 0.5 * (1 - s.limpio);
+    const ledFac = 1 - 0.3 * s.ledH / c.ledL70;
+    day.B = B; day.ledFac = ledFac;
     s.Tg += ((18.3 - sc.dT * fT / 0.8) - s.Tg) / 365;   // la tierra alrededor se enfría despacio
     let ledHours = 0;
     for (let h = 0; h < 24; h++) {
@@ -134,12 +180,15 @@ function simular(cin) {
       const rate = tH >= c.llegadaH ? c.tasaH1 * Math.pow(tH, -1.2) : 0;
       const outside = d >= c.salidaDia && rate < c.umbralSalida && h === 12 && c.salidaH > 0;
       const dIn = rate / PF, dOut = outside ? rate * c.salidaH * 0.7 : 0;  // afuera: terreno real ≈ 0.7 del ideal
+      if (outside && (d - c.salidaDia) % c.limpiezaDias === 0) s.limpio = 1;
       s.dosis += dIn + dOut; s.dosisOut += rate;
       day.rateOut = Math.max(day.rateOut, rate); day.rateIn = Math.max(day.rateIn, dIn);
 
       // 2. Energía: panel → cargas por prioridad → batería → generador; lo que falta se apaga de abajo hacia arriba
       const sun = h >= 6 && h < 18 ? Math.sin(Math.PI * (h - 6 + 0.5) / 12) * Math.PI / 24 : 0; // suma 1 en el día
-      const pv = pvKWp * PV_YIELD[m] * luz * sun;
+      const pvLimpio = sinInv ? 0 : pvKWp * (1 - c.pvAno * d / 365) * PV_YIELD[m] * luz * sun;
+      const pv = pvLimpio * s.limpio;
+      tot.pvSucio += pvLimpio - pv;
       const lights = h >= 6 && h < 6 + c.fotoperiodo;
       // ventilación: caudal normal y, si hace calor dentro y afuera está más fresco, caudal de enfriamiento
       const cool = !sealed && s.T > 25 && Tout < s.T - 2;
@@ -148,37 +197,47 @@ function simular(cin) {
       // pecera: pierde ~20 W/K por cada 500 L (con tapa y aislamiento lateral); la tilapia muere abajo de ~11 °C
       const UAaq = c.acuarioL > 0 ? 0.020 * Math.pow(c.acuarioL / 500, 2 / 3) : 0;
       const aqKW = c.calentarPecera ? Math.max(0, UAaq * (c.tPecera - s.T)) : 0;
-      const aire = c.acuarioL > 0 ? 0.03 * c.acuarioL / 500 : 0;          // aireador: sin él los peces se asfixian en horas
-      const vital = [['vent', ventKW], ['base', c.cargaBase], ['calef', s.T < c.tSet ? c.calefKW : 0], ['pecera', aqKW + aire]];
+      const aire = c.acuarioL > 0 && !roto('aireador', d) ? 0.03 * c.acuarioL / 500 : 0;   // aireador: sin él los peces se asfixian en horas
+      // cocina: tres comidas; si los perros comen de la despensa también se cocina para ellos
+      const comidas = h === 7 || h === 13 || h === 19;
+      const cocinaKW = comidas ? c.cocinaKWh * (c.personas + (s.perrosDespensa ? res_perrosEq : 0)) / 3 : 0;
+      const vital = [['vent', ventKW], ['base', c.cargaBase], ['cocina', cocinaKW], ['calef', s.T < c.tSet ? c.calefKW : 0], ['pecera', aqKW + aire]];
       const al = ALGAS[c.alga];
       const UAalg = c.algasL > 0 && !c.algasEnPecera ? 0.020 * Math.pow(c.algasL / 500, 2 / 3) : 0;
       const algHeatKW = c.calentarAlgas && UAalg ? Math.max(0, UAalg * (al.tOpt - s.T)) : 0;
       // regadera: agua de la cisterna (a la temperatura del cuarto) calentada a 38 °C, repartida en el día
       const duchaL = c.duchasSemana / 7 * c.duchaMin * c.regaderaLmin * c.personas;
       const duchaKW = duchaL * 4.186 * Math.max(0, c.tDucha - s.T) / 3600 / 0.95 / 24;
-      const extra = [['deshum', s.lastRecov * c.deshumKWhL], ['ducha', duchaKW], ['algas', (lights ? algKW : 0) + algHeatKW], ['led', lights ? ledKW : 0]];
+      const extra = [['deshum', roto('deshum', d) ? 0 : s.lastRecov * c.deshumKWhL], ['ducha', duchaKW], ['algas', (lights ? algKW : 0) + algHeatKW], ['led', lights ? ledKW : 0]];
       const served = {};
       let pvLeft = pv, gen = 0, short = 0, ch = 0;
       const discharge = (kwh, floor) => {          // entrega kwh desde la batería sin bajar de floor
-        const dis = Math.min(kwh / 0.95, Math.max(0, s.soc - floor * c.bateriaKWh));
+        if (sinInv) return 0;                       // sin inversor la batería no sirve
+        const dis = Math.min(kwh / 0.95, Math.max(0, s.soc - floor * B));
         s.soc -= dis; tot.dis += dis; tot.lossDis += dis * 0.05; return dis * 0.95;
       };
       // a) cargas vitales: panel → batería hasta 10 % → generador
       let needV = vital.reduce((a, l) => a + l[1], 0);
       const fromPV = Math.min(pvLeft, needV); pvLeft -= fromPV; needV -= fromPV;
       needV -= discharge(needV, 0.1);
-      if ((needV > 1e-9 || s.soc < 0.25 * c.bateriaKWh) && s.fuel > 0 && d < fuelLife(c.combustible) && c.generadorKW > 0) {
-        const cap = Math.min(c.generadorKW, s.fuel / fuelRate);
+      const Pg = c.generadorKW, idle = c.genVacio;
+      if ((needV > 1e-9 || (!sinInv && s.soc < 0.25 * B)) && !sinGen && !s.genMuerto && s.fuel > 0 && d < fuelLife(c.combustible) && Pg > 0) {
+        // consumo en línea recta: aun con poca carga quema ~24 % de lo de plena carga (línea de Willans)
+        const cap = Math.max(0, Math.min(Pg, (s.fuel / fuelRate - idle * Pg) / (1 - idle)));
         const toLoad = Math.min(needV, cap);
-        const toBat = s.soc < 0.25 * c.bateriaKWh ? Math.max(0, Math.min((cap - toLoad) * 0.95, 0.9 * c.bateriaKWh - s.soc)) : 0;
+        const toBat = !sinInv && s.soc < 0.25 * B ? Math.max(0, Math.min((cap - toLoad) * 0.95, 0.9 * B - s.soc)) : 0;
         gen = toLoad + toBat / 0.95;
-        s.soc += toBat; tot.ch += toBat / 0.95;
-        needV -= toLoad; s.fuel -= gen * fuelRate;
+        if (gen > 0) {
+          const burn = Math.min(s.fuel, fuelRate * (idle * Pg + (1 - idle) * gen));
+          s.soc += toBat; tot.ch += toBat / 0.95;
+          needV -= toLoad; s.fuel -= burn; tot.genFuel += burn; s.genH += 1; tot.genH += 1;
+          if (s.genH >= c.genVidaH) s.genMuerto = true;
+        }
       }
       let cut = Math.max(0, needV); short += cut; tot.shedVital += cut; day.shedVital += cut;
       for (let i = vital.length - 1; i >= 0; i--) { const [k, w] = vital[i]; const x = Math.min(cut, w); served[k] = w - x; cut -= x; }
       // b) asegura la noche: el panel carga la batería hasta 60 % antes de alimentar cultivos
-      const pre = Math.max(0, Math.min(pvLeft * 0.95, 0.6 * c.bateriaKWh - s.soc));
+      const pre = sinInv ? 0 : Math.max(0, Math.min(pvLeft * 0.95, 0.6 * B - s.soc));
       s.soc += pre; tot.ch += pre / 0.95; pvLeft -= pre / 0.95; ch += pre;
       // c) cargas de cultivo y agua: sólo excedente del panel o batería arriba de 50 %
       for (const [k, w] of extra) {
@@ -187,13 +246,13 @@ function simular(cin) {
         served[k] = give; short += w - give;
       }
       // d) lo que sobra del panel carga la batería; el resto se tira
-      const post = Math.max(0, Math.min(pvLeft * 0.95, 0.95 * c.bateriaKWh - s.soc));
+      const post = sinInv ? 0 : Math.max(0, Math.min(pvLeft * 0.95, 0.95 * B - s.soc));
       s.soc += post; tot.ch += post / 0.95; pvLeft -= post / 0.95; ch += post;
       const pvUsed = pv - pvLeft;
       const loads = [...vital, ...extra];
       tot.pv += pvUsed; tot.gen += gen; tot.shed += short;
       for (const k in served) tot.load += served[k];
-      day.pv += pvUsed; day.gen += gen; day.shed += short;
+      day.pv += pvUsed; day.gen += gen; day.shed += short; day.cocina += served.cocina; tot.cocina += served.cocina;
       const ledFrac = lights && ledKW > 0 ? served.led / ledKW : 0;
       const algDemand = (lights ? algKW : 0) + algHeatKW;
       const algServed = algDemand > 0 ? served.algas / algDemand : 1;
@@ -204,16 +263,20 @@ function simular(cin) {
       const deshFrac = extra[0][1] > 0 ? served.deshum / extra[0][1] : 1;
       day.duchaFrac += (duchaKW > 0 ? served.ducha / duchaKW : 1) / 24;
       const aqFrac = aqKW + aire > 0 ? Math.min(1, served.pecera / (aqKW + aire)) : (c.calentarPecera ? 1 : 0);
+      // sin aire (aireador roto o sin energía) más de 6 horas, la tilapia se asfixia
+      const aireOk = aire > 0 && served.pecera >= aire * 0.999;
+      s.sinAire = c.acuarioL > 0 && !aireOk ? s.sinAire + 1 : 0;
       const Taq = c.calentarPecera ? s.T + aqFrac * (c.tPecera - s.T) : s.T;
       day.Taq += Taq / 24;
-      if (lights) ledHours += ledFrac;
+      if (lights) { ledHours += ledFrac; s.ledH += ledFrac; }
 
       // 3. Fotosíntesis de plantas y algas (sólo con luz)
       let o2P = 0, co2P = 0, transp = 0, kcalH = 0;
       for (const k of cultivos) {
         if (k.area <= 0 || !lights) continue;
-        const mol = k.ppfd * 3600e-6 * k.area * ledFrac;  // mol de fotones en la hora
+        const mol = k.ppfd * ledFac * 3600e-6 * k.area * ledFrac;  // mol de fotones en la hora (los LED pierden luz con las horas)
         const bio = mol * k.cr.lueTot;                     // g de biomasa seca
+        tot.biomasaKg += bio / 1000;
         o2P += bio * O2_PER_G_BIOMASS / 32; co2P += bio * CO2_PER_G_BIOMASS / 44; transp += bio * TRANSP_L_PER_G;
         if (d >= k.cr.cycle) { kcalH += mol * k.cr.lueEd * k.cr.kcal; day.vitC += mol * k.cr.lueEd * k.cr.vitC; }
         day.residuosG += mol * (k.cr.lueTot - k.cr.lueEd);            // hojas, tallos y raíces
@@ -264,6 +327,10 @@ function simular(cin) {
       day.o2Vent += s.o2 - o2Prev - o2Src;
       const o2f = s.o2 / molAir, co2f = s.co2 / molAir;
       day.o2min = Math.min(day.o2min, o2f); day.co2max = Math.max(day.co2max, co2f);
+      // radón: entra del suelo, decae y se va con la ventilación (implícito)
+      s.rn = (s.rn + c.radonEntrada) / (1 + Qn + RN_LAMBDA);
+      const dRn = s.rn * RN_DOSE / 10;   // rem
+      s.dosis += dRn; s.dosisRn += dRn; day.rnMax = Math.max(day.rnMax, s.rn);
       day.o2 += o2f / 24; day.co2 += co2f / 24;
 
       // 6. Temperatura: tierra, aire de ventilación (con recuperador), gente, perros, focos y calefacción
@@ -323,6 +390,7 @@ function simular(cin) {
     if (c.lombricomposta && des.restosKg > 0) { const lomb = 0.10 * des.restosKg * 0.2; s.alimPeces += lomb; tot.lombrizKg += lomb; }
     for (const k in des) tot[k] = (tot[k] || 0) + des[k];
     day.des = des;
+    if (s.peces > 0 && s.sinAire > 6) { mark('peces sin aire', d); day.kcalProd += s.peces * 960; tot.pescadoKg += s.peces; s.peces = 0; }
     const gT = clamp((day.Taq - 18) / 10, 0, 1);                       // crecen bien a 28 °C, casi nada a 18 °C
     if (s.peces > 0 && day.Taq < 11) { mark('peces mueren de frío', d); day.kcalProd += s.peces * 960; s.peces = 0; }
     const feedNeed = s.peces * 0.015 * gT;                             // 1.5 % del peso al día si el agua está tibia
@@ -333,12 +401,22 @@ function simular(cin) {
     }
     const maxFish = c.acuarioL / 1000 * 25;
     if (s.peces > maxFish) { day.kcalProd += (s.peces - maxFish) * 960; tot.pescadoKg += s.peces - maxFish; s.peces = maxFish; }
+    // caducidad: el aceite se enrancia a los ~2 años; lo que queda de él se tira (se consume parejo con lo demás)
+    if (d === c.aceiteVida && s.comida > 0) { const lost = s.comida * DESPENSA.aceite.frac; s.comida -= lost; tot.kcalCaduca += lost; mark('aceite caduca', d); }
+    if (d === c.croqVida && s.croq > 0) { tot.croqCaducaKg += s.croq; s.croq = 0; mark('croquetas caducan', d); }
     const need = kcalHum - day.kcalProd;
     tot.kcalProd += Math.min(day.kcalProd, kcalHum);
     if (need > 0) { const take = Math.min(s.comida, need); s.comida -= take; if (take < need) { tot.kcalFalta += need - take; mark('comida', d); } }
     const croqNeed = kcalPerros / 3500;
     const croqTake = Math.min(s.croq, croqNeed); s.croq -= croqTake;
-    if (croqTake < croqNeed) { tot.croqFalta += croqNeed - croqTake; mark('croquetas', d); }
+    s.perrosDespensa = false;
+    if (croqTake < croqNeed) {
+      // sin croquetas los perros comen arroz y frijol cocidos de la despensa de las personas
+      const falta = (croqNeed - croqTake) * 3500, take = Math.min(s.comida, falta);
+      s.comida -= take; tot.kcalPerrosDespensa += take; s.perrosDespensa = take > 0;
+      if (take > 0) mark('perros comen de la despensa', d);
+      tot.croqFalta += (falta - take) / 3500; if (take < falta) mark('croquetas', d);
+    }
     if (c.combustibleL > 0 && s.fuel <= 1e-6) mark('combustible', d);
     if (c.combustibleL > 0 && d >= fuelLife(c.combustible)) mark('combustible caducado', d);
     if (c.calSodada > 0 && s.cal <= 1e-6) mark('cal sodada', d);
@@ -348,9 +426,13 @@ function simular(cin) {
     if (day.T < 12) mark('frío dentro (< 12 °C)', d);
     if (day.T > 30) mark('calor dentro (> 30 °C)', d);
     if (day.shedVital > 0.05) mark('se apagan cargas vitales', d);
+    if (day.rnMax > 300) mark('radón arriba de 300 Bq/m³', d);
+    if (s.genMuerto) mark('generador al fin de su vida', d);
+    if (c.falla && d === c.fallaDia) mark('falla', d);
     if (day.ledOnFrac < 0.5) mark('cultivos con menos de la mitad de luz', d);
     Object.assign(day, {
-      agua: s.agua, comida: s.comida / kcalHum, croq: s.croq / croqNeed, fuel: s.fuel, soc: c.bateriaKWh ? s.soc / c.bateriaKWh : 0,
+      limpio: s.limpio, genH: s.genH, rn: s.rn, dosisRn: s.dosisRn,
+      agua: s.agua, comida: s.comida / kcalHum, croq: s.croq / croqNeed, fuel: s.fuel, soc: B ? s.soc / B : 0,
       cal: s.cal, dosis: s.dosis, peces: s.peces, alimPeces: s.alimPeces, co2aqMol: s.co2aq, ledOnFrac: c.fotoperiodo ? ledHours / c.fotoperiodo : 0, o2kg: s.o2kg,
     });
     days.push(day);
@@ -381,7 +463,9 @@ function necesidades(c) {
     camaraL: (0.128 * c.personas + 0.036 * c.personas) * 365 / 0.5,
     orinaL: 1.42 * c.personas * c.dias,
     aserrinKg: (0.036 * c.personas + 0.2 * c.perros) * c.dias,
+    despensa: despensaKg(c),
+    protDia: Object.values(DESPENSA).reduce((a, it) => a + c.kcalPersona * it.frac / it.kcal * it.prot, 0),   // g por persona al día
   };
 }
 // MODEL-END
-if (typeof module !== 'undefined') module.exports = { simular, config, necesidades, shieldPF, SCEN, CROPS, ALGAS, T_NORMAL, RAIN_MM, DTR };
+if (typeof module !== 'undefined') module.exports = { simular, config, necesidades, shieldPF, despensaKg, DESPENSA, SCEN, CROPS, ALGAS, T_NORMAL, RAIN_MM, DTR };

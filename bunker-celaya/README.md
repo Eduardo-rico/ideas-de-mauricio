@@ -3,6 +3,7 @@
 Simulación hora por hora de un búnker enterrado en Celaya, Gto., para 5 personas y 4 perros durante 3 años: desde la detonación y la lluvia radiactiva hasta el invierno nuclear.
 
 Cada componente tiene su propio modelo:
+- **Desgaste, caducidad y fallas:** cocina eléctrica, generador a media carga y con horas de vida, batería y paneles que se degradan, polvo en paneles, croquetas y aceite que caducan, radón y equipos que se rompen con o sin repuesto.
 - **Blindaje:** espesores de medio valor y límite por la entrada; regla t^−1.2.
 - **Ventilación filtrada y depurador de CO₂:** cal sodada.
 - **Cultivos bajo LED:** hidroponía y aeroponía, con la eficiencia de luz de NASA.
@@ -17,7 +18,7 @@ Cada componente tiene su propio modelo:
 
 - `index.html` — la página: corte animado del búnker, línea de tiempo de 3 años, gráficas, qué se acaba y cuándo, ecuaciones y presupuesto con precios.
 - `model.js` — el modelo.
-- `escenarios.test.js` — 44 pruebas: `node escenarios.test.js`.
+- `escenarios.test.js` — 64 pruebas: `node escenarios.test.js`.
   - Los balances de energía, batería, agua, O₂ y CO₂ cierran en 7 casos.
   - El O₂ y el CO₂ por persona coinciden con NASA BVAD.
   - La regla 7:10 se cumple, y también las tendencias.
