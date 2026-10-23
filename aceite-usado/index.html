@@ -1,0 +1,1328 @@
+<!doctype html><html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Re-refinado de Aceite Usado</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tablero de planta — tren de cinco etapas animado a la izquierda, mandos por etapa a la derecha, calidad y memoria técnica debajo */
+:root {
+  --bg: #111312; --panel: #181b19; --panel2: #1f2320; --line: #2f3530; --fg: #e3e6e1; --muted: #8f978f;
+  --oil: #e2a13a; --heat: #ff7a2f; --cool: #4fb3d9; --steel: #66706a; --pipe: #3a423c;
+  --water: #4fa3e0; --sludge: #7d6b55; --clay: #c9b28a; --solv: #a59bff; --fuel: #f2c14e; --resid: #4a3f36;
+  --ok: #4cc38a; --warn: #f0b429; --crit: #ff5d5d;
+  --f-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #eceee9; --panel: #ffffff; --panel2: #f4f5f1; --line: #d3d8d0; --fg: #1a1f1b; --muted: #5d665e;
+  --oil: #b87512; --heat: #d4541a; --cool: #1c7ea8; --steel: #8e9890; --pipe: #b8c0b7;
+  --water: #2378b8; --sludge: #6a5844; --clay: #a08350; --solv: #5b4fd6; --fuel: #b88a00; --resid: #3d332b;
+  --ok: #1f8f5a; --warn: #a86f00; --crit: #c93030; color-scheme: light;
+} }
+:root[data-theme="light"] {
+  --bg: #eceee9; --panel: #ffffff; --panel2: #f4f5f1; --line: #d3d8d0; --fg: #1a1f1b; --muted: #5d665e;
+  --oil: #b87512; --heat: #d4541a; --cool: #1c7ea8; --steel: #8e9890; --pipe: #b8c0b7;
+  --water: #2378b8; --sludge: #6a5844; --clay: #a08350; --solv: #5b4fd6; --fuel: #b88a00; --resid: #3d332b;
+  --ok: #1f8f5a; --warn: #a86f00; --crit: #c93030; color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; letter-spacing: .01em; text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 700; }
+h2 { font-size: 26px; }
+h3 { font-size: 19px; }
+p { margin: 0; }
+output, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+header.top .lede { color: var(--muted); max-width: 66ch; margin-top: 6px; }
+.runbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: 600 14px var(--f-body); border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); padding: 8px 14px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--oil); outline-offset: 2px; }
+button.primary { background: var(--oil); border-color: var(--oil); color: #1a1205; }
+.speed { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+select { font: 500 13.5px var(--f-body); background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill { font: 500 12px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.pill.on { color: var(--oil); border-color: var(--oil); }
+.pill.ok { color: var(--ok); border-color: var(--ok); }
+.pill.warn { color: var(--warn); border-color: var(--warn); }
+.pill.crit { color: var(--crit); border-color: var(--crit); }
+.tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+@media (max-width: 980px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { background: var(--panel); padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
+.tile .k { font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile .v { font: 600 26px var(--f-display); font-variant-numeric: tabular-nums; }
+.tile .u { font: 400 12px var(--f-mono); color: var(--muted); }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+@media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.scene { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; display: grid; gap: 8px; }
+.scene canvas { display: block; width: 100%; aspect-ratio: 1000 / 620; max-width: 100%; }
+.timeline { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.timeline div { font: 500 11.5px var(--f-mono); color: var(--muted); border-top: 3px solid var(--line); padding-top: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.timeline div.done { border-color: var(--ok); color: var(--fg); }
+.timeline div.now { border-color: var(--oil); color: var(--oil); }
+aside.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 18px; min-width: 0; }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
+legend { font: 600 17px var(--f-display); padding: 0; margin-bottom: 4px; display: flex; gap: 8px; align-items: baseline; }
+legend small { font: 500 11px var(--f-mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.ctl { display: grid; gap: 4px; font-size: 13.5px; }
+.ctl .row { display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { color: var(--oil); font-size: 13px; }
+.ctl .hint { font-size: 12px; color: var(--muted); }
+input[type=range] { width: 100%; accent-color: var(--oil); }
+select.full { width: 100%; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button { font-size: 12.5px; padding: 6px 10px; font-weight: 500; }
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+@media (max-width: 980px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; min-width: 0; align-content: start; }
+.chart canvas { width: 100%; height: 240px; display: block; }
+.chart .sub { font-size: 12.5px; color: var(--muted); }
+section.doc { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 16px; min-width: 0; }
+section.doc > p { max-width: 75ch; }
+.muted { color: var(--muted); }
+.eqgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 860px) { .eqgrid { grid-template-columns: minmax(0, 1fr); } }
+.eq { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.eq math { font-size: 17px; overflow-x: auto; max-width: 100%; }
+.eq .what { font: 600 15px var(--f-display); letter-spacing: .02em; }
+.eq p { font-size: 13.5px; color: var(--muted); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--panel2); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tag { font: 500 11px var(--f-mono); padding: 2px 7px; border-radius: 99px; border: 1px solid var(--line); white-space: nowrap; }
+.tag.lit { color: var(--ok); border-color: var(--ok); }
+.tag.cal { color: var(--warn); border-color: var(--warn); }
+.tag.bad { color: var(--crit); border-color: var(--crit); }
+.stage { font: 600 13px var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--oil); background: var(--panel2); }
+.note { border: 1px dashed var(--warn); border-radius: 8px; padding: 10px 14px; background: var(--panel2); font-size: 13.5px; max-width: 90ch; }
+.sources { display: grid; gap: 6px; font-size: 13.5px; padding-left: 18px; margin: 0; }
+a { color: var(--cool); }
+.qual td.num { min-width: 64px; }
+.qual td:last-child { white-space: normal; font-size: 12px; }
+.legendrow { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.routes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 860px) { .routes { grid-template-columns: minmax(0, 1fr); } }
+.route { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.route p { font-size: 13.5px; color: var(--muted); }
+.route a, .routetotal { font-size: 13.5px; font-weight: 600; }
+.routetotal strong { color: var(--oil); }
+table.buy .bn { font-weight: 500; }
+table.buy .bd { font-size: 12.5px; color: var(--muted); }
+input.qty { width: 64px; font: 500 13px var(--f-mono); text-align: right; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+tfoot td { background: var(--panel2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Planta piloto virtual · un lote de aceite de motor usado · cinco etapas</div>
+      <h1>Re-refinado de Aceite Usado</h1>
+      <p class="lede">Del aceite negro del cambio de aceite a aceite base que se puede volver a formular. Escoge cómo quitar los aditivos y la suciedad (solvente con floculante, fosfato, ácido o nada), destila al vacío y dale el acabado. Cada número sale de un balance de masa y energía por etapa.</p>
+    </div>
+    <div class="runbar">
+      <button class="primary" id="btn-run" type="button">▶ Procesar lote</button>
+      <button id="btn-end" type="button">Ir al final</button>
+      <button id="btn-reset" type="button">Reiniciar</button>
+      <label class="speed" for="speed">Velocidad
+        <select id="speed">
+          <option value="600">×600</option>
+          <option value="1800">×1800</option>
+          <option value="4000" selected>×4000</option>
+          <option value="10000">×10000</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <div class="status" id="status" aria-live="polite"></div>
+
+  <div class="tiles">
+    <div class="tile"><span class="k">Tiempo</span><span class="v" id="k-time">0:00</span><span class="u">h:min del lote · total <span id="k-ttot">—</span></span></div>
+    <div class="tile"><span class="k">Etapa</span><span class="v" id="k-stage">—</span><span class="u" id="k-stage-sub">listo para arrancar</span></div>
+    <div class="tile"><span class="k">Aceite base</span><span class="v" id="k-base" style="color:var(--oil)">0</span><span class="u">kg · <span id="k-yield">0</span> % de la carga</span></div>
+    <div class="tile"><span class="k">Color ASTM D1500</span><span class="v" id="k-color">—</span><span class="u">0.5 claro · 8 negro</span></div>
+    <div class="tile"><span class="k">Energía</span><span class="v" id="k-E">0</span><span class="u">kWh · <span id="k-Eper">—</span> por litro</span></div>
+    <div class="tile"><span class="k">Residuos</span><span class="v" id="k-waste">0</span><span class="u">kg para disposición</span></div>
+  </div>
+
+  <div class="layout">
+    <div class="scene">
+      <canvas id="scene" role="img" aria-label="Diagrama animado de la planta: tanque de sedimentación, deshidratador, tratamiento químico, evaporador de película al vacío, acabado con arcilla y tanques de aceite base"></canvas>
+      <div class="timeline" id="timeline">
+        <div data-i="0">1 · Sedimentar</div><div data-i="1">2 · Deshidratar</div><div data-i="2">3 · Tratamiento</div><div data-i="3">4 · Destilar al vacío</div><div data-i="4">5 · Acabado</div>
+      </div>
+    </div>
+
+    <aside class="panel" aria-label="Controles de la planta">
+      <fieldset>
+        <legend>Escenarios <small>un clic</small></legend>
+        <div class="presets">
+          <button type="button" data-preset="solvente">Solvente + KOH</button>
+          <button type="button" data-preset="dap">Fosfato diamónico</button>
+          <button type="button" data-preset="acido">Ácido + arcilla (histórico)</button>
+          <button type="button" data-preset="ninguno">Solo destilar</button>
+          <button type="button" data-preset="hidro">Con hidroacabado</button>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Aceite de entrada</legend>
+        <label class="ctl" for="tipo"><span class="row">Origen</span>
+          <select class="full" id="tipo">
+            <option value="taller">Mezcla de taller</option>
+            <option value="gasolina">Autos a gasolina (más combustible disuelto)</option>
+            <option value="diesel">Motores diésel (mucho hollín)</option>
+            <option value="agua">Con mucha agua (15 %)</option>
+          </select>
+        </label>
+        <label class="ctl" for="mass"><span class="row">Carga del lote<output id="o-mass"></output></span><input type="range" id="mass" min="50" max="1000" step="25" value="175"><span class="hint">175 kg ≈ un tambo de 200 L.</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>1 · Sedimentación</legend>
+        <label class="ctl" for="Ts"><span class="row">Temperatura<output id="o-Ts"></output></span><input type="range" id="Ts" min="20" max="90" step="5" value="60"><span class="hint">Caliente = menos viscoso = el agua baja más rápido (Stokes).</span></label>
+        <label class="ctl" for="ts"><span class="row">Tiempo de reposo<output id="o-ts"></output></span><input type="range" id="ts" min="1" max="48" step="1" value="12"></label>
+      </fieldset>
+      <fieldset>
+        <legend>2 · Deshidratación</legend>
+        <label class="ctl" for="Td"><span class="row">Temperatura final<output id="o-Td"></output></span><input type="range" id="Td" min="90" max="180" step="5" value="150"><span class="hint">Abajo de 100 °C queda agua; el vapor de agua arrastra la gasolina disuelta.</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>3 · Tratamiento químico</legend>
+        <label class="ctl" for="ruta"><span class="row">Ruta</span>
+          <select class="full" id="ruta">
+            <option value="solvente">Solvente polar + floculante (2-propanol + KOH)</option>
+            <option value="dap">Fosfato diamónico (desmetalizado)</option>
+            <option value="acido">Ácido sulfúrico (histórico)</option>
+            <option value="ninguno">Ninguno: directo a destilar</option>
+          </select>
+        </label>
+        <div class="ctl-group" data-ruta="solvente">
+          <label class="ctl" for="S"><span class="row">Solvente / aceite<output id="o-S"></output></span><input type="range" id="S" min="1" max="6" step="0.5" value="3"></label>
+          <label class="ctl" for="koh"><span class="row">KOH (floculante)<output id="o-koh"></output></span><input type="range" id="koh" min="0" max="6" step="0.5" value="2"></label>
+          <label class="ctl" for="t3"><span class="row">Decantación<output id="o-t3"></output></span><input type="range" id="t3" min="0.5" max="12" step="0.5" value="4"></label>
+        </div>
+        <div class="ctl-group" data-ruta="dap" hidden>
+          <label class="ctl" for="dap"><span class="row">Dosis de fosfato<output id="o-dap"></output></span><input type="range" id="dap" min="0" max="5" step="0.25" value="2"></label>
+          <label class="ctl" for="T3"><span class="row">Temperatura<output id="o-T3"></output></span><input type="range" id="T3" min="60" max="160" step="5" value="140"></label>
+          <label class="ctl" for="t3min"><span class="row">Tiempo de reacción<output id="o-t3min"></output></span><input type="range" id="t3min" min="10" max="180" step="10" value="60"></label>
+        </div>
+        <div class="ctl-group" data-ruta="acido" hidden>
+          <label class="ctl" for="acido"><span class="row">Ácido sulfúrico<output id="o-acido"></output></span><input type="range" id="acido" min="2" max="12" step="1" value="6"><span class="hint">Deja lodo ácido: residuo peligroso y corrosivo. Por eso casi ya no se usa.</span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>4 · Destilación al vacío</legend>
+        <label class="ctl" for="Tgo"><span class="row">Separación de gasóleo<output id="o-Tgo"></output></span><input type="range" id="Tgo" min="220" max="290" step="5" value="265"><span class="hint">Más alto = punto de inflamación más alto, pero se va aceite base con el gasóleo.</span></label>
+        <label class="ctl" for="Tw"><span class="row">Pared del evaporador<output id="o-Tw"></output></span><input type="range" id="Tw" min="280" max="370" step="5" value="320"><span class="hint">Arriba de ~340 °C el aceite se craquea y los aditivos ensucian.</span></label>
+        <label class="ctl" for="Pv"><span class="row">Vacío<output id="o-Pv"></output></span><input type="range" id="Pv" min="0.5" max="20" step="0.5" value="2"></label>
+        <label class="ctl" for="Thc"><span class="row">Condensador caliente<output id="o-Thc"></output></span><input type="range" id="Thc" min="180" max="290" step="5" value="235"><span class="hint">Divide el destilado: lo que condensa aquí es el corte pesado.</span></label>
+      </fieldset>
+      <fieldset>
+        <legend>5 · Acabado</legend>
+        <label class="ctl" for="acabado"><span class="row">Tipo</span>
+          <select class="full" id="acabado">
+            <option value="arcilla">Arcilla decolorante + filtro prensa</option>
+            <option value="hidro">Hidroacabado (hidrógeno a presión)</option>
+          </select>
+        </label>
+        <div class="ctl-group" data-acabado="arcilla">
+          <label class="ctl" for="clay"><span class="row">Arcilla<output id="o-clay"></output></span><input type="range" id="clay" min="0" max="12" step="0.5" value="6"></label>
+          <label class="ctl" for="Tcl"><span class="row">Temperatura<output id="o-Tcl"></output></span><input type="range" id="Tcl" min="80" max="180" step="5" value="140"></label>
+        </div>
+        <label class="ctl" for="tarifa"><span class="row">Tarifa eléctrica<output id="o-tarifa"></output></span><input type="range" id="tarifa" min="1" max="6" step="0.1" value="3"><span class="hint">Valor de ejemplo; usa el de tu recibo de CFE.</span></label>
+      </fieldset>
+    </aside>
+  </div>
+
+  <div class="charts">
+    <div class="chart">
+      <h3>¿A dónde va cada kilo?</h3>
+      <p class="sub">Destino de la carga al terminar el lote.</p>
+      <canvas id="ch-dest" aria-label="Barra del destino de cada kilo de aceite usado"></canvas>
+      <div class="legendrow" id="dest-legend"></div>
+    </div>
+    <div class="chart">
+      <h3>Contaminantes en cada etapa</h3>
+      <p class="sub">% que sigue en el aceite después de cada etapa.</p>
+      <canvas id="ch-cont" aria-label="Gráfica de contaminantes restantes por etapa"></canvas>
+    </div>
+    <div class="chart">
+      <h3>Calidad del aceite base</h3>
+      <p class="sub">Contra un aceite base virgen Grupo I de referencia.</p>
+      <div class="tablewrap"><table class="qual"><thead><tr><th>Propiedad</th><th class="num">Ligero</th><th class="num">Pesado</th><th class="num">Ref.</th></tr></thead><tbody id="qual-body"></tbody></table></div>
+    </div>
+  </div>
+
+  <section class="doc" id="corridas">
+    <div class="eyebrow">Bitácora</div>
+    <h2>Lotes terminados</h2>
+    <p class="muted">Cada lote que termina queda aquí. Compara rutas: rendimiento, calidad, energía, residuos y costo.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Ruta</th><th>Acabado</th><th class="num">Aceite base</th><th class="num">Color L/P</th><th class="num">TAN L/P</th><th class="num">Inflamación L/P</th><th class="num">Residuos</th><th class="num">kWh/L</th><th class="num">$/L</th></tr></thead>
+        <tbody id="runs"><tr><td colspan="10" class="muted">Todavía no termina ningún lote. Pulsa «Procesar lote» o «Ir al final».</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+    <section class="doc" id="ecuaciones">
+    <div class="eyebrow">Memoria de cálculo</div>
+    <h2>Las ecuaciones del modelo</h2>
+    <p>El aceite usado se representa con 17 especies: agua, dos combustibles disueltos, seis fracciones de aceite base por punto de ebullición, productos de oxidación, aditivos con metales, polímeros, hollín y partículas de desgaste. Cada etapa es un balance de masa por especie. La suma de productos y residuos es igual a la carga más los reactivos, al 10⁻¹⁵, en las cuatro rutas.</p>
+    <div class="eqgrid">
+      <div class="eq">
+        <span class="what">1 · Sedimentación (Stokes)</span>
+        <math display="block"><mi>v</mi><mo>=</mo><mfrac><mrow><mi>g</mi><mspace width="0.1em"/><mi>Δ</mi><mi>ρ</mi><mspace width="0.1em"/><msup><mi>d</mi><mn>2</mn></msup></mrow><mrow><mn>18</mn><mi>μ</mi><mo>(</mo><mi>T</mi><mo>)</mo></mrow></mfrac><mo>,</mo><mspace width="0.6em"/><msub><mi>f</mi><mtext>removido</mtext></msub><mo>=</mo><munder><mo>∑</mo><mi>d</mi></munder><msub><mi>w</mi><mi>d</mi></msub><mi>min</mi><mo>(</mo><mn>1</mn><mo>,</mo><mfrac><mrow><msub><mi>v</mi><mi>d</mi></msub><mi>t</mi></mrow><mi>H</mi></mfrac><mo>)</mo></math>
+        <p>Gotas de agua libre con tamaños lognormales (d₅₀ 60 µm) y partículas de desgaste (d₅₀ 12 µm, 3 500 kg/m³). El hollín es coloidal y no baja. Calentar de 25 a 60 °C baja la viscosidad de ~200 a ~43 cSt, así que el agua baja casi 5 veces más rápido.</p>
+      </div>
+      <div class="eq">
+        <span class="what">2 · Viscosidad contra temperatura (Walther, ASTM D341)</span>
+        <math display="block"><msub><mi>log</mi><mn>10</mn></msub><msub><mi>log</mi><mn>10</mn></msub><mo>(</mo><mi>ν</mi><mo>+</mo><mn>0.7</mn><mo>)</mo><mo>=</mo><mi>A</mi><mo>−</mo><mi>B</mi><mspace width="0.15em"/><msub><mi>log</mi><mn>10</mn></msub><mi>T</mi></math>
+        <p>A y B salen de la viscosidad del aceite usado a 40 y 100 °C (95 y 13.5 cSt por defecto).</p>
+      </div>
+      <div class="eq">
+        <span class="what">3 · Presión de vapor al vacío (Maxwell–Bonnell)</span>
+        <math display="block"><msub><mi>log</mi><mn>10</mn></msub><mi>P</mi><mo>=</mo><mfrac><mrow><mn>2663.129</mn><mi>X</mi><mo>−</mo><mn>5.994296</mn></mrow><mrow><mn>95.76</mn><mi>X</mi><mo>−</mo><mn>0.972546</mn></mrow></mfrac><mo>,</mo><mspace width="0.5em"/><mi>X</mi><mo>=</mo><mfrac><mrow><msub><mi>T</mi><mi>b</mi></msub><mo>/</mo><mi>T</mi><mo>−</mo><mn>0.0002867</mn><msub><mi>T</mi><mi>b</mi></msub></mrow><mrow><mn>748.1</mn><mo>−</mo><mn>0.2145</mn><msub><mi>T</mi><mi>b</mi></msub></mrow></mfrac></math>
+        <p>Correlación del API para fracciones de petróleo (T en °R, P en mmHg; abajo de 2 mmHg usa sus otras constantes). Reproduce la presión de vapor del octano a 27 °C (2.05 contra 2.1 kPa) y pone a un SN-500 hirviendo a 249 °C con 1 mmHg.</p>
+      </div>
+      <div class="eq">
+        <span class="what">4 · Destilación diferencial (Rayleigh)</span>
+        <math display="block"><mi>d</mi><msub><mi>n</mi><mi>i</mi></msub><mo>=</mo><mo>−</mo><mfrac><mrow><msub><mi>x</mi><mi>i</mi></msub><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup></mrow><msub><mi>P</mi><mi>b</mi></msub></mfrac><mi>d</mi><mi>N</mi><mo>,</mo><mspace width="0.5em"/><mtext>hasta</mtext><mspace width="0.3em"/><msub><mi>P</mi><mi>b</mi></msub><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>x</mi><mi>i</mi></msub><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup><mo>(</mo><mi>T</mi><mo>)</mo><mo>=</mo><mi>P</mi><mfrac><msub><mi>n</mi><mn>0</mn></msub><mrow><msub><mi>n</mi><mn>0</mn></msub><mo>+</mo><msub><mi>n</mi><mtext>vapor</mtext></msub></mrow></mfrac></math>
+        <p>En el evaporador de película el vapor sale conforme se forma. Se evapora hasta que el líquido que queda hierve a la presión del vacío. Los aditivos y polímeros disueltos diluyen y hacen que se quede algo de aceite pesado en el residuo, que así se puede bombear. El vapor de arrastre de la separación de gasóleo baja la presión efectiva.</p>
+      </div>
+      <div class="eq">
+        <span class="what">5 · Condensación fraccionada (flash ideal)</span>
+        <math display="block"><munder><mo>∑</mo><mi>i</mi></munder><mfrac><mrow><msub><mi>z</mi><mi>i</mi></msub><mo>(</mo><msub><mi>K</mi><mi>i</mi></msub><mo>−</mo><mn>1</mn><mo>)</mo></mrow><mrow><mn>1</mn><mo>+</mo><mi>V</mi><mo>(</mo><msub><mi>K</mi><mi>i</mi></msub><mo>−</mo><mn>1</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.5em"/><msub><mi>K</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mtext>cc</mtext></msub><mo>)</mo></mrow><mi>P</mi></mfrac></math>
+        <p>El condensador caliente se queda con el corte pesado (tipo SN-500) y deja pasar el ligero (tipo SN-150) al condensador frío.</p>
+      </div>
+      <div class="eq">
+        <span class="what">6 · Extracción con solvente y floculación</span>
+        <math display="block"><msub><mi>η</mi><mi>k</mi></msub><mo>=</mo><msub><mi>η</mi><mrow><mi>k</mi><mo>,</mo><mtext>ref</mtext></mrow></msub><mfrac><mrow><mi>F</mi><mo>(</mo><mi>S</mi><mo>,</mo><mtext>KOH</mtext><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mrow><mi>F</mi><mo>(</mo><mn>4</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>4</mn><mtext> h</mtext><mo>)</mo></mrow></mfrac><mo>,</mo><mspace width="0.4em"/><mi>F</mi><mo>=</mo><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>S</mi><mo>/</mo><mn>1.5</mn></mrow></msup><mo>)</mo><mo>(</mo><mn>0.6</mn><mo>+</mo><mfrac><mrow><mn>0.4</mn><mtext>KOH</mtext></mrow><mrow><mtext>KOH</mtext><mo>+</mo><mn>1</mn></mrow></mfrac><mo>)</mo><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>t</mi><mo>/</mo><mn>1.5</mn><mtext> h</mtext></mrow></msup><mo>)</mo></math>
+        <p>El 2-propanol disuelve el aceite base y deja fuera a los aditivos, polímeros y oxidados, que el KOH aglomera en flóculos. La referencia es S = 4 con 2 g de KOH por kg de solvente: ~55 % menos ceniza y 92 % de aceite recuperado (Rincón et al.). El solvente se recupera destilándolo, y se pierde 3 % por lote.</p>
+      </div>
+      <div class="eq">
+        <span class="what">7 · Desmetalizado con fosfato diamónico</span>
+        <math display="block"><msub><mi>η</mi><mtext>ceniza</mtext></msub><mo>=</mo><mn>0.75</mn><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mn>2</mn><mi>r</mi></mrow></msup><mo>)</mo><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>k</mi><mo>(</mo><mi>T</mi><mo>)</mo><mi>t</mi></mrow></msup><mo>)</mo><mo>,</mo><mspace width="0.4em"/><mi>r</mi><mo>=</mo><mfrac><mtext>dosis</mtext><mrow><mn>2.5</mn><mo>×</mo><mtext>metales</mtext></mrow></mfrac></math>
+        <p>El fosfato reacciona con el calcio y el zinc de los aditivos y forma fosfatos que precipitan y se filtran. Con 2 % a 140 °C por una hora baja la ceniza ~70 %, como reportan las patentes (0.5 → 0.15 %). Casi no toca a los oxidados ni a los polímeros.</p>
+      </div>
+      <div class="eq">
+        <span class="what">8 · Lo que pasa en la pared caliente</span>
+        <math display="block"><msub><mi>x</mi><mtext>desc</mtext></msub><mo>=</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><msub><mi>k</mi><mi>d</mi></msub><mo>(</mo><msub><mi>T</mi><mi>w</mi></msub><mo>)</mo></mrow></msup><mo>,</mo><mspace width="0.5em"/><msub><mi>x</mi><mtext>craqueo</mtext></msub><mo>=</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><msub><mi>k</mi><mi>c</mi></msub><mo>(</mo><msub><mi>T</mi><mi>w</mi></msub><mo>)</mo></mrow></msup></math>
+        <p>Los aditivos que llegan al evaporador se descomponen (E = 80 kJ/mol; ~30 % a 320 °C) y una parte destila con el aceite: color, olor y acidez. El aceite se craquea arriba de ~330 °C (E = 220 kJ/mol; 1 % a 340 °C). Por eso tratar antes de destilar da mejor producto y menos ensuciamiento.</p>
+      </div>
+      <div class="eq">
+        <span class="what">9 · Acabado con arcilla (Freundlich)</span>
+        <math display="block"><msub><mi>C</mi><mn>0</mn></msub><mo>=</mo><mi>C</mi><mo>+</mo><mfrac><msub><mi>m</mi><mtext>arcilla</mtext></msub><msub><mi>m</mi><mtext>aceite</mtext></msub></mfrac><mspace width="0.1em"/><mi>K</mi><mo>(</mo><mi>T</mi><mo>)</mo><mspace width="0.1em"/><msup><mi>C</mi><mrow><mn>1</mn><mo>/</mo><mi>n</mi></mrow></msup><mo>,</mo><mspace width="0.5em"/><mi>n</mi><mo>=</mo><mn>1.35</mn></math>
+        <p>C es la fracción de compuestos polares (oxidados y aditivo descompuesto) que dan color y acidez. Como 1/n &lt; 1, cada kilo extra de arcilla rinde menos. La arcilla gastada se queda con 0.35 kg de aceite por kg, y eso es una pérdida.</p>
+      </div>
+      <div class="eq">
+        <span class="what">10 · Viscosidad de la mezcla (Refutas)</span>
+        <math display="block"><mtext>VBN</mtext><mo>=</mo><mn>14.534</mn><mspace width="0.1em"/><mi>ln</mi><mi>ln</mi><mo>(</mo><mi>ν</mi><mo>+</mo><mn>0.8</mn><mo>)</mo><mo>+</mo><mn>10.975</mn><mo>,</mo><mspace width="0.5em"/><msub><mtext>VBN</mtext><mtext>mezcla</mtext></msub><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>w</mi><mi>i</mi></msub><msub><mtext>VBN</mtext><mi>i</mi></msub></math>
+        <p>Da la viscosidad a 40 y 100 °C de cada corte y su grado ISO VG.</p>
+      </div>
+      <div class="eq">
+        <span class="what">11 · Punto de inflamación</span>
+        <math display="block"><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>x</mi><mi>i</mi></msub><msubsup><mi>P</mi><mi>i</mi><mtext>sat</mtext></msubsup><mo>(</mo><msub><mi>T</mi><mi>f</mi></msub><mo>)</mo><mo>=</mo><mn>150</mn><mtext> Pa</mtext></math>
+        <p>Estimación: el aceite flamea cuando su vapor llega a ~150 Pa, valor calibrado para que un SN-150 limpio dé ~200 °C. Un poco de diésel que no se separó lo baja mucho.</p>
+      </div>
+      <div class="eq">
+        <span class="what">12 · Energía del lote</span>
+        <math display="block"><mi>Q</mi><mo>=</mo><mfrac><mn>1</mn><mn>0.85</mn></mfrac><mrow><mo>[</mo><mi>m</mi><msub><mi>c</mi><mi>p</mi></msub><mi>Δ</mi><mi>T</mi><mo>+</mo><msub><mi>m</mi><mtext>agua</mtext></msub><msub><mi>λ</mi><mtext>agua</mtext></msub><mo>+</mo><msub><mi>m</mi><mtext>solv</mtext></msub><mo>(</mo><msub><mi>c</mi><mi>p</mi></msub><mi>Δ</mi><mi>T</mi><mo>+</mo><msub><mi>λ</mi><mtext>solv</mtext></msub><mo>)</mo><mo>+</mo><msub><mi>m</mi><mtext>dest</mtext></msub><msub><mi>λ</mi><mtext>HC</mtext></msub><mo>+</mo><msub><mi>P</mi><mtext>vacío</mtext></msub><mi>t</mi><mo>]</mo></mrow></math>
+        <p>Recuperar el solvente es lo que más energía gasta: evaporar tres kilos de 2-propanol por cada kilo de aceite casi triplica la energía del lote (≈ 195 contra 67 kWh por tambo).</p>
+      </div>
+    </div>
+    <h3>Parámetros</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Parámetro</th><th>Valor</th><th>Origen</th></tr></thead>
+        <tbody>
+          <tr><td>Composición del aceite usado (agua, combustible, aditivos, metales)</td><td>agua 6 %, combustible 5 %, aditivos 3 %, polímeros 2.5 %, oxidados 3 %, hollín 0.6 %; Ca 2 000, Zn 1 000, P 900, Fe 100 ppm</td><td><span class="tag cal">Típica; analiza tu aceite</span></td></tr>
+          <tr><td>Presión de vapor de fracciones</td><td>Maxwell–Bonnell</td><td><span class="tag lit">API Technical Data Book</span></td></tr>
+          <tr><td>Viscosidad de cada fracción base</td><td>18 a 500 cSt a 40 °C</td><td><span class="tag cal">Típica de cortes SN</span></td></tr>
+          <tr><td>Eficiencia del solvente a S = 4 y KOH 2 g/kg</td><td>ceniza 55 %, polímeros 75 %, oxidados 35–70 %, hollín 90 %</td><td><span class="tag lit">Rincón et al. 2005–2006</span> <span class="tag cal">reparto por especie calibrado</span></td></tr>
+          <tr><td>Fosfato diamónico</td><td>0.2–5 %, 60–150 °C, 10–120 min; ceniza 0.5 → 0.15 %</td><td><span class="tag lit">Patentes de desmetalizado</span></td></tr>
+          <tr><td>Freundlich de la arcilla</td><td>n = 1.35; K = 75 a 120 °C</td><td><span class="tag lit">n: bentonita activada</span> <span class="tag cal">K calibrado</span></td></tr>
+          <tr><td>Descomposición de aditivos y craqueo</td><td>80 y 220 kJ/mol</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
+          <tr><td>Color, acidez y punto de inflamación</td><td>relaciones con polares, hollín y presión de vapor</td><td><span class="tag cal">Estimación; mide con ASTM D1500, D664 y D92</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Los valores marcados «calibrado» o «típica» no salen de una medición tuya: sirven para comparar rutas y entender qué palanca mueve qué. Antes de invertir, analiza tu aceite usado (agua por Karl Fischer, metales por ICP, viscosidad ASTM D445, TAN ASTM D664) y prueba cada ruta en el laboratorio con 1–5 litros.</p>
+  </section>
+
+    <section class="doc" id="compras">
+    <div class="eyebrow">Presupuesto</div>
+    <h2>Qué comprar, cuánto cuesta y dónde</h2>
+    <p>Precios en pesos consultados el 22 de octubre de 2026 en Mercado Libre, Amazon México y Alibaba. Cambian seguido, y varios links llevan a una búsqueda con varios vendedores. Los consumibles se calculan con la ruta y las cantidades que tengas puestas arriba.</p>
+    <div class="routes">
+      <div class="route">
+        <span class="eyebrow">Ruta 1 · para empezar</span>
+        <h3>Pruebas de banco, 1–5 L</h3>
+        <p>Probar cada ruta con tu propio aceite: matraces, parrilla con agitación, embudo de separación y una destilación al vacío de laboratorio. Lo caro son los análisis (viscosidad, TAN, color, metales), que se mandan a un laboratorio externo.</p>
+      </div>
+      <div class="route">
+        <span class="eyebrow">Ruta 2 · llave en mano</span>
+        <h3>Planta de destilación al vacío</h3>
+        <p>Plantas pequeñas en Alibaba desde ≈ US$4,000–7,900 (2 t/día, configuración básica) hasta ≈ US$30,000 con recuperación declarada de 85 %, más flete, impuestos e instalación. Pide la capacidad real, el vacío que alcanza y el rendimiento medido.</p>
+        <a href="https://www.alibaba.com/product-detail/Small-Scale-Refinery-Used-Black-Engine_1600908866813.html" target="_blank" rel="noopener">Ver planta en Alibaba</a>
+      </div>
+      <div class="route">
+        <span class="eyebrow">Ruta 3 · armarla</span>
+        <h3>Planta piloto de un tambo por lote</h3>
+        <p>La del simulador, con el evaporador comprado y el resto armado. Es la lista de abajo.</p>
+        <span class="routetotal">Equipo: <strong id="buy-total-top" class="num">—</strong> · Consumibles por lote: <strong id="cons-total-top" class="num">—</strong></span>
+      </div>
+    </div>
+    <h3>Consumibles por lote</h3>
+    <div class="tablewrap">
+      <table class="buy">
+        <thead><tr><th>Consumible</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Por lote</th><th>Dónde</th></tr></thead>
+        <tbody id="cons-body"></tbody>
+        <tfoot><tr><td colspan="3"><strong>Total por lote</strong> · <span id="cons-per-l" class="muted"></span></td><td class="num"><strong id="cons-total">—</strong></td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <h3>Equipo</h3>
+    <div class="tablewrap">
+      <table class="buy">
+        <thead><tr><th>Artículo</th><th class="num">Cant.</th><th class="num">Precio unit.</th><th class="num">Subtotal</th><th>Dónde</th></tr></thead>
+        <tbody id="buy-body"></tbody>
+        <tfoot><tr><td colspan="3"><strong>Total estimado del equipo</strong></td><td class="num"><strong id="buy-total">—</strong></td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <p class="note">Falta en la lista y sí cuesta: la instalación eléctrica (15–20 kW), el agua de enfriamiento, la obra civil con dique de contención para derrames, los análisis de laboratorio y los trámites ambientales.</p>
+  </section>
+
+  <section class="doc" id="permisos">
+    <div class="eyebrow">Antes de empezar</div>
+    <h2>Permisos y seguridad</h2>
+    <div class="tablewrap">
+      <table>
+        <tbody>
+          <tr><td class="stage" colspan="2">Permisos en México</td></tr>
+          <tr><td>El aceite usado es residuo peligroso</td><td>Lo regula la Ley General para la Prevención y Gestión Integral de los Residuos (artículo 31: planes de manejo) y se clasifica con la NOM-052-SEMARNAT. Para acopiarlo, transportarlo o tratarlo necesitas autorización de la SEMARNAT, y cada movimiento lleva manifiesto. Verifica en el DOF la versión vigente de la norma.</td></tr>
+          <tr><td>Lo que produces también</td><td>El lodo, el residuo de fondo, la arcilla gastada y el agua aceitosa son residuos peligrosos y van con un gestor autorizado. El lodo ácido de la ruta histórica es el más difícil de disponer.</td></tr>
+          <tr><td>El aceite base</td><td>Para venderlo, el comprador te pedirá su hoja técnica: viscosidad, índice de viscosidad, punto de inflamación, color, TAN, azufre y ceniza, medidos en un laboratorio acreditado.</td></tr>
+          <tr><td class="stage" colspan="2">Seguridad</td></tr>
+          <tr><td>2-propanol</td><td>Se inflama desde 12 °C. Motores y luces a prueba de explosión, tierra física, ventilación y nada de flama cerca del tanque de extracción.</td></tr>
+          <tr><td>Aceite caliente y vacío</td><td>A 250–350 °C el aceite se puede autoinflamar si entra aire. Prueba de fugas antes de calentar, trampa fría antes de la bomba de vacío y paro por alta temperatura.</td></tr>
+          <tr><td>Ácido sulfúrico</td><td>Si eliges esa ruta: lentes, careta, guantes de neopreno y regadera de emergencia. Agrega siempre el ácido al aceite, nunca al revés.</td></tr>
+          <tr><td>Fosfato diamónico caliente</td><td>Desprende amoníaco: trabaja con extracción de gases.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="doc" id="fuentes">
+    <div class="eyebrow">Referencias</div>
+    <h2>Fuentes</h2>
+    <ul class="sources">
+      <li>Extracción con solventes polares y floculación con KOH (Rincón, Cañizares y García): <a href="https://www.researchgate.net/publication/231371997_Regeneration_of_Used_Lubricant_Oil_by_Polar_Solvent_Extraction" target="_blank" rel="noopener">Ind. Eng. Chem. Res. 2005</a> y <a href="https://pubs.acs.org/doi/10.1021/ie0580452" target="_blank" rel="noopener">mezclas de solventes polares, 2006</a></li>
+      <li>Re-refinado por destilación al vacío y evaporador de película: <a href="https://www.researchgate.net/publication/338152590_Re-refining_of_used_lubricating_oil_by_vacuum_distillationthin_wiped_film_evaporation_technique" target="_blank" rel="noopener">ResearchGate</a> · <a href="https://www.osti.gov/biblio/5997375" target="_blank" rel="noopener">OSTI (70–90 % como destilado)</a> · <a href="https://www.sciencedirect.com/science/article/pii/S2405844026007401" target="_blank" rel="noopener">Heliyon 2026</a></li>
+      <li>Desmetalizado con fosfato diamónico: <a href="https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/7431829" target="_blank" rel="noopener">US 7431829</a> · <a href="https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/4287049" target="_blank" rel="noopener">US 4287049</a></li>
+      <li>Arcillas activadas y Freundlich para aceites usados: <a href="https://www.researchgate.net/publication/264435481_Acid_Activation_and_Bleaching_Capacity_of_Some_Clays_for_Decolourizing_Used_Oils" target="_blank" rel="noopener">ResearchGate</a> · <a href="https://www.sciencedirect.com/science/article/pii/S1018363918307335" target="_blank" rel="noopener">bentonita activada (n = 1.35)</a></li>
+      <li>Aditivos y metales en aceite de motor: <a href="https://learnoilanalysis.com/lube-oil-test-analysis-lab-lubrication-reliability-maintenance/oil-additives-typical-concentrations/" target="_blank" rel="noopener">LearnOilAnalysis</a> · <a href="https://www.cimac.com/cms/upload/Publication_Press/Recommendations/Recommendation_30.pdf" target="_blank" rel="noopener">CIMAC Guía 30</a></li>
+      <li>Marco legal en México: <a href="https://www.redalyc.org/journal/7262/726276431012/html/" target="_blank" rel="noopener">alternativas de recuperación de aceites usados (Redalyc)</a> · <a href="http://centro.paot.org.mx/documentos/semarnat/regulacion_resi_peli_mexico.pdf" target="_blank" rel="noopener">regulación de residuos peligrosos (SEMARNAT)</a></li>
+    </ul>
+  </section>
+
+</div>
+<script>
+// MODEL-START
+// Re-refinación de aceite de motor usado por etapas. Unidades: kg, K, Pa, s, J.
+// Cada etapa recibe una corriente {especie: kg} y regresa productos, residuos, energía y tiempo.
+
+const R = 8.314, PATM = 101325, G = 9.81;
+
+// Especies. Tb: punto de ebullición normal (K); M: kg/mol; nv: no volátil
+const SP = {
+  W:   { name: 'Agua', M: 0.018 },
+  FG:  { name: 'Combustible ligero (gasolina)', Tb: 400, M: 0.10 },
+  FD:  { name: 'Combustible ligero (diésel)', Tb: 560, M: 0.23 },
+  B1:  { name: 'Base 1', Tb: 650, M: 0.30, v40: 18, v100: 3.9 },
+  B2:  { name: 'Base 2', Tb: 690, M: 0.34, v40: 30, v100: 5.2 },
+  B3:  { name: 'Base 3', Tb: 720, M: 0.38, v40: 55, v100: 7.5 },
+  B4:  { name: 'Base 4', Tb: 760, M: 0.43, v40: 100, v100: 11 },
+  B5:  { name: 'Base 5', Tb: 800, M: 0.50, v40: 220, v100: 18 },
+  B6:  { name: 'Base 6', Tb: 840, M: 0.58, v40: 500, v100: 32 },
+  OXv: { name: 'Productos de oxidación (destilables)', Tb: 740, M: 0.40, polar: true },
+  DV:  { name: 'Aditivo descompuesto (destilable)', Tb: 620, M: 0.25, polar: true },
+  OXh: { name: 'Productos de oxidación (pesados)', nv: true, polar: true, M: 0.6 },
+  AD:  { name: 'Aditivos con metales (detergentes, ZDDP)', nv: true, M: 0.8 },
+  VI:  { name: 'Polímeros mejoradores de viscosidad', nv: true, M: 20 },
+  SO:  { name: 'Hollín', nv: true },
+  PW:  { name: 'Partículas de desgaste y tierra', nv: true },
+  IPA: { name: '2-propanol', M: 0.060 },
+  REA: { name: 'Reactivos (KOH, DAP o ácido)', nv: true },
+  CL:  { name: 'Arcilla', nv: true },
+};
+const BASE = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6'];
+const VOLATILES = ['FG', 'FD', ...BASE, 'OXv', 'DV'];
+const IMPUREZAS = ['OXv', 'DV', 'OXh', 'AD', 'VI', 'SO', 'PW'];
+
+// Metales por kg de cada especie (fracción másica): los aditivos llevan Ca, Zn y P; el desgaste Fe, Pb y Si
+const METALS = { AD: { Ca: 0.0667, Zn: 0.0333, P: 0.030 }, PW: { Fe: 0.025, Pb: 0.0025, Si: 0.0075 } };
+const ASH_FACTOR = 1.6; // ceniza sulfatada ≈ 1.6 × metales
+
+// Aceite usado de entrada, % en masa (mezcla de taller)
+const FEEDS = {
+  taller:   { W: 6, FG: 2, FD: 3, base: 79.5, OXv: 1.8, OXh: 1.2, AD: 3, VI: 2.5, SO: 0.6, PW: 0.4 },
+  gasolina: { W: 4, FG: 4, FD: 1, base: 81.6, OXv: 2.0, OXh: 1.0, AD: 3, VI: 3.0, SO: 0.2, PW: 0.2 },
+  diesel:   { W: 5, FG: 0.5, FD: 5, base: 78.3, OXv: 1.6, OXh: 1.4, AD: 3.5, VI: 2.0, SO: 2.2, PW: 0.5 },
+  agua:     { W: 15, FG: 2, FD: 3, base: 70.5, OXv: 1.8, OXh: 1.2, AD: 3, VI: 2.5, SO: 0.6, PW: 0.4 },
+};
+const BASE_SPLIT = { B1: 0.12, B2: 0.23, B3: 0.22, B4: 0.20, B5: 0.15, B6: 0.08 };
+const FREE_WATER = 0.6;    // fracción del agua que está libre (gotas); el resto emulsionada
+const CP_OIL = 2100, CP_IPA = 2600, LAT_W = 2.257e6, LAT_IPA = 6.63e5, LAT_HC = 2.6e5;
+
+function feedStream(type, mass) {
+  const f = FEEDS[type], s = {};
+  let tot = 0;
+  for (const k in f) tot += f[k];
+  for (const k in f) {
+    if (k === 'base') for (const b of BASE) s[b] = mass * f.base / tot * BASE_SPLIT[b];
+    else s[k] = mass * f[k] / tot;
+  }
+  for (const k of ['DV', 'IPA', 'REA', 'CL']) s[k] = 0;
+  return s;
+}
+
+// ---------- utilidades ----------
+const sum = (s, keys) => (keys || Object.keys(s)).reduce((a, k) => a + (s[k] || 0), 0);
+const copy = (s) => Object.assign({}, s);
+const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
+function addTo(dst, src, f = 1) { for (const k in src) dst[k] = (dst[k] || 0) + src[k] * f; return dst; }
+function oilMass(s) { return sum(s, [...BASE, 'FG', 'FD', ...IMPUREZAS]); }
+
+// Presión de vapor de fracciones de petróleo: Maxwell–Bonnell (API TDB 5A1.19), Pa
+function psatMB(TbK, TK) {
+  const Tb = TbK * 1.8, T = TK * 1.8;
+  const X = (Tb / T - 0.0002867 * Tb) / (748.1 - 0.2145 * Tb);
+  let l = (2663.129 * X - 5.994296) / (95.76 * X - 0.972546);
+  if (l < Math.log10(2)) l = (3000.538 * X - 6.761560) / (43 * X - 0.987672);
+  return Math.pow(10, l) * 133.322;
+}
+function psatWater(TK) { const t = TK - 273.15; return Math.pow(10, 8.07131 - 1730.63 / (233.426 + t)) * 133.322; }
+function psatIPA(TK) { const t = TK - 273.15; return Math.pow(10, 8.87829 - 2010.33 / (252.636 + t)) * 133.322; }
+
+// Viscosidad: Walther (ASTM D341) entre dos puntos y mezcla con el índice de Refutas
+function walther(v40, v100, TK) {
+  const a = (v) => Math.log10(Math.log10(v + 0.7));
+  const B = (a(v40) - a(v100)) / (Math.log10(373.15) - Math.log10(313.15));
+  const A = a(v40) + B * Math.log10(313.15);
+  return Math.pow(10, Math.pow(10, A - B * Math.log10(TK))) - 0.7;
+}
+const vbn = (v) => 14.534 * Math.log(Math.log(v + 0.8)) + 10.975;
+const vbnInv = (x) => Math.exp(Math.exp((x - 10.975) / 14.534)) - 0.8;
+function blendVisc(s) {
+  let m = 0, a40 = 0, a100 = 0;
+  for (const b of BASE) { const w = s[b] || 0; m += w; a40 += w * vbn(SP[b].v40); a100 += w * vbn(SP[b].v100); }
+  if (m <= 0) return { v40: 0, v100: 0 };
+  return { v40: vbnInv(a40 / m), v100: vbnInv(a100 / m) };
+}
+
+// Flash ideal (Raoult) con Rachford–Rice; nc = moles de gas que no condensa (agua o N2 de arrastre)
+function flash(s, TK, P, nc = 0) {
+  const n = {}, K = {};
+  let N = nc;
+  for (const k of VOLATILES) {
+    if (!(s[k] > 0)) continue;
+    n[k] = s[k] / SP[k].M; N += n[k]; K[k] = psatMB(SP[k].Tb, TK) / P;
+  }
+  const keys = Object.keys(n);
+  const vap = {}, liq = copy(s);
+  if (!keys.length) return { vap, liq };
+  const f = (V) => nc / N / V + keys.reduce((a, k) => a + n[k] / N * (K[k] - 1) / ((1 - V) + V * K[k]), 0);
+  let V;
+  if (f(1) >= 0) V = 1;
+  else if (f(1e-9) <= 0) V = 0;
+  else { let lo = 1e-9, hi = 1; for (let i = 0; i < 80; i++) { const m = 0.5 * (lo + hi); if (f(m) > 0) lo = m; else hi = m; } V = 0.5 * (lo + hi); }
+  for (const k of keys) {
+    const fv = V * K[k] / ((1 - V) + V * K[k]);
+    vap[k] = s[k] * fv; liq[k] = s[k] - vap[k];
+  }
+  return { vap, liq, V };
+}
+
+// Destilación diferencial (Rayleigh): el vapor sale conforme se forma, hasta que el líquido
+// que queda tiene presión de burbuja igual a P. Los no volátiles disueltos (aditivos, polímeros) diluyen.
+function rayleigh(s, TK, P, nc = 0) {
+  const liq = copy(s), vap = {};
+  const ps = {};
+  for (const k of VOLATILES) ps[k] = psatMB(SP[k].Tb, TK);
+  const dissolved = ['AD', 'OXh', 'VI'];
+  // el vapor de arrastre (cantidad fija) baja la presión parcial que tiene que vencer el líquido
+  let n0 = 0;
+  for (const k of VOLATILES) if (liq[k] > 0) n0 += liq[k] / SP[k].M;
+  const Peff = nc > 0 && n0 > 0 ? P * n0 / (n0 + nc) : P;
+  for (let it = 0; it < 2000; it++) {
+    let n = 0;
+    const nk = {};
+    for (const k of VOLATILES) if (liq[k] > 1e-12) { nk[k] = liq[k] / SP[k].M; n += nk[k]; }
+    let nNV = 0;
+    for (const k of dissolved) nNV += (liq[k] || 0) / SP[k].M;
+    if (n <= 0) break;
+    const Pb = Object.keys(nk).reduce((a, k) => a + nk[k] / (n + nNV) * ps[k], 0);
+    if (Pb <= Peff) break;
+    const dN = Math.min(0.004 * n, n * (1 - Peff / Pb) + 1e-9);
+    for (const k in nk) {
+      const y = nk[k] * ps[k] / (n + nNV) / Pb;
+      const dm = Math.min(liq[k], y * dN * SP[k].M);
+      liq[k] -= dm; vap[k] = (vap[k] || 0) + dm;
+    }
+  }
+  return { vap, liq };
+}
+
+// Distribución lognormal de tamaños (fracción de masa por clase) para la sedimentación
+function lognormalBins(d50, sg, n = 60) {
+  const out = [], ls = Math.log(sg);
+  const lo = Math.log(d50) - 3.5 * ls, hi = Math.log(d50) + 3.5 * ls, step = (hi - lo) / n;
+  let tot = 0;
+  for (let i = 0; i < n; i++) { const x = lo + (i + 0.5) * step, w = Math.exp(-0.5 * Math.pow((x - Math.log(d50)) / ls, 2)); out.push([Math.exp(x), w]); tot += w; }
+  return out.map(([d, w]) => [d, w / tot]);
+}
+function settledFraction(bins, drho, mu, t, H) {
+  if (drho <= 0) return 0;
+  return bins.reduce((a, [d, w]) => a + w * Math.min(1, G * drho * d * d / (18 * mu) * t / H), 0);
+}
+
+// ---------- Etapas ----------
+// 1. Sedimentación: Stokes sobre gotas de agua libre y partículas gruesas
+function sedimentacion(s, c) {
+  const T = c.Ts + 273.15, t = c.ts * 3600, H = c.H;
+  const nu = walther(c.v40, c.v100, T) * 1e-6;
+  const rhoO = 885 - 0.65 * (T - 288), rhoW = 1000 - 0.0036 * Math.pow(T - 277, 2);
+  const mu = nu * rhoO;
+  const fW = settledFraction(lognormalBins(60e-6, 2.5), rhoW - rhoO, mu, t, H);
+  const fP = settledFraction(lognormalBins(12e-6, 2.2), 3500 - rhoO, mu, t, H);
+  const out = copy(s);
+  const rem = { W: s.W * FREE_WATER * fW, PW: s.PW * fP };
+  out.W -= rem.W; out.PW -= rem.PW;
+  // el agua drenada arrastra aceite (≈ 5 % de lo drenado)
+  const drag = 0.05 * (rem.W + rem.PW), oil = oilMass(out);
+  const waste = copy(rem);
+  for (const k of [...BASE, 'FG', 'FD']) { const x = drag * out[k] / oil; out[k] -= x; waste[k] = (waste[k] || 0) + x; }
+  const E = s.W ? (oilMass(s) * CP_OIL + s.W * 4186) * Math.max(0, T - c.Tamb) : 0;
+  return { out, waste: { 'Agua aceitosa': waste }, E, time: E / c.Ph + t, info: { fW, fP, mu, nu: nu * 1e6 } };
+}
+
+// 2. Deshidratación a presión atmosférica: el vapor de agua arrastra parte del combustible
+function deshidratacion(s, c) {
+  const T = c.Td + 273.15;
+  const fwat = clamp(psatWater(T) / PATM, 0, 1);
+  const out = copy(s);
+  const wOut = s.W * (T >= 373.15 ? 1 : fwat);
+  out.W = s.W - wOut;
+  const fl = flash(out, T, PATM, wOut / SP.W.M);
+  const fuel = fl.vap;
+  for (const k in fuel) out[k] -= fuel[k];
+  const E = oilMass(s) * CP_OIL * Math.max(0, T - (c.Ts + 273.15)) + wOut * LAT_W + sum(fuel) * LAT_HC;
+  return { out, products: { 'Combustible ligero': fuel }, waste: { 'Agua condensada': { W: wOut } }, E, time: E / c.Ph + 1800, info: { wOut } };
+}
+
+// 3. Tratamiento químico
+const ETA_SOLV = { AD: 0.55, VI: 0.75, OXh: 0.70, OXv: 0.35, DV: 0.35, SO: 0.90, PW: 0.95 }; // a S = 4, KOH = 2 g/kg, 4 h
+const ETA_ACID = { AD: 0.90, VI: 0.80, OXh: 0.85, OXv: 0.85, DV: 0.85, SO: 0.95, PW: 0.95 };
+const ETA_DAP = { VI: 0.10, OXh: 0.10, OXv: 0.05, DV: 0.05, SO: 0.50, PW: 0.80 };
+function solventFactor(S, koh, th) {
+  const f = (S, k, t) => (1 - Math.exp(-S / 1.5)) * (0.6 + 0.4 * k / (k + 1)) * (1 - Math.exp(-t / 1.5));
+  return Math.min(1.15, f(S, koh, th) / f(4, 2, 4));
+}
+function metalsMass(s) { return sum(s, ['AD']) * (METALS.AD.Ca + METALS.AD.Zn + METALS.AD.P) + (s.PW || 0) * (METALS.PW.Fe + METALS.PW.Pb + METALS.PW.Si); }
+
+function tratamiento(s, c) {
+  const out = copy(s), sludge = {};
+  const oil0 = oilMass(s);
+  let eta = {}, E = 0, time = 0, reagent = 0, holdup = 0.6, label = 'Lodo';
+  if (c.ruta === 'solvente') {
+    const F = solventFactor(c.S, c.koh, c.t3);
+    for (const k in ETA_SOLV) eta[k] = Math.min(0.99, ETA_SOLV[k] * F);
+    reagent = c.koh / 1000 * c.S * oil0;
+    const ipa = c.S * oil0, lost = 0.03 * ipa;
+    sludge.IPA = lost * 0.5;
+    E = ipa * (CP_IPA * 60 + LAT_IPA) + oil0 * CP_OIL * 20;
+    time = 1800 + c.t3 * 3600 + E / c.Ph;
+    out.IPA = 0;
+    eta._ipa = { used: ipa, lost };
+  } else if (c.ruta === 'dap') {
+    const metals = metalsMass(s) / oil0;
+    const r = (c.dap / 100) / (2.5 * metals);
+    const k = 0.05 * Math.exp(-60e3 / R * (1 / (c.T3 + 273.15) - 1 / 413.15));
+    eta = Object.assign({ AD: 0.75 * (1 - Math.exp(-2 * r)) * (1 - Math.exp(-k * c.t3min)) }, ETA_DAP);
+    reagent = c.dap / 100 * oil0;
+    const water = 1.5 * reagent;
+    E = oil0 * CP_OIL * Math.max(0, c.T3 + 273.15 - (c.Td + 273.15)) + water * LAT_W;
+    time = c.t3min * 60 + 3600 + E / c.Ph;
+    holdup = 0.5; label = 'Torta de fosfatos';
+  } else if (c.ruta === 'acido') {
+    eta = Object.assign({}, ETA_ACID);
+    reagent = c.acido / 100 * oil0;
+    holdup = 0.8; label = 'Lodo ácido';
+    time = 3600 + 12 * 3600;
+  }
+  let removed = 0;
+  for (const k in eta) {
+    if (k[0] === '_' || !(s[k] > 0)) continue;
+    const x = s[k] * eta[k]; out[k] -= x; sludge[k] = (sludge[k] || 0) + x; removed += x;
+  }
+  // el lodo retiene aceite base (y el ácido se lleva más)
+  const carry = holdup * (removed + reagent);
+  const oilB = sum(out, BASE);
+  for (const b of BASE) { const x = carry * out[b] / oilB; out[b] -= x; sludge[b] = (sludge[b] || 0) + x; }
+  sludge.REA = reagent;
+  const waste = c.ruta === 'ninguno' ? {} : { [label]: sludge };
+  return { out, waste, E, time, reagent, info: { eta, removed, carry } };
+}
+
+// 4. Destilación al vacío: separación de gasóleo y evaporador de película (TFE) con condensación fraccionada
+function destilacion(s, c) {
+  const Tw = c.Tw + 273.15, P = c.Pv * 100;   // Pv en mbar
+  const feed = copy(s);
+  // 4a. separación de gasóleo (destilación diferencial con vapor de arrastre)
+  const go = rayleigh(feed, c.Tgo + 273.15, c.Pgo * 100, c.steam * oilMass(feed) / SP.W.M);
+  const afterGo = go.liq;
+  // descomposición de aditivos en la pared caliente: una parte se vuelve destilable (DV)
+  const kd = 0.778 * Math.exp(-80e3 / R * (1 / Tw - 1 / 593.15));
+  const dec = (afterGo.AD || 0) * (1 - Math.exp(-kd));
+  afterGo.AD -= dec; afterGo.DV = (afterGo.DV || 0) + 0.4 * dec;
+  const decRes = 0.6 * dec;
+  // craqueo térmico del aceite base arriba de ~330 °C
+  const kc = 0.01005 * Math.exp(-220e3 / R * (1 / Tw - 1 / 613.15));
+  let cracked = 0;
+  for (const b of BASE) { const x = afterGo[b] * (1 - Math.exp(-kc)); afterGo[b] -= x; cracked += x; }
+  // 4b. TFE: destilación diferencial a la temperatura de pared y al vacío
+  const tfe = rayleigh(afterGo, Tw, P);
+  const residue = tfe.liq;
+  residue.AD = (residue.AD || 0) + decRes;
+  const dist = tfe.vap;
+  // arrastre de gotas del residuo hacia el destilado
+  const eps = 0.003;
+  for (const k in residue) { const x = residue[k] * eps; residue[k] -= x; dist[k] = (dist[k] || 0) + x; }
+  // 4c. condensador caliente y frío
+  const hot = flash(dist, c.Thc + 273.15, P);
+  const heavy = hot.liq, light = hot.vap;
+  // ensuciamiento del evaporador: lo no volátil que llega, más caliente = peor
+  const nvIn = sum(afterGo, ['AD', 'VI', 'SO', 'OXh']) / Math.max(1e-9, oilMass(afterGo));
+  const fouling = nvIn * 100 * Math.exp((Tw - 593.15) / 30);
+  const mIn = oilMass(s);
+  const E = mIn * CP_OIL * Math.max(0, Tw - (c.Td + 273.15)) + (sum(dist) + sum(go.vap)) * LAT_HC;
+  const time = mIn / c.feedRate * 3600;
+  return {
+    out: { heavy, light }, products: { 'Gasóleo (combustible)': go.vap },
+    waste: { 'Residuo de fondo': residue, 'Ligeros de craqueo': { FG: cracked } },
+    E: E + c.vacuumKW * 1000 * time, time, info: { dec, cracked, fouling, V: tfe.V },
+  };
+}
+
+// 5. Acabado con arcilla: isoterma de Freundlich para los compuestos polares y filtración
+const FREUNDLICH = { K: 75, n: 1.35, dH: 20e3, Tref: 393.15 }; // n de bentonita; K calibrado a re-refinación
+function arcilla(s, c) {
+  const out = copy(s);
+  const oil = oilMass(s);
+  if (oil <= 0) return { out, waste: {}, E: 0, time: 0, info: {} };
+  const dose = c.clay / 100;
+  const K = FREUNDLICH.K * Math.exp(-FREUNDLICH.dH / R * (1 / (c.Tcl + 273.15) - 1 / FREUNDLICH.Tref));
+  const polarKeys = ['OXv', 'DV', 'OXh'];
+  const C0 = sum(s, polarKeys) / oil;
+  // C0 = C + dosis · K · C^(1/n)  → bisección
+  let lo = 0, hi = C0;
+  for (let i = 0; i < 80; i++) { const m = 0.5 * (lo + hi); if (m + dose * K * Math.pow(m, 1 / FREUNDLICH.n) > C0) hi = m; else lo = m; }
+  const approach = 1 - Math.exp(-c.tcl / 10);
+  const Ceq = 0.5 * (lo + hi), C = C0 - (C0 - Ceq) * approach;
+  const frac = C0 > 0 ? C / C0 : 1;
+  const spent = { CL: dose * oil };
+  for (const k of polarKeys) { const x = (s[k] || 0) * (1 - frac); out[k] = (out[k] || 0) - x; spent[k] = x; }
+  // la filtración quita sólidos arrastrados
+  for (const k of ['SO', 'PW', 'AD', 'VI']) { const x = (out[k] || 0) * 0.9; out[k] = (out[k] || 0) - x; spent[k] = (spent[k] || 0) + x; }
+  // la arcilla gastada retiene aceite
+  const b = sum(out, BASE), carry = Math.min(0.35 * dose * oil, 0.5 * b);
+  for (const k of BASE) { const x = b > 0 ? carry * out[k] / b : 0; out[k] -= x; spent[k] = (spent[k] || 0) + x; }
+  const E = oil * CP_OIL * Math.max(0, c.Tcl - 40);
+  return { out, waste: { 'Arcilla gastada': spent }, E, time: c.tcl * 60 + 3600 + E / c.Ph, info: { C0, C } };
+}
+
+// 5b. Hidroacabado: hidrógeno a 30–60 bar y 300–340 °C sobre catalizador NiMo; satura y quita polares
+function hidroacabado(s, c) {
+  const out = copy(s), waste = {};
+  const oil = oilMass(s);
+  for (const [k, eta] of [['OXv', 0.97], ['DV', 0.98], ['OXh', 0.95], ['AD', 0.9], ['SO', 0.95], ['PW', 0.95], ['VI', 0.9]]) {
+    const x = (s[k] || 0) * eta; out[k] = (out[k] || 0) - x; waste[k] = x;
+  }
+  // ≈ 1 % del aceite se craquea a ligeros
+  const b = sum(out, BASE);
+  for (const k of BASE) { const x = 0.01 * out[k]; out[k] -= x; waste.FG = (waste.FG || 0) + x; }
+  const E = oil * CP_OIL * 280 * 0.3;  // con intercambio de calor carga/efluente
+  return { out, waste: { 'Agua ácida y ligeros del hidroacabado': waste }, E, time: oil / c.feedRate * 3600, info: {} };
+}
+
+// ---------- Calidad ----------
+function calidad(s) {
+  const m = sum(s);
+  if (m <= 0) return null;
+  const v = blendVisc(s);
+  const polar = sum(s, ['OXv', 'DV', 'OXh']) / m;
+  const tan = (100 * sum(s, ['OXv', 'OXh']) + 50 * (s.DV || 0)) / m;
+  const metals = metalsMass(s) / m;
+  const soot = sum(s, ['SO']) / m;
+  const color = clamp(0.5 + 1.8 * Math.log10(1 + (polar * 1e6 + 100 * soot * 1e6) / 150), 0.5, 8);
+  // punto de inflamación: temperatura a la que la presión de vapor de la mezcla llega a P_fl
+  let n = 0;
+  const x = {};
+  for (const k of VOLATILES) if (s[k] > 0) { x[k] = s[k] / SP[k].M; n += x[k]; }
+  const pv = (T) => Object.keys(x).reduce((a, k) => a + x[k] / n * psatMB(SP[k].Tb, T), 0);
+  let lo = 250, hi = 700;
+  for (let i = 0; i < 60; i++) { const T = 0.5 * (lo + hi); if (pv(T) > P_FLASH) hi = T; else lo = T; }
+  const iso = [10, 15, 22, 32, 46, 68, 100, 150, 220, 320, 460, 680].reduce((a, g) => (Math.abs(Math.log(g / v.v40)) < Math.abs(Math.log(a / v.v40)) ? g : a));
+  return {
+    kg: m, litros: m / 0.87, v40: v.v40, v100: v.v100, isoVG: iso, flash: 0.5 * (lo + hi) - 273.15,
+    tan, color, ash_ppm: metals * ASH_FACTOR * 1e6, metals_ppm: metals * 1e6, polar_ppm: polar * 1e6,
+  };
+}
+const P_FLASH = 150; // Pa; calibrado para que un SN-150 dé ≈ 210 °C (copa abierta)
+
+// ---------- Proceso completo ----------
+function procesar(c) {
+  const feed = feedStream(c.tipo, c.mass);
+  const stages = [];
+  const waste = {}, products = {};
+  const merge = (dst, src) => { for (const k in src || {}) dst[k] = addTo(dst[k] || {}, src[k]); };
+  let s = feed;
+  const s1 = sedimentacion(s, c); stages.push(['sedimentacion', s1]); merge(waste, s1.waste); s = s1.out;
+  const s2 = deshidratacion(s, c); stages.push(['deshidratacion', s2]); merge(waste, s2.waste); merge(products, s2.products); s = s2.out;
+  const s3 = tratamiento(s, c); stages.push(['tratamiento', s3]); merge(waste, s3.waste); s = s3.out;
+  const s4 = destilacion(s, c); stages.push(['destilacion', s4]); merge(waste, s4.waste); merge(products, s4.products);
+  const fin = c.acabado === 'hidro' ? hidroacabado : arcilla;
+  const lightCl = fin(s4.out.light, c), heavyCl = fin(s4.out.heavy, c);
+  const s5 = {
+    out: { light: lightCl.out, heavy: heavyCl.out }, E: lightCl.E + heavyCl.E, time: Math.max(lightCl.time, heavyCl.time),
+    waste: {}, info: { light: lightCl.info, heavy: heavyCl.info },
+  };
+  merge(s5.waste, lightCl.waste); merge(s5.waste, heavyCl.waste);
+  stages.push(['arcilla', s5]); merge(waste, s5.waste);
+  products['Aceite base ligero'] = s5.out.light;
+  products['Aceite base pesado'] = s5.out.heavy;
+  const added = { REA: s3.reagent || 0, CL: c.acabado === 'hidro' ? 0 : c.clay / 100 * (oilMass(s4.out.light) + oilMass(s4.out.heavy)), IPA: s3.info.eta._ipa ? s3.info.eta._ipa.lost * 0.5 : 0 };
+  const E = stages.reduce((a, [, st]) => a + st.E, 0) / 0.85;
+  const time = stages.reduce((a, [, st]) => a + st.time, 0);
+  const inTot = c.mass + sum(added), outTot = sum(Object.values(products).map((p) => sum(p))) + sum(Object.values(waste).map((w) => sum(w)));
+  return {
+    feed, stages, products, waste, added, E, time, closure: outTot / inTot - 1,
+    q: { light: calidad(s5.out.light), heavy: calidad(s5.out.heavy), feed: calidad(feed) },
+    base_kg: sum(s5.out.light, BASE) + sum(s5.out.heavy, BASE), prod_kg: sum(s5.out.light) + sum(s5.out.heavy), base_in: sum(feed, BASE),
+    ipa: s3.info.eta._ipa || null, fouling: s4.info.fouling, info: s4.info,
+  };
+}
+
+function config(o = {}) {
+  return Object.assign({
+    tipo: 'taller', mass: 175, Tamb: 298.15, Ph: 15000, v40: 95, v100: 13.5,
+    Ts: 60, ts: 12, H: 0.8,
+    Td: 150,
+    ruta: 'solvente', S: 3, koh: 2, t3: 4, dap: 2, T3: 140, t3min: 60, acido: 6,
+    Tgo: 265, Pgo: 20, steam: 0.02, Tw: 320, Pv: 2, Thc: 235, feedRate: 25, vacuumKW: 1.1,
+    acabado: 'arcilla', clay: 6, Tcl: 140, tcl: 30,
+  }, o);
+}
+
+</script>
+<script>
+// ---------- Interfaz ----------
+const $ = (id) => document.getElementById(id);
+const STAGE_NAMES = ['Sedimentar', 'Deshidratar', 'Tratamiento', 'Destilar al vacío', 'Acabado'];
+const RUTA_NAMES = { solvente: 'Solvente + KOH', dap: 'Fosfato diamónico', acido: 'Ácido sulfúrico', ninguno: 'Sin tratamiento' };
+const NUM = ['mass', 'Ts', 'ts', 'Td', 'S', 'koh', 't3', 'dap', 'T3', 't3min', 'acido', 'Tgo', 'Tw', 'Pv', 'Thc', 'clay', 'Tcl', 'tarifa'];
+const UNITS = {
+  mass: (v) => `${v} kg`, Ts: (v) => `${v} °C`, ts: (v) => `${v} h`, Td: (v) => `${v} °C`, S: (v) => `${v} : 1`, koh: (v) => `${v} g/kg`,
+  t3: (v) => `${v} h`, dap: (v) => `${v} %`, T3: (v) => `${v} °C`, t3min: (v) => `${v} min`, acido: (v) => `${v} %`, Tgo: (v) => `${v} °C`,
+  Tw: (v) => `${v} °C`, Pv: (v) => `${v} mbar`, Thc: (v) => `${v} °C`, clay: (v) => `${v} %`, Tcl: (v) => `${v} °C`, tarifa: (v) => `$${Number(v).toFixed(1)}/kWh`,
+};
+const PRESETS = {
+  solvente: { ruta: 'solvente', acabado: 'arcilla', S: 3, koh: 2, clay: 6, Tgo: 265, Tw: 320 },
+  dap: { ruta: 'dap', acabado: 'arcilla', dap: 2, T3: 140, t3min: 60, clay: 6, Tgo: 265, Tw: 320 },
+  acido: { ruta: 'acido', acabado: 'arcilla', acido: 6, clay: 4, Tgo: 265, Tw: 320 },
+  ninguno: { ruta: 'ninguno', acabado: 'arcilla', clay: 8, Tgo: 265, Tw: 320 },
+  hidro: { ruta: 'dap', acabado: 'hidro', dap: 2, Tgo: 270, Tw: 320 },
+};
+const sumO = (o) => Object.values(o || {}).reduce((a, b) => a + (b || 0), 0);
+let cfg, res, t = 0, running = false, logged = false, runs = [], clock = 0;
+
+function readCfg() {
+  const o = { tipo: $('tipo').value, ruta: $('ruta').value, acabado: $('acabado').value };
+  for (const k of NUM) o[k] = parseFloat($(k).value);
+  const c = config(o);
+  c.tarifa = o.tarifa;
+  return c;
+}
+function refreshOutputs() {
+  for (const k of NUM) $('o-' + k).value = UNITS[k]($(k).value);
+  document.querySelectorAll('[data-ruta]').forEach((g) => { g.hidden = g.dataset.ruta !== $('ruta').value; });
+  document.querySelectorAll('[data-acabado]').forEach((g) => { g.hidden = g.dataset.acabado !== $('acabado').value; });
+}
+function recompute(resetClock) {
+  cfg = readCfg();
+  res = procesar(cfg);
+  res.after = [
+    res.stages[0][1].out, res.stages[1][1].out, res.stages[2][1].out,
+    addTo(addTo({}, res.stages[3][1].out.light), res.stages[3][1].out.heavy),
+    addTo(addTo({}, res.stages[4][1].out.light), res.stages[4][1].out.heavy),
+  ];
+  res.colors = [calidad(res.feed).color, ...res.after.map((s) => (calidad(s) || { color: 8 }).color)];
+  res.dur = res.stages.map(([, st]) => st.time);
+  res.T = res.dur.reduce((a, b) => a + b, 0);
+  if (resetClock) { t = 0; logged = false; }
+  t = Math.min(t, res.T);
+  renderStatic();
+}
+function stageAt(time) {
+  let acc = 0;
+  for (let i = 0; i < res.dur.length; i++) { if (time < acc + res.dur[i]) return { i, p: (time - acc) / res.dur[i] }; acc += res.dur[i]; }
+  return { i: res.dur.length - 1, p: 1, done: true };
+}
+function hm(s) { const m = Math.floor(s / 60); return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`; }
+const mxn = (v) => '$' + Math.round(v).toLocaleString('es-MX');
+
+document.querySelectorAll('aside input, aside select').forEach((el) => el.addEventListener('input', () => { refreshOutputs(); recompute(false); }));
+document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
+  const p = PRESETS[b.dataset.preset];
+  for (const k in p) $(k).value = p[k];
+  refreshOutputs(); recompute(true); running = true; setRun();
+}));
+$('btn-run').addEventListener('click', () => { if (t >= res.T) recompute(true); running = !running; setRun(); });
+$('btn-end').addEventListener('click', () => { t = res.T; running = false; setRun(); });
+$('btn-reset').addEventListener('click', () => { recompute(true); running = false; setRun(); });
+function setRun() { $('btn-run').textContent = running ? '❚❚ Pausar' : t > 0 && t < res.T ? '▶ Continuar' : '▶ Procesar lote'; }
+
+// ---------- Colores ----------
+let C = {};
+function readTheme() {
+  const cs = getComputedStyle(document.documentElement);
+  ['bg', 'panel', 'panel2', 'line', 'fg', 'muted', 'oil', 'heat', 'cool', 'steel', 'pipe', 'water', 'sludge', 'clay', 'solv', 'fuel', 'resid', 'ok', 'warn', 'crit']
+    .forEach((k) => { C[k] = cs.getPropertyValue('--' + k).trim(); });
+}
+readTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTheme);
+new MutationObserver(readTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; }
+// Escala ASTM D1500 aproximada
+const ASTM = [[0.5, [246, 231, 161]], [1.5, [240, 207, 106]], [2.5, [227, 168, 64]], [3.5, [201, 122, 34]], [5, [138, 69, 18]], [6.5, [74, 36, 16]], [8, [20, 16, 16]]];
+function oilColor(c, a = 1) {
+  for (let i = 1; i < ASTM.length; i++) if (c <= ASTM[i][0]) {
+    const [c0, p0] = ASTM[i - 1], [c1, p1] = ASTM[i], f = clamp((c - c0) / (c1 - c0), 0, 1);
+    return `rgba(${p0.map((x, j) => Math.round(x + (p1[j] - x) * f)).join(',')},${a})`;
+  }
+  return `rgba(20,16,16,${a})`;
+}
+function setupCanvas(cv) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), r = cv.getBoundingClientRect();
+  const w = Math.max(10, r.width), h = Math.max(10, r.height);
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+// ---------- Escena ----------
+const V = {
+  s1: { x: 30, y: 150, w: 110, h: 220 }, s2: { x: 180, y: 170, w: 100, h: 180 }, s3: { x: 320, y: 160, w: 110, h: 200 },
+  go: { x: 505, y: 150, w: 26, h: 190 }, tfe: { x: 560, y: 110, w: 50, h: 250 }, s5: { x: 760, y: 160, w: 90, h: 160 },
+  p1: { x: 890, y: 110, w: 80, h: 100 }, p2: { x: 890, y: 275, w: 80, h: 100 },
+};
+const BINS = [
+  { x: 40, label: 'Agua aceitosa', keys: ['Agua aceitosa'], col: 'water' },
+  { x: 185, label: 'Agua', keys: ['Agua condensada'], col: 'water' },
+  { x: 330, label: 'Lodo', keys: ['Lodo', 'Torta de fosfatos', 'Lodo ácido'], col: 'sludge' },
+  { x: 500, label: 'Combustibles', keys: ['Combustible ligero', 'Gasóleo (combustible)'], col: 'fuel', product: true },
+  { x: 620, label: 'Residuo de fondo', keys: ['Residuo de fondo'], col: 'resid' },
+  { x: 760, label: 'Arcilla gastada', keys: ['Arcilla gastada', 'Agua ácida y ligeros del hidroacabado'], col: 'clay' },
+];
+const PIPES = {
+  a: [[140, 330], [160, 330], [160, 320], [180, 320]],
+  b: [[280, 320], [300, 320], [300, 310], [320, 310]],
+  c: [[430, 330], [490, 330], [490, 320], [505, 320]],
+  d: [[531, 330], [545, 330], [545, 140], [560, 140]],
+  vap: [[585, 110], [585, 90], [680, 90], [680, 112]],
+  vap2: [[700, 150], [700, 200]],
+  hot: [[660, 150], [660, 175], [740, 175], [740, 200], [760, 200]],
+  cold: [[680, 240], [680, 260], [745, 260], [745, 230], [760, 230]],
+  out1: [[850, 200], [870, 200], [870, 165], [890, 165]],
+  out2: [[850, 290], [870, 290], [870, 325], [890, 325]],
+  res: [[585, 360], [585, 380], [665, 380], [665, 470]],
+  steam: [[230, 170], [230, 125]],
+};
+const PLEN = {};
+for (const k in PIPES) { const p = PIPES[k]; let L = 0; const seg = []; for (let i = 1; i < p.length; i++) { const d = Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]); seg.push(d); L += d; } PLEN[k] = { L, seg }; }
+function pointAt(k, d) { const p = PIPES[k], s = PLEN[k].seg; for (let i = 0; i < s.length; i++) { if (d <= s[i]) { const f = d / s[i]; return [p[i][0] + (p[i + 1][0] - p[i][0]) * f, p[i][1] + (p[i + 1][1] - p[i][1]) * f]; } d -= s[i]; } return p[p.length - 1]; }
+const parts = [], spawnAcc = {}, drops = [];
+function spawn(path, rate, col, dt, r = 3, v = 90) {
+  spawnAcc[path] = (spawnAcc[path] || 0) + rate * dt;
+  while (spawnAcc[path] >= 1) { spawnAcc[path] -= 1; parts.push({ path, d: 0, v: v * (0.8 + Math.random() * 0.4), col, r }); }
+}
+
+function drawScene(dt) {
+  const { ctx, w, h } = setupCanvas($('scene'));
+  ctx.save(); ctx.scale(w / 1000, h / 620); ctx.clearRect(0, 0, 1000, 620);
+  const st = stageAt(t), i = st.i, p = st.p, fin = t >= res.T;
+  const lab = (s, x, y, col = C.muted, al = 'left', sz = 11) => { ctx.fillStyle = col; ctx.font = `500 ${sz}px "IBM Plex Mono", monospace`; ctx.textAlign = al; ctx.fillText(s, x, y); };
+  const ttl = (s, x, y, active) => { ctx.fillStyle = active ? C.oil : C.fg; ctx.font = '600 14px "Saira Condensed", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(s.toUpperCase(), x, y); };
+  const rr = (x, y, ww, hh, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, ww, hh, r) : ctx.rect(x, y, ww, hh); };
+  const pipe = (k) => { const q = PIPES[k]; ctx.lineJoin = ctx.lineCap = 'round'; ctx.strokeStyle = C.pipe; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(q[0][0], q[0][1]); for (const pt of q.slice(1)) ctx.lineTo(pt[0], pt[1]); ctx.stroke(); ctx.strokeStyle = C.bg; ctx.lineWidth = 3; ctx.stroke(); };
+  Object.keys(PIPES).forEach((k) => { if (k !== 'steam') pipe(k); });
+  pipe('steam');
+
+  // nivel y color del aceite en cada recipiente
+  const vessel = (v, idx, name, sub) => {
+    const active = !fin && i === idx;
+    const full = active ? 0.78 : (fin || i > idx) ? 0.06 : 0.0;
+    const col = res.colors[active ? idx : idx + 1];
+    ctx.fillStyle = C.panel2; ctx.strokeStyle = active ? C.oil : C.steel; ctx.lineWidth = active ? 2.5 : 2;
+    rr(v.x, v.y, v.w, v.h, 10); ctx.fill();
+    if (full > 0) {
+      ctx.save(); rr(v.x + 2, v.y + 2, v.w - 4, v.h - 4, 8); ctx.clip();
+      const top = v.y + v.h * (1 - full);
+      const shown = active ? res.colors[idx] + (res.colors[idx + 1] - res.colors[idx]) * Math.min(1, p * 1.2) : col;
+      ctx.fillStyle = oilColor(shown, 0.92); ctx.fillRect(v.x, top, v.w, v.y + v.h - top);
+      ctx.restore();
+    }
+    rr(v.x, v.y, v.w, v.h, 10); ctx.stroke();
+    ttl(name, v.x + v.w / 2, v.y - 12, active);
+    if (sub) lab(sub, v.x + v.w / 2, v.y + v.h + 16, active ? C.oil : C.muted, 'center');
+    return active;
+  };
+
+  // 1 · sedimentación
+  const a1 = vessel(V.s1, 0, 'Sedimentar', `${cfg.Ts} °C · ${cfg.ts} h`);
+  if (cfg.Ts > 30) { ctx.strokeStyle = rgba(C.heat, a1 ? 0.9 : 0.35); ctx.lineWidth = 2; for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(V.s1.x + 10, V.s1.y + 150 + k * 14); ctx.lineTo(V.s1.x + V.s1.w - 10, V.s1.y + 150 + k * 14); ctx.stroke(); } }
+  if (a1) {
+    const info = res.stages[0][1].info;
+    const layer = 40 * info.fW * p;
+    ctx.fillStyle = rgba(C.water, 0.8); ctx.fillRect(V.s1.x + 3, V.s1.y + V.s1.h - 3 - layer, V.s1.w - 6, layer);
+    if (running && Math.random() < 0.6 * info.fW) drops.push({ x: V.s1.x + 10 + Math.random() * (V.s1.w - 20), y: V.s1.y + 60, v: 20 + Math.random() * 25, col: C.water, stop: V.s1.y + V.s1.h - 6 - layer });
+  }
+  // 2 · deshidratación
+  const a2 = vessel(V.s2, 1, 'Deshidratar', `${cfg.Td} °C`);
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.cool; ctx.lineWidth = 2; rr(195, 92, 70, 30, 8); ctx.fill(); ctx.stroke(); lab('condensador', 230, 86, C.muted, 'center', 10);
+  if (a2) {
+    if (running) for (let k = 0; k < 2; k++) if (Math.random() < 0.5) drops.push({ x: V.s2.x + 10 + Math.random() * (V.s2.w - 20), y: V.s2.y + V.s2.h - 8, v: -(25 + Math.random() * 30), col: rgba(C.fg, 0.7), stop: V.s2.y + V.s2.h * 0.24, ring: true });
+    if (running) spawn('steam', 8, rgba(C.fg, 0.6), dt, 2.5, 40);
+  }
+  // 3 · tratamiento
+  const rutaCol = { solvente: C.solv, dap: '#e8e6df', acido: '#1b1b1b', ninguno: C.steel }[cfg.ruta];
+  const a3 = vessel(V.s3, 2, 'Tratamiento', RUTA_NAMES[cfg.ruta]);
+  if (cfg.ruta === 'solvente') { ctx.fillStyle = C.panel2; ctx.strokeStyle = C.solv; ctx.lineWidth = 2; rr(445, 90, 24, 160, 8); ctx.fill(); ctx.stroke(); lab('2-propanol', 457, 84, C.solv, 'center', 10); }
+  if (a3) {
+    const ang = clock * 4;
+    if (p < 0.25 && cfg.ruta !== 'ninguno') { ctx.strokeStyle = C.steel; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(375, V.s3.y - 6); ctx.lineTo(375, V.s3.y + 150); ctx.stroke(); const aw = 35 * Math.cos(ang); ctx.beginPath(); ctx.moveTo(375 - aw, V.s3.y + 150); ctx.lineTo(375 + aw, V.s3.y + 150); ctx.stroke(); }
+    if (cfg.ruta !== 'ninguno' && running && p > 0.15 && p < 0.8 && Math.random() < 0.7) drops.push({ x: V.s3.x + 8 + Math.random() * (V.s3.w - 16), y: V.s3.y + 50 + Math.random() * 40, v: 12 + Math.random() * 18, col: rutaCol, stop: V.s3.y + V.s3.h - 8, floc: true });
+    const sludge = sumO(Object.values(res.stages[2][1].waste)[0] || {}) / cfg.mass;
+    const ly = Math.min(60, 160 * sludge) * Math.min(1, p * 1.4);
+    ctx.fillStyle = cfg.ruta === 'acido' ? 'rgba(20,20,20,0.95)' : rgba(C.sludge, 0.9); ctx.fillRect(V.s3.x + 3, V.s3.y + V.s3.h - 3 - ly, V.s3.w - 6, ly);
+    if (cfg.ruta === 'solvente' && p > 0.7 && running) for (let k = 0; k < 2; k++) if (Math.random() < 0.6) drops.push({ x: 449 + Math.random() * 16, y: 245, v: -50, col: C.solv, stop: 96 });
+  }
+  // 4 · destilación al vacío
+  const a4 = !fin && i === 3;
+  ttl('Destilar al vacío', 600, 64, a4);
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = a4 ? C.oil : C.steel; ctx.lineWidth = 2; rr(V.go.x, V.go.y, V.go.w, V.go.h, 8); ctx.fill(); ctx.stroke();
+  lab('gasóleo', V.go.x + 6, V.go.y + V.go.h + 14, C.muted, 'center', 10);
+  const heat = clamp((cfg.Tw - 260) / 110, 0, 1);
+  ctx.fillStyle = rgba(C.heat, a4 ? 0.25 + 0.5 * heat : 0.15); rr(V.tfe.x - 8, V.tfe.y + 20, V.tfe.w + 16, V.tfe.h - 40, 6); ctx.fill();
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = a4 ? C.oil : C.steel; rr(V.tfe.x, V.tfe.y, V.tfe.w, V.tfe.h, 10); ctx.fill(); ctx.stroke();
+  // rotor del evaporador de película
+  ctx.save(); rr(V.tfe.x + 2, V.tfe.y + 2, V.tfe.w - 4, V.tfe.h - 4, 8); ctx.clip();
+  if (a4) { ctx.fillStyle = oilColor(res.colors[3], 0.8); ctx.fillRect(V.tfe.x + 2, V.tfe.y + 20, 5, V.tfe.h - 40); ctx.fillRect(V.tfe.x + V.tfe.w - 7, V.tfe.y + 20, 5, V.tfe.h - 40); }
+  const rot = a4 ? clock * 6 : 0;
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 2;
+  for (let k = 0; k < 3; k++) { const x = V.tfe.x + V.tfe.w / 2 + Math.cos(rot + k * 2.09) * (V.tfe.w / 2 - 8); ctx.beginPath(); ctx.moveTo(x, V.tfe.y + 24); ctx.lineTo(x, V.tfe.y + V.tfe.h - 24); ctx.stroke(); }
+  ctx.restore();
+  lab(`pared ${cfg.Tw} °C`, V.tfe.x + V.tfe.w / 2, V.tfe.y + V.tfe.h + 14, a4 ? C.heat : C.muted, 'center', 10);
+  // condensadores y bomba de vacío
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.cool; ctx.lineWidth = 2;
+  rr(640, 112, 80, 38, 8); ctx.fill(); ctx.stroke(); lab(`${cfg.Thc} °C`, 680, 135, C.heat, 'center', 10); lab('caliente', 680, 108, C.muted, 'center', 10);
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = C.cool; rr(640, 200, 80, 40, 8); ctx.fill(); ctx.stroke(); lab('frío', 680, 224, C.cool, 'center', 10);
+  ctx.strokeStyle = C.steel; ctx.beginPath(); ctx.arc(690, 310, 20, 0, 6.283); ctx.stroke();
+  const pr = a4 ? clock * 5 : 0; ctx.beginPath(); ctx.moveTo(690, 310); ctx.lineTo(690 + 16 * Math.cos(pr), 310 + 16 * Math.sin(pr)); ctx.stroke();
+  lab('vacío', 690, 345, C.muted, 'center', 10); lab(`${cfg.Pv} mbar`, 690, 358, a4 ? C.oil : C.muted, 'center', 11);
+  ctx.strokeStyle = C.pipe; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(720, 225); ctx.lineTo(735, 225); ctx.lineTo(735, 290); ctx.lineTo(708, 300); ctx.stroke();
+  // 5 · acabado
+  const a5 = vessel(V.s5, 4, cfg.acabado === 'hidro' ? 'Hidroacabado' : 'Arcilla', cfg.acabado === 'hidro' ? 'H₂ a presión' : `${cfg.clay} % · ${cfg.Tcl} °C`);
+  if (cfg.acabado === 'arcilla') {
+    ctx.strokeStyle = C.steel; ctx.lineWidth = 2;
+    for (let k = 0; k < 7; k++) { ctx.fillStyle = a5 && p > 0.6 && (Math.floor(clock * 4) % 7 === k) ? C.clay : C.panel2; ctx.fillRect(V.s5.x + 4 + k * 12, 352, 9, 34); ctx.strokeRect(V.s5.x + 4 + k * 12, 352, 9, 34); }
+    lab('filtro prensa', V.s5.x + V.s5.w / 2, 400, C.muted, 'center', 10);
+    if (a5 && p < 0.6 && running) for (let k = 0; k < 2; k++) drops.push({ x: V.s5.x + 10 + Math.random() * (V.s5.w - 20), y: V.s5.y + 40 + Math.random() * 90, v: 8 * (Math.random() - 0.5), col: C.clay, stop: 9999, life: 0.6 });
+  }
+  // tanques de producto
+  const q = res.q;
+  const tank = (v, name, kg, col, frac) => {
+    ctx.fillStyle = C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 2; rr(v.x, v.y, v.w, v.h, 8); ctx.fill();
+    ctx.save(); rr(v.x + 2, v.y + 2, v.w - 4, v.h - 4, 6); ctx.clip();
+    const f = clamp(frac, 0, 1), top = v.y + v.h - (v.h - 4) * f; ctx.fillStyle = oilColor(col, 0.9); ctx.fillRect(v.x, top, v.w, v.y + v.h - top); ctx.restore();
+    rr(v.x, v.y, v.w, v.h, 8); ctx.stroke();
+    ttl(name, v.x + v.w / 2, v.y - 10, false); lab(`${kg.toFixed(1)} kg`, v.x + v.w / 2, v.y + v.h + 15, C.oil, 'center', 12);
+  };
+  const prog = fin ? 1 : i === 4 ? clamp((p - 0.6) / 0.4, 0, 1) : 0;
+  tank(V.p1, 'Base ligero', q.light.kg * prog, q.light.color, prog * q.light.kg / (cfg.mass * 0.45));
+  tank(V.p2, 'Base pesado', q.heavy.kg * prog, q.heavy.color, prog * q.heavy.kg / (cfg.mass * 0.45));
+  // botes de residuos y combustibles
+  const doneUpTo = (idx) => (fin ? 1 : i > idx ? 1 : i === idx ? p : 0);
+  const binStage = [0, 1, 2, 3, 3, 4];
+  BINS.forEach((b, k) => {
+    const src = b.product ? res.products : res.waste;
+    const kg = b.keys.reduce((a, key) => a + sumO(src[key]), 0) * doneUpTo(binStage[k]);
+    const by = 470, bw = 90, bh = 70;
+    ctx.fillStyle = C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 1.5; rr(b.x, by, bw, bh, 6); ctx.fill();
+    const f = clamp(kg / (cfg.mass * 0.15), 0, 1); ctx.fillStyle = rgba(C[b.col], 0.85); ctx.fillRect(b.x + 2, by + bh - 2 - (bh - 4) * f, bw - 4, (bh - 4) * f);
+    rr(b.x, by, bw, bh, 6); ctx.stroke();
+    lab(b.label, b.x + bw / 2, by + bh + 15, C.fg, 'center', 11); lab(`${kg.toFixed(1)} kg`, b.x + bw / 2, by + bh + 29, C[b.col], 'center', 11);
+  });
+  ctx.strokeStyle = C.pipe; ctx.lineWidth = 3; ctx.setLineDash([4, 5]);
+  [[85, 370, 85, 470], [230, 122, 230, 140], [375, 360, 375, 470], [518, 340, 545, 470]].forEach(([x1, y1, x2, y2]) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); });
+  ctx.setLineDash([]);
+
+  // partículas en tuberías
+  if (running && !fin) {
+    const feedCol = oilColor(res.colors[i], 1);
+    if (p < 0.15) spawn(['', 'a', 'b', 'c', 'hot'][i] || '', 18, feedCol, dt, 3.2);
+    if (i === 3) {
+      spawn('d', 10, oilColor(res.colors[3], 1), dt, 3);
+      spawn('vap', 14, rgba(C.heat, 0.8), dt, 2.6, 120);
+      spawn('vap2', 8, rgba(C.heat, 0.7), dt, 2.4, 80);
+      spawn('res', 4, C.resid, dt, 3.2, 50);
+    }
+    if (i === 4 && p < 0.2) { spawn('hot', 10, oilColor(res.colors[4], 1), dt, 3); spawn('cold', 10, oilColor(res.colors[4], 1), dt, 3); }
+    if (i === 4 && p > 0.6) { spawn('out1', 10, oilColor(q.light.color, 1), dt, 3); spawn('out2', 10, oilColor(q.heavy.color, 1), dt, 3); }
+  }
+  delete spawnAcc[''];
+  for (let k = parts.length - 1; k >= 0; k--) {
+    const o = parts[k]; if (!PIPES[o.path]) { parts.splice(k, 1); continue; }
+    if (running) o.d += o.v * dt;
+    if (o.d >= PLEN[o.path].L) { parts.splice(k, 1); continue; }
+    const [x, y] = pointAt(o.path, o.d); ctx.fillStyle = o.col; ctx.beginPath(); ctx.arc(x, y, o.r, 0, 6.283); ctx.fill();
+  }
+  for (let k = drops.length - 1; k >= 0; k--) {
+    const d = drops[k];
+    if (running) { d.y += d.v * dt; if (d.life !== undefined) { d.life -= dt; d.x += Math.sin(clock * 3 + k) * 0.6; } }
+    if ((d.v > 0 && d.y >= d.stop) || (d.v < 0 && d.y <= d.stop) || (d.life !== undefined && d.life <= 0)) { drops.splice(k, 1); continue; }
+    ctx.fillStyle = d.col; ctx.strokeStyle = d.col; ctx.lineWidth = 1.2; ctx.beginPath();
+    if (d.ring) { ctx.arc(d.x, d.y, 2.5, 0, 6.283); ctx.stroke(); } else if (d.floc) { ctx.arc(d.x, d.y, 2.2, 0, 6.283); ctx.arc(d.x + 2.5, d.y + 1, 1.8, 0, 6.283); ctx.fill(); } else { ctx.arc(d.x, d.y, 2, 0, 6.283); ctx.fill(); }
+  }
+  if (drops.length > 600) drops.splice(0, drops.length - 600);
+  if (parts.length > 900) parts.splice(0, parts.length - 900);
+  ctx.restore();
+}
+
+// ---------- Gráficas ----------
+function destinos() {
+  const P = res.products, W = res.waste;
+  const g = (o, keys) => keys.reduce((a, k) => a + sumO(o[k]), 0);
+  return [
+    ['Aceite base ligero', sumO(P['Aceite base ligero']), C.fuel],
+    ['Aceite base pesado', sumO(P['Aceite base pesado']), C.oil],
+    ['Combustibles', g(P, ['Combustible ligero', 'Gasóleo (combustible)']), C.heat],
+    ['Agua', g(W, ['Agua aceitosa', 'Agua condensada']), C.water],
+    ['Lodo del tratamiento', g(W, ['Lodo', 'Torta de fosfatos', 'Lodo ácido']), C.sludge],
+    ['Residuo de fondo', g(W, ['Residuo de fondo']), C.resid],
+    ['Arcilla o hidroacabado', g(W, ['Arcilla gastada', 'Agua ácida y ligeros del hidroacabado']), C.clay],
+    ['Ligeros de craqueo', g(W, ['Ligeros de craqueo']), C.crit],
+  ];
+}
+function drawDest() {
+  const { ctx, w, h } = setupCanvas($('ch-dest'));
+  ctx.clearRect(0, 0, w, h);
+  const d = destinos(), tot = d.reduce((a, x) => a + x[1], 0);
+  const barY = 20, barH = 46;
+  let x = 0;
+  d.forEach(([n, v, c]) => { const ww = w * v / tot; ctx.fillStyle = c; ctx.fillRect(x, barY, Math.max(0, ww - 1), barH); x += ww; });
+  ctx.font = '500 12px "IBM Plex Mono", monospace'; ctx.textAlign = 'left';
+  const rows = d.filter((r) => r[1] > 0.005 * tot);
+  rows.forEach(([n, v, c], k) => {
+    const y = barY + barH + 24 + k * 19;
+    ctx.fillStyle = c; ctx.fillRect(0, y - 9, 10, 10);
+    ctx.fillStyle = C.fg; ctx.fillText(n, 16, y);
+    ctx.textAlign = 'right'; ctx.fillText(`${v.toFixed(1)} kg · ${(100 * v / tot).toFixed(1)} %`, w, y); ctx.textAlign = 'left';
+  });
+  $('dest-legend').textContent = `Entran ${cfg.mass} kg de aceite usado + ${sumO(res.added).toFixed(1)} kg de reactivos y arcilla.`;
+}
+function contaminantes(s) {
+  const m = (k) => (s[k] || 0);
+  return { metales: m('AD') + m('PW'), polimeros: m('VI'), oxidados: m('OXv') + m('OXh') + m('DV'), hollin: m('SO') };
+}
+function drawCont() {
+  const { ctx, w, h } = setupCanvas($('ch-cont'));
+  ctx.clearRect(0, 0, w, h);
+  const pts = [res.feed, ...res.after].map(contaminantes);
+  const ref = pts[0];
+  const ser = [['metales', 'Aditivos y metales', C.sludge], ['polimeros', 'Polímeros', C.solv], ['oxidados', 'Oxidados (acidez, color)', C.heat], ['hollin', 'Hollín', C.fg]];
+  const pad = { l: 34, r: 10, t: 10, b: 38 };
+  const X = (k) => pad.l + (w - pad.l - pad.r) * k / 5, Y = (v) => pad.t + (h - pad.t - pad.b) * (1 - v / 100);
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.font = '500 10.5px "IBM Plex Mono", monospace'; ctx.fillStyle = C.muted;
+  for (let v = 0; v <= 100; v += 25) { ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(w - pad.r, Y(v)); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(v + '%', pad.l - 4, Y(v) + 3); }
+  ['Entra', 'Sedim.', 'Deshid.', 'Trat.', 'Destil.', 'Acab.'].forEach((n, k) => { ctx.textAlign = 'center'; ctx.fillText(n, X(k), h - pad.b + 14); });
+  const st = stageAt(t), upto = t >= res.T ? 5 : st.i + (st.p >= 1 ? 1 : 0);
+  ser.forEach(([key, name, col], si) => {
+    ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.beginPath();
+    pts.forEach((pt, k) => { if (k > upto) return; const v = ref[key] > 0 ? 100 * pt[key] / ref[key] : 0; k ? ctx.lineTo(X(k), Y(v)) : ctx.moveTo(X(k), Y(v)); });
+    ctx.stroke();
+    ctx.fillStyle = col; ctx.fillRect(pad.l + si * ((w - pad.l) / 4), h - 12, 9, 9);
+    ctx.fillStyle = C.muted; ctx.textAlign = 'left'; ctx.fillText(name.split(' ')[0], pad.l + si * ((w - pad.l) / 4) + 13, h - 4);
+  });
+}
+const SPEC = [
+  ['Cantidad', (q) => `${q.kg.toFixed(1)} kg`, null],
+  ['Viscosidad a 40 °C', (q) => `${q.v40.toFixed(0)} cSt`, null, '28–34 / 90–110'],
+  ['Viscosidad a 100 °C', (q) => `${q.v100.toFixed(1)} cSt`, null],
+  ['Grado ISO VG', (q) => `VG ${q.isoVG}`, null],
+  ['Punto de inflamación', (q) => `${q.flash.toFixed(0)} °C`, (q, L) => q.flash >= (L ? 200 : 220), '≥ 200 / 220'],
+  ['Color ASTM D1500', (q) => q.color.toFixed(1), (q, L) => q.color <= (L ? 1.5 : 2.5), '≤ 1.5 / ≤ 2.5'],
+  ['Acidez (TAN, mg KOH/g)', (q) => `${q.tan.toFixed(3)}`, (q) => q.tan <= 0.05, '≤ 0.05'],
+  ['Ceniza', (q) => `${q.ash_ppm.toFixed(0)} ppm`, (q) => q.ash_ppm <= 100, '≤ 100 ppm'],
+];
+function renderQual() {
+  const L = res.q.light, H = res.q.heavy, show = t >= res.T;
+  $('qual-body').innerHTML = SPEC.map(([n, f, ok, ref]) => {
+    const cell = (q, isL) => { if (!show || !q) return '<td class="num muted">—</td>'; const pass = ok ? ok(q, isL) : null; return `<td class="num">${pass === null ? f(q) : `<span class="tag ${pass ? 'lit' : 'bad'}">${f(q)}</span>`}</td>`; };
+    return `<tr><td>${n}</td>${cell(L, true)}${cell(H, false)}<td class="num muted">${ref || ''}</td></tr>`;
+  }).join('');
+}
+
+// ---------- Estado ----------
+function liters() { return res.q.light.litros + res.q.heavy.litros; }
+function costoLote() { return consumibles().reduce((a, c) => a + (c.p == null ? 0 : c.p * c.q), 0); }
+function renderStatus() {
+  const st = stageAt(t), fin = t >= res.T;
+  const pills = [];
+  pills.push(fin ? ['Lote terminado', 'ok'] : running ? [`Etapa ${st.i + 1}: ${STAGE_NAMES[st.i]}`, 'on'] : t > 0 ? ['En pausa', 'warn'] : ['Listo para procesar', '']);
+  if (cfg.ruta === 'solvente') pills.push(['2-propanol: inflamable desde 12 °C', 'warn']);
+  if (cfg.ruta === 'acido') pills.push(['Lodo ácido: residuo peligroso y corrosivo', 'crit']);
+  if (cfg.Tw > 340) pills.push(['Pared muy caliente: el aceite se craquea', 'warn']);
+  if (res.fouling > 6) pills.push(['El evaporador se va a ensuciar rápido', 'warn']);
+  if (cfg.Td < 105) pills.push(['Queda agua: sube la deshidratación', 'warn']);
+  if (fin) {
+    const fails = SPEC.filter((s) => s[2]).filter((s) => !s[2](res.q.light, true) || !s[2](res.q.heavy, false)).map((s) => s[0].toLowerCase());
+    pills.push(fails.length ? [`No cumple: ${fails.join(', ')}`, 'warn'] : ['Cumple la referencia', 'ok']);
+  }
+  $('status').innerHTML = pills.map(([s, c]) => `<span class="pill ${c}">${s}</span>`).join('');
+}
+function renderTiles() {
+  const st = stageAt(t), fin = t >= res.T;
+  $('k-time').textContent = hm(t); $('k-ttot').textContent = hm(res.T);
+  $('k-stage').textContent = fin ? 'Listo' : `${st.i + 1} / 5`;
+  $('k-stage-sub').textContent = fin ? 'lote terminado' : STAGE_NAMES[st.i];
+  const baseFinal = res.base_kg, before = sumO(res.stages[3][1].out.light) + sumO(res.stages[3][1].out.heavy);
+  const base = fin ? baseFinal : st.i === 3 ? before * st.p : st.i === 4 ? before + (baseFinal - before) * st.p : 0;
+  $('k-base').textContent = base.toFixed(1); $('k-yield').textContent = (100 * base / cfg.mass).toFixed(0);
+  const col = fin ? res.colors[5] : res.colors[st.i] + (res.colors[st.i + 1] - res.colors[st.i]) * st.p;
+  $('k-color').textContent = col.toFixed(1); $('k-color').style.color = oilColor(Math.max(col, 2.5), 1);
+  let E = 0, Wk = 0;
+  res.stages.forEach(([, s], k) => {
+    const f = fin || k < st.i ? 1 : k === st.i ? st.p : 0;
+    E += s.E * f; Wk += Object.values(s.waste || {}).reduce((a, o) => a + sumO(o), 0) * f;
+  });
+  E /= 0.85;
+  $('k-E').textContent = (E / 3.6e6).toFixed(0);
+  $('k-Eper').textContent = fin ? `${(res.E / 3.6e6 / liters()).toFixed(2)} kWh` : '—';
+  $('k-waste').textContent = Wk.toFixed(1);
+  document.querySelectorAll('#timeline div').forEach((d) => { const k = +d.dataset.i; d.className = fin || k < st.i ? 'done' : k === st.i && t > 0 ? 'now' : ''; });
+}
+function logRun() {
+  const L = res.q.light, H = res.q.heavy, Wt = Object.values(res.waste).reduce((a, o) => a + sumO(o), 0);
+  runs.unshift({ n: runs.length + 1, ruta: RUTA_NAMES[cfg.ruta], acab: cfg.acabado === 'hidro' ? 'Hidroacabado' : `Arcilla ${cfg.clay} %`,
+    base: `${res.base_kg.toFixed(1)} kg (${(100 * res.base_kg / cfg.mass).toFixed(0)} %)`, col: `${L.color.toFixed(1)} / ${H.color.toFixed(1)}`,
+    tan: `${L.tan.toFixed(2)} / ${H.tan.toFixed(2)}`, fl: `${L.flash.toFixed(0)} / ${H.flash.toFixed(0)} °C`, w: `${Wt.toFixed(1)} kg`,
+    kwh: (res.E / 3.6e6 / liters()).toFixed(2), cost: mxn(costoLote() / liters()) });
+  $('runs').innerHTML = runs.map((r) => `<tr><td class="num">${r.n}</td><td>${r.ruta}</td><td>${r.acab}</td><td class="num">${r.base}</td><td class="num">${r.col}</td><td class="num">${r.tan}</td><td class="num">${r.fl}</td><td class="num">${r.w}</td><td class="num">${r.kwh}</td><td class="num">${r.cost}</td></tr>`).join('');
+}
+
+// ---------- Compras ----------
+const ML = 'https://listado.mercadolibre.com.mx/';
+function consumibles() {
+  const oil = cfg.mass, st3 = res.stages[2][1];
+  const list = [];
+  if (cfg.ruta === 'solvente') {
+    const lostL = res.ipa.lost / 0.786;
+    list.push({ n: '2-propanol de reposición', d: `Se pierde 3 % del solvente por lote (${lostL.toFixed(0)} L)`, q: lostL / 20, unit: 'garrafas 20 L', p: 1420, u: 'https://www.amazon.com.mx/Alcohol-Isoprop%C3%ADlico-99-8-Puro-Litros/dp/B0CG2NGW1P', s: 'Amazon MX' });
+    list.push({ n: 'Hidróxido de potasio (KOH)', d: 'Floculante', q: st3.reagent, unit: 'kg', p: 125, u: ML + 'hidroxido-de-potasio-1-kg', s: 'Mercado Libre' });
+  }
+  if (cfg.ruta === 'dap') list.push({ n: 'Fosfato diamónico 18-46-00', d: 'Grado fertilizante; saco de 50 kg a $1,800', q: st3.reagent, unit: 'kg', p: 36, u: 'https://articulo.mercadolibre.com.mx/MLM-2145894096-fosfato-diamonico-dap-18-46-00-granulado-50-kg-_JM', s: 'Mercado Libre' });
+  if (cfg.ruta === 'acido') list.push({ n: 'Ácido sulfúrico 98 %', d: 'Sin precio: cotiza con un distribuidor de químicos', q: st3.reagent, unit: 'kg', p: null, u: ML + 'acido-sulfurico', s: 'Búsqueda' });
+  if (cfg.acabado === 'arcilla') list.push({ n: 'Arcilla (bentonita)', d: 'Precio de bentonita común; la tierra decolorante activada cuesta más', q: res.added.CL, unit: 'kg', p: 39.8, u: ML + 'arcilla-bentonita', s: 'Mercado Libre' });
+  else list.push({ n: 'Hidrógeno', d: 'Sin precio: lo vende Infra o Praxair en cilindros o tubos', q: 0.01 * res.base_kg, unit: 'kg', p: null, u: ML + 'hidrogeno-gas', s: 'Búsqueda' });
+  list.push({ n: 'Electricidad', d: `Con la tarifa que pusiste ($${cfg.tarifa.toFixed(1)}/kWh)`, q: res.E / 3.6e6, unit: 'kWh', p: cfg.tarifa, u: 'https://app.cfe.mx/Aplicaciones/CCFE/Tarifas/TarifasCRENegocio/Negocio.aspx', s: 'CFE' });
+  const wasteKg = Object.values(res.waste).reduce((a, o) => a + sumO(o), 0) - (sumO(res.waste['Agua condensada']) || 0);
+  list.push({ n: 'Disposición de residuos peligrosos', d: 'Sin precio: cotiza con un gestor autorizado por SEMARNAT', q: wasteKg, unit: 'kg', p: null, u: 'https://www.gob.mx/semarnat', s: 'SEMARNAT' });
+  return list;
+}
+function equipo() {
+  const ipaInv = cfg.ruta === 'solvente' ? Math.ceil(res.ipa.used / 0.786 / 20) : 0;
+  return [
+    { g: '1–2 · Sedimentación y deshidratación' },
+    { n: 'Tanque de acero inoxidable 100 L', d: 'Dos por etapa para un tambo de 200 L', q: 4, p: 2546, u: ML + 'tanques-de-acero-inoxidable-100-litros', s: 'Mercado Libre' },
+    { n: 'Resistencia de banda cerámica 220 V, 2,100 W', d: '7 piezas ≈ 15 kW', q: 7, p: 690, u: 'https://articulo.mercadolibre.com.mx/MLM-3347008842-resistencias-electricas-tipo-banda-ceramica-220v-2100w-_JM', s: 'Mercado Libre' },
+    { n: 'Kit control PID REX-C100 + SSR + termopar K', d: 'Uno por recipiente caliente', q: 3, p: 390, u: 'https://articulo.mercadolibre.com.mx/MLM-1375707284-kit-pirometro-rex-c100-control-temperatura-relay-ssr-k-_JM', s: 'Mercado Libre' },
+    { n: 'Motorreductor para agitador', d: 'Deshidratador y tanque de tratamiento', q: 2, p: 1546, u: ML + 'motorreductor-30-rpm', s: 'Mercado Libre' },
+    { n: 'Condensador de acero inoxidable', d: 'Vapor de agua y combustible ligero', q: 2, p: 1150, u: ML + 'condensador-destilador', s: 'Mercado Libre' },
+    { n: 'Bomba sumergible 1/2 HP', d: 'Agua de enfriamiento', q: 1, p: 811, u: ML + 'bombas-sumergibles', s: 'Mercado Libre' },
+    { g: '3 · Tratamiento químico' },
+    { n: 'Destilador de acero inoxidable 38 L', d: 'Recuperar el 2-propanol (escala de banco; para un tambo hace falta uno de ~600 L)', q: cfg.ruta === 'solvente' ? 1 : 0, p: 4831, u: ML + 'destilador-acero-inoxidable', s: 'Mercado Libre' },
+    { n: 'Inventario inicial de 2-propanol, garrafas de 20 L', d: `${(res.ipa ? res.ipa.used / 0.786 : 0).toFixed(0)} L para S = ${cfg.S}; se recupera y se reusa`, q: ipaInv, p: 1420, u: 'https://www.amazon.com.mx/Alcohol-Isoprop%C3%ADlico-99-8-Puro-Litros/dp/B0CG2NGW1P', s: 'Amazon MX' },
+    { g: '4 · Destilación al vacío' },
+    { n: 'Planta de destilación al vacío para aceite usado', d: 'US$30,000 a ~$18.5 por dólar, sin flete ni impuestos', q: 1, p: 555000, u: 'https://www.alibaba.com/product-detail/Small-Scale-Refinery-Used-Black-Engine_1600908866813.html', s: 'Alibaba' },
+    { n: 'Destilación de trayecto corto (molecular)', d: 'Alternativa de laboratorio-piloto, US$39,999; pon 1 si la quieres', q: 0, p: 740000, u: 'https://www.alibaba.com/showroom/vacuum-distillation-used-oil-recycling-machine.html', s: 'Alibaba' },
+    { n: 'Bomba de vacío de 2 etapas, 12 CFM', d: 'Con trampa fría antes; las de refrigeración no aguantan vapor caliente', q: 1, p: 12347, u: ML + 'bomba-de-vacio-2-etapas', s: 'Mercado Libre' },
+    { g: '5 · Acabado' },
+    { n: 'Filtro prensa de acero inoxidable, 19 placas (usado)', d: 'Separar la arcilla gastada', q: cfg.acabado === 'arcilla' ? 1 : 0, p: 120000, u: 'https://listado.mercadolibre.com.mx/industrias-y-oficinas/equipamiento-para-industrias/filtro-prensa-usado', s: 'Mercado Libre' },
+    { g: '6 · Seguridad' },
+    { n: 'Extintor PQS tipo ABC 9 kg', d: '', q: 2, p: 1137, u: 'https://articulo.mercadolibre.com.mx/MLM-739037594-extintor-9-kg-de-pqs-tipo-abc-certificado-nacional-garantia-_JM', s: 'Mercado Libre' },
+    { n: 'Detector de gas combustible', d: 'Vapores de solvente y aceite', q: 1, p: 1499, u: ML + 'detector-de-gas-combustible', s: 'Mercado Libre' },
+    { n: 'Respirador 3M 6200 con cartuchos de vapores orgánicos', d: '', q: 2, p: 1196, u: ML + 'respirador-media-cara-3m', s: 'Mercado Libre' },
+    { n: 'Guantes para alta temperatura', d: '', q: 2, p: 685, u: ML + 'guantes-altas-temperaturas', s: 'Mercado Libre' },
+  ];
+}
+let eqQty = {};
+function renderBuy() {
+  const cons = consumibles();
+  let ct = 0;
+  $('cons-body').innerHTML = cons.map((c) => {
+    const sub = c.p == null ? null : c.p * c.q; if (sub) ct += sub;
+    return `<tr><td><div class="bn">${c.n}</div><div class="bd">${c.d}</div></td><td class="num">${c.q < 10 ? c.q.toFixed(2) : c.q.toFixed(0)} ${c.unit}</td><td class="num">${c.p == null ? '—' : mxn(c.p)}</td><td class="num">${sub == null ? 'cotizar' : mxn(sub)}</td><td><a href="${c.u}" target="_blank" rel="noopener">${c.s}</a></td></tr>`;
+  }).join('');
+  $('cons-total').textContent = mxn(ct) + ' MXN'; $('cons-total-top').textContent = mxn(ct);
+  $('cons-per-l').textContent = `${mxn(ct / liters())} por litro de aceite base, sin lo que dice «cotizar»`;
+  const eq = equipo();
+  let et = 0;
+  $('buy-body').innerHTML = eq.map((it, k) => {
+    if (it.g) return `<tr><td colspan="5" class="stage">${it.g}</td></tr>`;
+    const q = eqQty[it.n] != null ? eqQty[it.n] : it.q; et += q * it.p;
+    return `<tr><td><div class="bn">${it.n}</div>${it.d ? `<div class="bd">${it.d}</div>` : ''}</td><td class="num"><input class="qty" type="number" min="0" step="1" data-n="${it.n}" id="eq-${k}" value="${q}" aria-label="Cantidad de ${it.n}"></td><td class="num">${mxn(it.p)}</td><td class="num">${mxn(q * it.p)}</td><td><a href="${it.u}" target="_blank" rel="noopener">${it.s}</a></td></tr>`;
+  }).join('');
+  $('buy-total').textContent = mxn(et) + ' MXN'; $('buy-total-top').textContent = mxn(et);
+  document.querySelectorAll('#buy-body input.qty').forEach((el) => el.addEventListener('change', () => { eqQty[el.dataset.n] = Math.max(0, parseFloat(el.value) || 0); renderBuy(); }));
+}
+function renderStatic() { renderBuy(); }
+
+// ---------- Lazo ----------
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; clock += dt;
+  if (running && t < res.T) { t = Math.min(res.T, t + dt * parseFloat($('speed').value)); if (t >= res.T) { running = false; setRun(); } }
+  if (t >= res.T && !logged) { logged = true; logRun(); }
+  renderTiles(); renderStatus(); renderQual(); drawScene(dt); drawDest(); drawCont();
+  requestAnimationFrame(frame);
+}
+refreshOutputs();
+recompute(true);
+setRun();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
