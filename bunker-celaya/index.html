@@ -1,0 +1,1132 @@
+<!doctype html><html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Búnker Celaya</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: corte del búnker animado arriba con línea de tiempo de 3 años, mandos por subsistema a la derecha, gráficas por recurso y memoria técnica debajo */
+:root {
+  --bg: #0f1210; --panel: #161a17; --panel2: #1d221e; --line: #2d342f; --fg: #e2e6e0; --muted: #8b958c;
+  --oil: #d9a441; --heat: #ff7a2f; --cool: #4fb3d9; --steel: #6a746c; --pipe: #39423b;
+  --water: #3fa7e0; --sludge: #7d6b55; --clay: #c9b28a; --solv: #a59bff; --fuel: #f2c14e; --resid: #4a3f36;
+  --o2: #6fc3ff; --co2: #a3abb0; --plant: #6cc070; --food: #c98a4a; --energy: #f2d14b; --rad: #ff6a3d; --soil: #3b2f24; --concrete: #59605a; --sky: #6aa7d8;
+  --ok: #4cc38a; --warn: #f0b429; --crit: #ff5d5d;
+  --f-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) {
+  --bg: #eceee9; --panel: #ffffff; --panel2: #f3f5f1; --line: #d3d8d0; --fg: #1a1f1b; --muted: #5d665e;
+  --oil: #a8740f; --heat: #d4541a; --cool: #1c7ea8; --steel: #8e9890; --pipe: #b8c0b7;
+  --water: #1f78b8; --sludge: #6a5844; --clay: #a08350; --solv: #5b4fd6; --fuel: #b88a00; --resid: #3d332b;
+  --o2: #1f7fc0; --co2: #6f777c; --plant: #2f8a3a; --food: #9a5d22; --energy: #b08f00; --rad: #d0431c; --soil: #8a6a4a; --concrete: #a3aaa4; --sky: #7fb4e0;
+  --ok: #1f8f5a; --warn: #a86f00; --crit: #c93030; color-scheme: light;
+} }
+:root[data-theme="light"] {
+  --bg: #eceee9; --panel: #ffffff; --panel2: #f3f5f1; --line: #d3d8d0; --fg: #1a1f1b; --muted: #5d665e;
+  --oil: #a8740f; --heat: #d4541a; --cool: #1c7ea8; --steel: #8e9890; --pipe: #b8c0b7;
+  --water: #1f78b8; --sludge: #6a5844; --clay: #a08350; --solv: #5b4fd6; --fuel: #b88a00; --resid: #3d332b;
+  --o2: #1f7fc0; --co2: #6f777c; --plant: #2f8a3a; --food: #9a5d22; --energy: #b08f00; --rad: #d0431c; --soil: #8a6a4a; --concrete: #a3aaa4; --sky: #7fb4e0;
+  --ok: #1f8f5a; --warn: #a86f00; --crit: #c93030; color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 600; letter-spacing: .01em; text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 700; }
+h2 { font-size: 26px; }
+h3 { font-size: 19px; }
+p { margin: 0; }
+output, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+header.top .lede { color: var(--muted); max-width: 66ch; margin-top: 6px; }
+.runbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: 600 14px var(--f-body); border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); padding: 8px 14px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--oil); outline-offset: 2px; }
+button.primary { background: var(--oil); border-color: var(--oil); color: #1a1205; }
+.speed { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+select { font: 500 13.5px var(--f-body); background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill { font: 500 12px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.pill.on { color: var(--oil); border-color: var(--oil); }
+.pill.ok { color: var(--ok); border-color: var(--ok); }
+.pill.warn { color: var(--warn); border-color: var(--warn); }
+.pill.crit { color: var(--crit); border-color: var(--crit); }
+.tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+@media (max-width: 980px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { background: var(--panel); padding: 12px 14px; display: grid; gap: 2px; min-width: 0; }
+.tile .k { font: 500 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile .v { font: 600 26px var(--f-display); font-variant-numeric: tabular-nums; }
+.tile .u { font: 400 12px var(--f-mono); color: var(--muted); }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+@media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.scene { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; display: grid; gap: 8px; }
+.scene canvas { display: block; width: 100%; aspect-ratio: 1000 / 660; max-width: 100%; }
+.timeline { display: grid; gap: 6px; }
+.timeline input[type=range] { width: 100%; }
+.phases { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden; }
+.phases span { display: block; height: 100%; }
+.tl-row { display: flex; justify-content: space-between; gap: 8px; font: 500 12px var(--f-mono); color: var(--muted); flex-wrap: wrap; }
+.timeline div { font: 500 11.5px var(--f-mono); color: var(--muted); border-top: 3px solid var(--line); padding-top: 4px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.timeline div.done { border-color: var(--ok); color: var(--fg); }
+.timeline div.now { border-color: var(--oil); color: var(--oil); }
+aside.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 18px; min-width: 0; }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
+legend { font: 600 17px var(--f-display); padding: 0; margin-bottom: 4px; display: flex; gap: 8px; align-items: baseline; }
+legend small { font: 500 11px var(--f-mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.ctl { display: grid; gap: 4px; font-size: 13.5px; }
+.ctl .row { display: flex; justify-content: space-between; gap: 8px; }
+.ctl output { color: var(--oil); font-size: 13px; }
+.ctl .hint { font-size: 12px; color: var(--muted); }
+input[type=range] { width: 100%; accent-color: var(--oil); }
+select.full { width: 100%; }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.presets button { font-size: 12.5px; padding: 6px 10px; font-weight: 500; }
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.charts.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 980px) { .charts.two { grid-template-columns: minmax(0, 1fr); } }
+.findings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 980px) { .findings { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .findings { grid-template-columns: minmax(0, 1fr); } }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.finding .big { font: 600 28px var(--f-display); color: var(--oil); font-variant-numeric: tabular-nums; }
+.finding p { font-size: 13.5px; color: var(--muted); }
+.events { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13.5px; }
+.events li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding: 5px 0; }
+.events li:last-child { border-bottom: 0; }
+.events .when { font-family: var(--f-mono); color: var(--warn); white-space: nowrap; }
+.events .ok { color: var(--ok); }
+@media (max-width: 980px) { .charts { grid-template-columns: minmax(0, 1fr); } }
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; min-width: 0; align-content: start; }
+.chart canvas { width: 100%; height: 240px; display: block; }
+.chart .sub { font-size: 12.5px; color: var(--muted); }
+section.doc { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 16px; min-width: 0; }
+section.doc > p { max-width: 75ch; }
+.muted { color: var(--muted); }
+.eqgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 860px) { .eqgrid { grid-template-columns: minmax(0, 1fr); } }
+.eq { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.eq math { font-size: 17px; overflow-x: auto; max-width: 100%; }
+.eq .what { font: 600 15px var(--f-display); letter-spacing: .02em; }
+.eq p { font-size: 13.5px; color: var(--muted); }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 11.5px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--panel2); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tag { font: 500 11px var(--f-mono); padding: 2px 7px; border-radius: 99px; border: 1px solid var(--line); white-space: nowrap; }
+.tag.lit { color: var(--ok); border-color: var(--ok); }
+.tag.cal { color: var(--warn); border-color: var(--warn); }
+.tag.bad { color: var(--crit); border-color: var(--crit); }
+.stage { font: 600 13px var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--oil); background: var(--panel2); }
+.note { border: 1px dashed var(--warn); border-radius: 8px; padding: 10px 14px; background: var(--panel2); font-size: 13.5px; max-width: 90ch; }
+.sources { display: grid; gap: 6px; font-size: 13.5px; padding-left: 18px; margin: 0; }
+a { color: var(--cool); }
+.qual td.num { min-width: 64px; }
+.qual td:last-child { white-space: normal; font-size: 12px; }
+.legendrow { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.routes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 860px) { .routes { grid-template-columns: minmax(0, 1fr); } }
+.route { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.route p { font-size: 13.5px; color: var(--muted); }
+.route a, .routetotal { font-size: 13.5px; font-weight: 600; }
+.routetotal strong { color: var(--oil); }
+table.buy .bn { font-weight: 500; }
+table.buy .bd { font-size: 12.5px; color: var(--muted); }
+input.qty { width: 64px; font: 500 13px var(--f-mono); text-align: right; background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+tfoot td { background: var(--panel2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Celaya, Gto. · 1 767 m · 5 personas y 4 perros · tres años bajo tierra</div>
+      <h1>Búnker Celaya</h1>
+      <p class="lede">Desde la detonación hasta el tercer invierno: la lluvia radiactiva, el cielo que se oscurece, y cómo se gastan o se producen el aire, el agua, la comida y la energía en cada cuarto. Mueve el diseño a la derecha y mira qué se acaba primero.</p>
+    </div>
+    <div class="runbar">
+      <button class="primary" id="btn-run" type="button">▶ Reproducir</button>
+      <button id="btn-reset" type="button">Día 0</button>
+      <label class="speed" for="speed">Velocidad
+        <select id="speed">
+          <option value="2">2 días/s</option>
+          <option value="8" selected>8 días/s</option>
+          <option value="30">30 días/s</option>
+          <option value="90">90 días/s</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <div class="status" id="status" aria-live="polite"></div>
+
+  <div class="tiles">
+    <div class="tile"><span class="k">Día</span><span class="v" id="k-day">0</span><span class="u" id="k-phase">—</span></div>
+    <div class="tile"><span class="k">Afuera</span><span class="v" id="k-out">—</span><span class="u" id="k-out-sub">—</span></div>
+    <div class="tile"><span class="k">Aire dentro</span><span class="v" id="k-air">—</span><span class="u" id="k-air-sub">—</span></div>
+    <div class="tile"><span class="k">Agua</span><span class="v" id="k-water" style="color:var(--water)">—</span><span class="u" id="k-water-sub">—</span></div>
+    <div class="tile"><span class="k">Comida guardada</span><span class="v" id="k-food" style="color:var(--food)">—</span><span class="u" id="k-food-sub">—</span></div>
+    <div class="tile"><span class="k">Energía</span><span class="v" id="k-energy" style="color:var(--energy)">—</span><span class="u" id="k-energy-sub">—</span></div>
+  </div>
+
+  <div class="layout">
+    <div class="scene">
+      <canvas id="scene" role="img" aria-label="Corte animado del búnker: superficie con paneles y captación de lluvia, tierra y concreto, dormitorio, cuarto de cultivo con hidroponía, aeroponía, algas y pecera, almacén con comida y cisternas, y cuarto de máquinas con baterías, generador y filtro de aire"></canvas>
+      <div class="timeline">
+        <div class="phases" id="phases" aria-hidden="true"></div>
+        <label class="ctl" for="day"><span class="row">Ir a un día<output id="o-day"></output></span><input type="range" id="day" min="0" max="1094" step="1" value="0"></label>
+        <div class="tl-row" id="tl-legend"></div>
+      </div>
+    </div>
+
+    <aside class="panel" aria-label="Diseño del búnker">
+      <fieldset>
+        <legend>Escenarios <small>un clic</small></legend>
+        <div class="presets">
+          <button type="button" data-preset="base">Diseño equilibrado</button>
+          <button type="button" data-preset="sellado">Sellado 2 semanas</button>
+          <button type="button" data-preset="regional">Guerra regional</button>
+          <button type="button" data-preset="granja">Granja máxima</button>
+          <button type="button" data-preset="minimo">Sólo lo guardado</button>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Escenario</legend>
+        <label class="ctl" for="escenario"><span class="row">Guerra</span>
+          <select class="full" id="escenario">
+            <option value="150Tg">Total EUA–Rusia (150 Tg de hollín)</option>
+            <option value="47Tg">Grande (47 Tg)</option>
+            <option value="5Tg">Regional (5 Tg)</option>
+          </select>
+        </label>
+        <label class="ctl" for="tasaH1"><span class="row">Lluvia radiactiva en Celaya, 1 h después<output id="o-tasaH1"></output></span><input type="range" id="tasaH1" min="0" max="3" step="0.1" value="2"><span class="hint">Escala logarítmica: 1 a 1 000 R/h. Depende de qué tan cerca y del viento.</span></label>
+        <label class="ctl" for="dias"><span class="row">Duración<output id="o-dias"></output></span><input type="range" id="dias" min="60" max="1095" step="5" value="1095"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Búnker y blindaje</legend>
+        <label class="ctl" for="tierra"><span class="row">Tierra encima<output id="o-tierra"></output></span><input type="range" id="tierra" min="0" max="2" step="0.1" value="1"></label>
+        <label class="ctl" for="concreto"><span class="row">Losa de concreto<output id="o-concreto"></output></span><input type="range" id="concreto" min="0.1" max="0.6" step="0.05" value="0.3"></label>
+        <label class="ctl" for="vueltas"><span class="row">Vueltas en la entrada<output id="o-vueltas"></output></span><input type="range" id="vueltas" min="0" max="3" step="1" value="2"></label>
+        <label class="ctl" for="area"><span class="row">Superficie interior<output id="o-area"></output></span><input type="range" id="area" min="60" max="250" step="5" value="130"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Habitantes</legend>
+        <label class="ctl" for="personas"><span class="row">Personas<output id="o-personas"></output></span><input type="range" id="personas" min="1" max="10" step="1" value="5"></label>
+        <label class="ctl" for="perros"><span class="row">Perros<output id="o-perros"></output></span><input type="range" id="perros" min="0" max="8" step="1" value="4"></label>
+        <label class="ctl" for="pesoPerro"><span class="row">Peso de cada perro<output id="o-pesoPerro"></output></span><input type="range" id="pesoPerro" min="5" max="45" step="1" value="20"></label>
+        <label class="ctl" for="kcalPersona"><span class="row">Comida por persona<output id="o-kcalPersona"></output></span><input type="range" id="kcalPersona" min="1600" max="3000" step="50" value="2200"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Aire</legend>
+        <label class="ctl" for="vent"><span class="row">Ventilación filtrada<output id="o-vent"></output></span><input type="range" id="vent" min="0" max="400" step="10" value="120"><span class="hint">Aire de afuera por filtro HEPA y carbón: el polvo radiactivo se queda en el filtro.</span></label>
+        <label class="ctl" for="sellarDias"><span class="row">Días totalmente sellado<output id="o-sellarDias"></output></span><input type="range" id="sellarDias" min="0" max="30" step="1" value="0"></label>
+        <label class="ctl" for="calSodada"><span class="row">Cal sodada guardada<output id="o-calSodada"></output></span><input type="range" id="calSodada" min="0" max="500" step="10" value="100"></label>
+        <label class="ctl" for="o2kg"><span class="row">Oxígeno embotellado<output id="o-o2kg"></output></span><input type="range" id="o2kg" min="0" max="100" step="5" value="0"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Cultivo, algas y pecera</legend>
+        <label class="ctl" for="hidroCultivo"><span class="row">Hidroponía: cultivo</span>
+          <select class="full" id="hidroCultivo"><option value="lechuga">Lechuga y hojas</option><option value="papa">Papa</option><option value="trigo">Trigo</option><option value="frijol">Soya</option></select></label>
+        <label class="ctl" for="hidroArea"><span class="row">Hidroponía: área<output id="o-hidroArea"></output></span><input type="range" id="hidroArea" min="0" max="80" step="1" value="10"></label>
+        <label class="ctl" for="aeroCultivo"><span class="row">Aeroponía: cultivo</span>
+          <select class="full" id="aeroCultivo"><option value="papa">Papa</option><option value="lechuga">Lechuga y hojas</option><option value="trigo">Trigo</option><option value="frijol">Soya</option></select></label>
+        <label class="ctl" for="aeroArea"><span class="row">Aeroponía: área<output id="o-aeroArea"></output></span><input type="range" id="aeroArea" min="0" max="80" step="1" value="10"></label>
+        <label class="ctl" for="aeroPPFD"><span class="row">Luz LED en el cultivo<output id="o-aeroPPFD"></output></span><input type="range" id="aeroPPFD" min="100" max="800" step="25" value="400"></label>
+        <label class="ctl" for="algasL"><span class="row">Fotobiorreactor de algas<output id="o-algasL"></output></span><input type="range" id="algasL" min="0" max="2000" step="50" value="200"></label>
+        <label class="ctl" for="acuarioL"><span class="row">Pecera (tilapia)<output id="o-acuarioL"></output></span><input type="range" id="acuarioL" min="0" max="3000" step="100" value="500"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Energía</legend>
+        <label class="ctl" for="paneles"><span class="row">Paneles de 550 W<output id="o-paneles"></output></span><input type="range" id="paneles" min="0" max="60" step="1" value="20"></label>
+        <label class="ctl" for="bateriaKWh"><span class="row">Baterías LiFePO4<output id="o-bateriaKWh"></output></span><input type="range" id="bateriaKWh" min="5" max="80" step="5.12" value="20.48"></label>
+        <label class="ctl" for="combustible"><span class="row">Generador</span>
+          <select class="full" id="combustible"><option value="gaslp">Gas LP (no caduca)</option><option value="diesel">Diésel (≈ 2 años con estabilizador)</option><option value="gasolina">Gasolina (≈ 1 año)</option></select></label>
+        <label class="ctl" for="combustibleL"><span class="row">Combustible guardado<output id="o-combustibleL"></output></span><input type="range" id="combustibleL" min="0" max="3000" step="100" value="600"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Agua</legend>
+        <label class="ctl" for="aguaL"><span class="row">Cisternas<output id="o-aguaL"></output></span><input type="range" id="aguaL" min="2000" max="60000" step="1000" value="20000"></label>
+        <label class="ctl" for="aguaPersona"><span class="row">Agua por persona al día<output id="o-aguaPersona"></output></span><input type="range" id="aguaPersona" min="5" max="40" step="1" value="15"><span class="hint">15 L es el mínimo de supervivencia de las normas Esfera.</span></label>
+        <label class="ctl" for="techo"><span class="row">Techo que capta lluvia<output id="o-techo"></output></span><input type="range" id="techo" min="0" max="300" step="10" value="100"></label>
+        <label class="ctl" for="reciclaGris"><span class="row">Reciclaje de aguas grises<output id="o-reciclaGris"></output></span><input type="range" id="reciclaGris" min="0" max="0.9" step="0.05" value="0.5"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Comida guardada</legend>
+        <label class="ctl" for="comidaDias"><span class="row">Para las personas<output id="o-comidaDias"></output></span><input type="range" id="comidaDias" min="0" max="1100" step="10" value="900"></label>
+        <label class="ctl" for="croquetasKg"><span class="row">Croquetas para los perros<output id="o-croquetasKg"></output></span><input type="range" id="croquetasKg" min="0" max="3000" step="50" value="1500"></label>
+      </fieldset>
+    </aside>
+  </div>
+
+  <div class="findings" id="findings"></div>
+
+  <div class="charts two">
+    <div class="chart"><h3>Aire</h3><p class="sub">O₂ (%) y CO₂ (ppm, máximo del día). Línea punteada: 5 000 ppm, límite para 8 horas.</p><canvas id="ch-air" aria-label="Oxígeno y CO2 a lo largo de los tres años"></canvas></div>
+    <div class="chart"><h3>Agua y comida</h3><p class="sub">Litros en cisternas y días de comida que quedan para personas y perros.</p><canvas id="ch-sup" aria-label="Agua y comida a lo largo de los tres años"></canvas></div>
+    <div class="chart"><h3>Energía</h3><p class="sub">kWh al día del sol y del generador; luz que reciben los cultivos (%).</p><canvas id="ch-en" aria-label="Energía a lo largo de los tres años"></canvas></div>
+    <div class="chart"><h3>Afuera y adentro</h3><p class="sub">Temperatura afuera y dentro, luz del sol que llega (%) y dosis acumulada dentro.</p><canvas id="ch-out" aria-label="Clima, luz y radiación a lo largo de los tres años"></canvas></div>
+  </div>
+
+  <div class="charts two">
+    <section class="chart">
+      <h3>¿Qué se acaba y cuándo?</h3>
+      <p class="sub">El primer día en que pasa cada cosa con el diseño actual.</p>
+      <ul class="events" id="events"></ul>
+    </section>
+    <section class="chart">
+      <h3>Lo que pide la física</h3>
+      <p class="sub">Necesidades para el tiempo elegido, sin contar lo que se produce dentro.</p>
+      <ul class="events" id="needs"></ul>
+    </section>
+  </div>
+    <section class="doc" id="ecuaciones">
+    <div class="eyebrow">Memoria de cálculo</div>
+    <h2>Las ecuaciones del modelo</h2>
+    <p>El modelo avanza de hora en hora durante todo el periodo: 26 280 pasos en tres años. Cada hora calcula la radiación, el sol, la energía, la fotosíntesis, el aire, la temperatura y el agua; cada día descuenta la comida. Los balances de energía, batería, agua, O₂ y CO₂ cierran al 10⁻⁹ en todos los casos de prueba.</p>
+    <div class="eqgrid">
+      <div class="eq"><span class="what">1 · Lluvia radiactiva (regla 7:10)</span>
+        <math display="block"><mi>R</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mi>R</mi><mn>1</mn></msub><msup><mi>t</mi><mrow><mo>−</mo><mn>1.2</mn></mrow></msup><mo>,</mo><mspace width="0.5em"/><msub><mi>R</mi><mtext>dentro</mtext></msub><mo>=</mo><mfrac><mi>R</mi><mtext>PF</mtext></mfrac></math>
+        <p>t en horas desde la detonación; R₁ es la tasa a la hora 1. Siete veces más tiempo, una décima de la radiación: a las 2 semanas queda ~1/25 de la tasa del primer día y ~1/1 000 de la de la hora 1.</p></div>
+      <div class="eq"><span class="what">2 · Blindaje</span>
+        <math display="block"><mtext>PF</mtext><mo>=</mo><mi>min</mi><mo>(</mo><msup><mn>2</mn><mrow><msub><mi>x</mi><mtext>tierra</mtext></msub><mo>/</mo><mn>9.1</mn><mtext> cm</mtext><mo>+</mo><msub><mi>x</mi><mtext>concreto</mtext></msub><mo>/</mo><mn>6.1</mn><mtext> cm</mtext></mrow></msup><mo>,</mo><msub><mtext>PF</mtext><mtext>entrada</mtext></msub><mo>)</mo></math>
+        <p>Cada espesor de medio valor deja pasar la mitad de los rayos gamma. 1 m de tierra y 30 cm de concreto darían ×60 000, pero la radiación entra por la escalera: con dos vueltas el límite es ~×1 000.</p></div>
+      <div class="eq"><span class="what">3 · Invierno nuclear</span>
+        <math display="block"><mi>f</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mo>(</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>t</mi><mo>/</mo><mn>20</mn><mtext> d</mtext></mrow></msup><mo>)</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>t</mi><mo>/</mo><mn>4.6</mn><mtext> años</mtext></mrow></msup><mo>,</mo><mspace width="0.4em"/><mtext>sol</mtext><mo>=</mo><mn>1</mn><mo>−</mo><mi>a</mi><mi>f</mi><mo>,</mo><mspace width="0.4em"/><mi>Δ</mi><mi>T</mi><mo>=</mo><mi>b</mi><mspace width="0.1em"/><msub><mi>f</mi><mtext>retrasada</mtext></msub></math>
+        <p>El hollín sube a la estratosfera en semanas y su vida e es de 4.6 años (Robock 2007). Con 150 Tg el sol baja hasta 70 % y la temperatura ~10 °C; el clima responde con 3 meses de retraso.</p></div>
+      <div class="eq"><span class="what">4 · Respiración de personas y perros</span>
+        <math display="block"><msub><mover><mi>n</mi><mo>˙</mo></mover><msub><mtext>O</mtext><mn>2</mn></msub></msub><mo>=</mo><mfrac><mtext>kcal/día</mtext><mrow><mn>4.83</mn><mtext> kcal/L</mtext></mrow></mfrac><mo>,</mo><mspace width="0.5em"/><msub><mover><mi>n</mi><mo>˙</mo></mover><msub><mtext>CO</mtext><mn>2</mn></msub></msub><mo>=</mo><mn>0.87</mn><mspace width="0.1em"/><msub><mover><mi>n</mi><mo>˙</mo></mover><msub><mtext>O</mtext><mn>2</mn></msub></msub><mo>,</mo><mspace width="0.5em"/><msub><mtext>kcal</mtext><mtext>perro</mtext></msub><mo>=</mo><mn>105</mn><mspace width="0.1em"/><msup><mi>W</mi><mn>0.75</mn></msup></math>
+        <p>A 2 822 kcal/día da 0.835 kg de O₂ y 0.998 kg de CO₂, igual que NASA BVAD. Un perro de 20 kg gasta ~990 kcal/día (NRC 2006: entre 95 y 130 · W^0.75).</p></div>
+      <div class="eq"><span class="what">5 · Aire del búnker</span>
+        <math display="block"><msub><mi>n</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>n</mi><mi>t</mi></msub><mo>+</mo><mi>S</mi><mo>+</mo><mi>Q</mi><mspace width="0.1em"/><msub><mi>n</mi><mtext>afuera</mtext></msub><mo>/</mo><mi>V</mi></mrow><mrow><mn>1</mn><mo>+</mo><mi>Q</mi><mo>/</mo><mi>V</mi></mrow></mfrac></math>
+        <p>Balance de moles de O₂ y CO₂ con la ventilación resuelta implícita. S suma respiración, peces, plantas y algas. A 1 767 m la presión es de 81.8 kPa, menos que en el mar.</p></div>
+      <div class="eq"><span class="what">6 · Depurador de CO₂</span>
+        <math display="block"><msub><mi>m</mi><mtext>cal</mtext></msub><mo>=</mo><mfrac><msub><mi>m</mi><msub><mtext>CO</mtext><mn>2</mn></msub></msub><mrow><mn>0.5</mn><mtext> kg/kg</mtext></mrow></mfrac></math>
+        <p>La cal sodada absorbe ~26 L de CO₂ por cada 100 g (≈ 0.5 kg/kg). Entra cuando el CO₂ pasa de 5 000 ppm. Sellados, 5 personas y 4 perros gastan ~10 kg al día.</p></div>
+      <div class="eq"><span class="what">7 · Plantas bajo LED</span>
+        <math display="block"><mtext>DLI</mtext><mo>=</mo><mtext>PPFD</mtext><mo>×</mo><mi>h</mi><mo>×</mo><mn>0.0036</mn><mo>,</mo><mspace width="0.4em"/><mi>B</mi><mo>=</mo><mtext>LUE</mtext><mo>×</mo><mtext>DLI</mtext><mo>×</mo><mi>A</mi><mo>,</mo><mspace width="0.4em"/><msub><mtext>O</mtext><mn>2</mn></msub><mo>=</mo><mfrac><mn>32</mn><mn>30</mn></mfrac><mi>B</mi><mo>,</mo><mspace width="0.4em"/><msub><mi>P</mi><mtext>LED</mtext></msub><mo>=</mo><mfrac><mrow><mtext>PPFD</mtext><mo>×</mo><mi>A</mi></mrow><mrow><mn>2.7</mn><mtext> µmol/J</mtext></mrow></mfrac></math>
+        <p>LUE de NASA: papa 0.64 g por mol de luz (0.44 comestible), lechuga 0.46. Cada gramo de biomasa seca libera 1.07 g de O₂. Los focos convierten 2.7 µmol de luz por joule.</p></div>
+      <div class="eq"><span class="what">8 · Algas y pecera</span>
+        <math display="block"><msub><mtext>O</mtext><mrow><mn>2</mn><mo>,</mo><mtext>algas</mtext></mrow></msub><mo>=</mo><mn>1.4</mn><mspace width="0.1em"/><msub><mi>p</mi><mi>V</mi></msub><mi>V</mi><mo>,</mo><mspace width="0.5em"/><msub><mtext>O</mtext><mrow><mn>2</mn><mo>,</mo><mtext>peces</mtext></mrow></msub><mo>=</mo><mo>−</mo><mn>150</mn><mtext> mg/kg·h</mtext><mo>×</mo><msub><mi>m</mi><mtext>peces</mtext></msub></math>
+        <p>Algas a 0.5 g de biomasa por litro al día con luz intensa. La tilapia respira 80–200 mg de O₂ por kg cada hora y crece con su alimento (conversión 1.8).</p></div>
+      <div class="eq"><span class="what">9 · Energía por prioridades</span>
+        <math display="block"><mtext>sol</mtext><mo>=</mo><msub><mtext>kWp</mtext><mrow></mrow></msub><mo>×</mo><msub><mi>Y</mi><mtext>mes</mtext></msub><mo>×</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mi>f</mi><mo>)</mo><mo>,</mo><mspace width="0.4em"/><msub><mi>Y</mi><mtext>Celaya</mtext></msub><mo>≈</mo><mn>5.8</mn><mo>–</mo><mn>8</mn><mtext> kWh/kWp·día</mtext></math>
+        <p>Primero ventilación, luz y refrigerador (pueden usar la batería hasta 10 % y el generador). Luego se carga la batería a 60 %. Lo que sobra va a los cultivos, las algas y el deshumidificador. Si falta, se apagan de abajo hacia arriba.</p></div>
+      <div class="eq"><span class="what">10 · Temperatura dentro</span>
+        <math display="block"><mi>C</mi><mfrac><mrow><mi>d</mi><mi>T</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mi>Q</mi><mo>+</mo><mi>U</mi><msub><mi>A</mi><mtext>tierra</mtext></msub><mo>(</mo><msub><mi>T</mi><mtext>tierra</mtext></msub><mo>−</mo><mi>T</mi><mo>)</mo><mo>+</mo><mi>ρ</mi><msub><mi>c</mi><mi>p</mi></msub><mi>Q</mi><mo>(</mo><mn>1</mn><mo>−</mo><mi>η</mi><mo>)</mo><mo>(</mo><msub><mi>T</mi><mtext>afuera</mtext></msub><mo>−</mo><mi>T</mi><mo>)</mo></math>
+        <p>La tierra alrededor está a ~18 °C (la media anual) y se enfría despacio. Cada persona da ~137 W y los focos de cultivo dan todo su consumo como calor. Si hace calor dentro, la ventilación sube a 600 m³/h sin recuperador.</p></div>
+      <div class="eq"><span class="what">11 · Agua</span>
+        <math display="block"><mfrac><mrow><mi>d</mi><mi>W</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msub><mtext>lluvia</mtext><mrow></mrow></msub><mo>+</mo><mi>η</mi><mspace width="0.1em"/><mtext>vapor</mtext><mo>+</mo><mi>r</mi><mspace width="0.1em"/><mtext>grises</mtext><mo>−</mo><mtext>consumo</mtext><mo>−</mo><mtext>transpiración</mtext></math>
+        <p>Lluvia de Celaya (689 mm al año, casi toda de junio a septiembre) en el techo, con 80 % de captación y después de 30 días para que baje el polvo radiactivo. El deshumidificador recupera 80 % del vapor de gente, perros, plantas y pecera.</p></div>
+      <div class="eq"><span class="what">12 · Comida</span>
+        <math display="block"><msub><mi>S</mi><mrow><mi>d</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>S</mi><mi>d</mi></msub><mo>−</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>N</mi><mspace width="0.1em"/><msub><mtext>kcal</mtext><mtext>persona</mtext></msub><mo>−</mo><msub><mtext>kcal</mtext><mtext>cultivadas</mtext></msub><mo>)</mo></math>
+        <p>Papa a los 90 días, lechuga a los 30, espirulina a las 2 semanas y la tilapia que pase de 25 kg por m³. Los perros comen croquetas de ~3 500 kcal/kg.</p></div>
+    </div>
+    <h3>Parámetros</h3>
+    <div class="tablewrap"><table><thead><tr><th>Parámetro</th><th>Valor</th><th>Origen</th></tr></thead><tbody>
+      <tr><td>O₂ y CO₂ por persona</td><td>0.835 / 0.998 kg/día a 136.7 W; RQ 0.87</td><td><span class="tag lit">NASA BVAD</span></td></tr>
+      <tr><td>Energía de un perro</td><td>95–130 × W^0.75 kcal/día (se usa 105)</td><td><span class="tag lit">NRC 2006</span></td></tr>
+      <tr><td>Decaimiento de la lluvia radiactiva</td><td>t^−1.2</td><td><span class="tag lit">Glasstone; defensa civil</span></td></tr>
+      <tr><td>Espesor de medio valor</td><td>tierra 9.1 cm, concreto 6.1 cm</td><td><span class="tag lit">Defensa civil (las fuentes varían)</span></td></tr>
+      <tr><td>Límite por la entrada</td><td>×50 recta, ×300 una vuelta, ×1 000 dos, ×3 000 tres</td><td><span class="tag cal">Calibrado</span></td></tr>
+      <tr><td>Invierno nuclear en Celaya</td><td>150 Tg: −10 °C, sol −70 %, lluvia −45 %; 47 Tg y 5 Tg proporcionales; vida e del hollín 4.6 años</td><td><span class="tag lit">Robock 2007, Coupe 2019</span> <span class="tag cal">adaptado a una región tropical</span></td></tr>
+      <tr><td>Productividad de cultivos</td><td>LUE de papa, trigo, soya y lechuga</td><td><span class="tag lit">NASA Biomass Production Chamber</span></td></tr>
+      <tr><td>Eficacia de los focos LED</td><td>2.7 µmol/J</td><td><span class="tag lit">revisión 2024: 2–3 µmol/J</span></td></tr>
+      <tr><td>Algas</td><td>0.5 g/L·día; 1.4 g de O₂ por g</td><td><span class="tag cal">Calibrado (literatura: 10–100 L por persona para el O₂)</span></td></tr>
+      <tr><td>Tilapia</td><td>150 mg O₂/kg·h; conversión 1.8; 25 kg/m³</td><td><span class="tag lit">Estudios de acuaponía</span></td></tr>
+      <tr><td>Cal sodada</td><td>0.5 kg de CO₂ por kg</td><td><span class="tag lit">26 L por 100 g</span></td></tr>
+      <tr><td>Producción solar en Celaya</td><td>5.8–8 kWh por kWp al día según la estación</td><td><span class="tag lit">ProfileSolar (NASA POWER)</span></td></tr>
+      <tr><td>Clima normal de Celaya</td><td>18.3 °C de media, 689 mm al año</td><td><span class="tag lit-adaptado tag cal">climate-data.org; meses intermedios interpolados</span></td></tr>
+      <tr><td>Agua mínima</td><td>15 L por persona al día</td><td><span class="tag lit">Normas Esfera</span></td></tr>
+      <tr><td>Masa térmica, pérdidas a la tierra, agua de los perros, transpiración</td><td>12 kWh/K, 0.75 W/m²K, 1 L/perro, 0.25 L por g de biomasa</td><td><span class="tag cal">Calibrado</span></td></tr>
+    </tbody></table></div>
+    <p class="note">Nadie sabe con precisión cuánta lluvia radiactiva caería en Celaya ni cómo se enfriaría el Bajío: depende de los blancos, el viento y el hollín. Por eso son controles. El modelo sirve para dimensionar y ver qué falla primero, no para predecir. Antes de construir, un ingeniero estructural debe revisar la losa con 1 m de tierra encima, y la ventilación con filtro NBC debe probarse en el sitio.</p>
+  </section>
+
+    <section class="doc" id="compras">
+    <div class="eyebrow">Presupuesto</div>
+    <h2>Qué comprar, cuánto cuesta y dónde</h2>
+    <p>Las cantidades salen del diseño que tienes arriba y cambian con él. Los precios son de Mercado Libre, Amazon México y proveedores mexicanos, consultados el 22 de octubre de 2026. La obra es un valor de ejemplo: pide cotización a una constructora de Celaya.</p>
+    <div class="tablewrap">
+      <table class="buy">
+        <thead><tr><th>Artículo</th><th class="num">Cant.</th><th class="num">Precio unit.</th><th class="num">Subtotal</th><th>Dónde</th></tr></thead>
+        <tbody id="buy-body"></tbody>
+        <tfoot><tr><td colspan="3"><strong>Total estimado</strong> · sin lo que dice «cotizar»</td><td class="num"><strong id="buy-total">—</strong></td><td></td></tr></tfoot>
+      </table>
+    </div>
+    <p class="note">Falta en la lista y sí importa: botiquín y medicinas para 3 años (incluidas las de los perros), yoduro de potasio para la tiroides (sólo con indicación médica), detector de monóxido de carbono, herramientas, semillas de repuesto, nutrientes para hidroponía, alimento para los peces, vitaminas, cobijas y ropa de frío, y entretenimiento: la salud mental es un recurso que también se acaba.</p>
+  </section>
+
+  <section class="doc" id="permisos">
+    <div class="eyebrow">Antes de construir</div>
+    <h2>Permisos y seguridad</h2>
+    <div class="tablewrap"><table><tbody>
+      <tr><td class="stage" colspan="2">Permisos</td></tr>
+      <tr><td>Construcción</td><td>Licencia de construcción del Municipio de Celaya, con planos firmados por un director responsable de obra. Una losa con 1 m de tierra encima carga ~1.8 t/m²: necesita cálculo estructural.</td></tr>
+      <tr><td>Gas LP</td><td>Tanques estacionarios y tubería instalados por una empresa autorizada y con su dictamen; el tanque va afuera, lejos de la toma de aire.</td></tr>
+      <tr><td>Instalación eléctrica y solar</td><td>Conforme a la NOM-001-SEDE (instalaciones eléctricas) y con un instalador certificado; si se interconecta a CFE, el contrato de interconexión.</td></tr>
+      <tr><td class="stage" colspan="2">Seguridad</td></tr>
+      <tr><td>Monóxido de carbono</td><td>El generador y cualquier quemador van afuera o en un cuarto sellado con escape propio. Detector de CO en cada cuarto.</td></tr>
+      <tr><td>Calor</td><td>Un refugio lleno se calienta. La ventilación de verano y el recuperador de calor con bypass están en el modelo por eso.</td></tr>
+      <tr><td>Radiación</td><td>No salir mientras el Geiger marque más de ~0.5 R/h. Para limpiar paneles, salidas cortas con ropa que se queda en la entrada.</td></tr>
+      <tr><td>Agua de lluvia</td><td>Descartar el primer mes, filtrar (sedimento + carbón) y esterilizar con UV o hervir.</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="doc" id="fuentes">
+    <div class="eyebrow">Referencias</div>
+    <h2>Fuentes</h2>
+    <ul class="sources">
+      <li>Invierno nuclear: <a href="https://climate.envsci.rutgers.edu/pdf/RobockNW2006JD008235.pdf" target="_blank" rel="noopener">Robock, Oman y Stenchikov 2007</a> · <a href="https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2019JD030509" target="_blank" rel="noopener">Coupe et al. 2019</a> · <a href="https://iopscience.iop.org/article/10.1088/1748-9326/adcfb5" target="_blank" rel="noopener">agricultura en invierno nuclear</a></li>
+      <li>Lluvia radiactiva y blindaje: <a href="https://tacda.org/wp-content/uploads/2018/10/TACDA_Academy_CDBasics_6Radiation.pdf" target="_blank" rel="noopener">TACDA, fundamentos de radiación</a></li>
+      <li>Ventilación de refugios: <a href="https://swissshelters.com/articles/shelter-ventilation-system" target="_blank" rel="noopener">refugios suizos (3 m³/h por persona en modo filtro)</a></li>
+      <li>Fisiología: <a href="https://ntrs.nasa.gov/api/citations/20210024855/downloads/BVAD_2.15.22-final.pdf" target="_blank" rel="noopener">NASA BVAD</a> · <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4349026/" target="_blank" rel="noopener">energía de perros (NRC 2006)</a></li>
+      <li>Cultivos y algas: <a href="https://www.sciencedirect.com/science/article/abs/pii/S0273117707007065" target="_blank" rel="noopener">Wheeler, productividad de cultivos para soporte de vida</a> · <a href="https://ntrs.nasa.gov/api/citations/20205008832/downloads/NASA%20TM-2020-5008832%20NASA's%20Contributions%20to%20Vertical%20Farming.pdf" target="_blank" rel="noopener">NASA y la agricultura vertical</a> · <a href="https://www.frontiersin.org/articles/10.3389/fspas.2021.700579/full" target="_blank" rel="noopener">fotobiorreactores para O₂</a></li>
+      <li>Tilapia: <a href="https://niof-eg.com/wp-content/uploads/2022/07/OXYGEN-CONSUMPTION-OF-NILE-TILAPIA.pdf" target="_blank" rel="noopener">consumo de oxígeno</a> · <a href="https://ejournals.ph/article.php?id=23608" target="_blank" rel="noopener">acuaponía</a></li>
+      <li>Cal sodada: <a href="https://healthprofessions.udmercy.edu/academics/na/agm/alh.pdf" target="_blank" rel="noopener">capacidad de absorción</a> · LED: <a href="https://bluedynamo.msu.edu/floriculture/uploads/files/2024-01, Update on LED efficacy.pdf" target="_blank" rel="noopener">eficacia 2024</a></li>
+      <li>Celaya: <a href="https://en.climate-data.org/north-america/mexico/guanajuato/celaya-764314/" target="_blank" rel="noopener">clima</a> · <a href="https://profilesolar.com/locations/Mexico/Celaya/" target="_blank" rel="noopener">producción solar</a> · <a href="https://en.wikipedia.org/wiki/Celaya" target="_blank" rel="noopener">altitud</a></li>
+      <li>Agua y comida: <a href="https://sphereprototype.conted.ox.ac.uk/standards/watersupply/accessAndWaterQuantity.html" target="_blank" rel="noopener">normas Esfera</a> · combustible: <a href="https://www.portlandiaelectric.supply/blogs/generators/generator-fuel-consumption-chart" target="_blank" rel="noopener">consumo de generadores</a></li>
+    </ul>
+  </section>
+
+</div>
+<script>
+// MODEL-START
+// Búnker de soporte de vida para invierno nuclear, Celaya, Gto. Paso de una hora.
+// Unidades internas: kg, L, mol, kWh, kcal, °C, horas. Cada componente es un bloque del paso horario.
+
+const KCAL_PER_L_O2 = 4.83;      // kcal por litro de O2 consumido (equivalente calórico)
+const RQ = 0.87;                 // cociente respiratorio (NASA BVAD)
+const MOL_PER_L_STP = 1 / 22.414;
+const P_ALT = 81.8;              // kPa a 1 767 m (Celaya)
+const T_REF = 293.15;
+const R_GAS = 8.314;
+
+// Clima normal de Celaya (climate-data.org, aproximado mes a mes; media anual 18.3 °C, 689 mm)
+const T_NORMAL = [14.7, 16.2, 18.6, 20.9, 22.1, 21.6, 20.1, 20.0, 19.6, 18.2, 16.3, 15.0];
+const RAIN_MM = [12, 6, 7, 12, 35, 128, 148, 138, 120, 52, 12, 4];
+// Producción fotovoltaica normal, kWh por kWp por día (ProfileSolar, por estación)
+const PV_YIELD = [6.04, 6.04, 7.97, 7.97, 7.97, 6.32, 6.32, 6.32, 5.81, 5.81, 5.81, 6.04];
+
+// Escenarios de guerra: hollín en la estratosfera (Robock 2007; Coupe 2019; Xia 2022)
+const SCEN = {
+  '5Tg':   { name: 'Regional (5 Tg de hollín)', dT: 1.5, light: 0.10, rain: 0.08 },
+  '47Tg':  { name: 'Grande (47 Tg)', dT: 5.5, light: 0.40, rain: 0.25 },
+  '150Tg': { name: 'Total EUA–Rusia (150 Tg)', dT: 10, light: 0.70, rain: 0.45 },
+};
+const SOOT_EFOLD_D = 4.6 * 365; // vida media e del hollín, días (Robock 2007)
+const SOOT_RISE_D = 20;
+const TEMP_LAG_D = 90;
+const CTH = 12;                  // kWh/K: masa térmica interior (concreto y contenido), calibrado
+
+// Cultivos: eficiencia del uso de la luz (NASA BPC, Wheeler 2008), g de materia seca por mol de luz
+const CROPS = {
+  lechuga: { name: 'Lechuga y hojas', lueTot: 0.46, lueEd: 0.42, kcal: 2.9, cycle: 30, prot: 0.25 },
+  papa:    { name: 'Papa', lueTot: 0.64, lueEd: 0.44, kcal: 3.6, cycle: 90, prot: 0.09 },
+  trigo:   { name: 'Trigo', lueTot: 0.59, lueEd: 0.17, kcal: 3.4, cycle: 80, prot: 0.13 },
+  frijol:  { name: 'Frijol de soya', lueTot: 0.43, lueEd: 0.16, kcal: 4.2, cycle: 90, prot: 0.36 },
+};
+const O2_PER_G_BIOMASS = 32 / 30;   // CH2O: 1 g de biomasa libera 1.07 g de O2
+const CO2_PER_G_BIOMASS = 44 / 30;
+const TRANSP_L_PER_G = 0.25;        // agua transpirada por g de biomasa seca (≈ 4 g/kg de eficiencia)
+
+const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
+
+function config(o = {}) {
+  return Object.assign({
+    dias: 1095, personas: 5, kcalPersona: 2200, perros: 4, pesoPerro: 20,
+    escenario: '150Tg', tasaH1: 100, llegadaH: 3,
+    tierra: 1.0, concreto: 0.3, vueltas: 2,
+    area: 130, altura: 2.6,
+    vent: 120, ventMax: 600, ventW: 0.3, sellarDias: 0, calSodada: 100, recupCalor: 0.6,
+    o2kg: 0, // oxígeno embotellado de reserva
+    hidroArea: 10, hidroCultivo: 'lechuga', hidroPPFD: 250,
+    aeroArea: 10, aeroCultivo: 'papa', aeroPPFD: 400, fotoperiodo: 16, ledEff: 2.7,
+    algasL: 200, algasProd: 0.5, algasW: 1.0,
+    acuarioL: 500, peces: 10, alimentoPeces: 100,
+    panelW: 550, paneles: 20, bateriaKWh: 20.5, generadorKW: 7, combustible: 'gaslp', combustibleL: 600,
+    cargaBase: 0.25, tSet: 17, calefKW: 3,
+    aguaL: 20000, aguaPersona: 15, aguaPerro: 1.0, reciclaGris: 0.5, deshum: 0.8, deshumKWhL: 0.55, techo: 100, lluviaDia: 30,
+    comidaDias: 900, croquetasKg: 1500,
+    salidaDia: 30, salidaH: 0.5, umbralSalida: 0.5,
+  }, o);
+}
+
+function shieldPF(c) {
+  // espesores de medio valor para rayos gamma de lluvia radiactiva: tierra 9.1 cm, concreto 6.1 cm
+  const slab = Math.pow(2, c.tierra / 0.091 + c.concreto / 0.061);
+  const entrada = [50, 300, 1000, 3000][clamp(c.vueltas, 0, 3)];
+  return Math.min(slab, entrada);
+}
+
+function fuelLperKWh(f) { return { gaslp: 0.55, gasolina: 0.42, diesel: 0.28 }[f]; }
+function fuelLife(f) { return { gaslp: Infinity, gasolina: 365, diesel: 730 }[f]; }
+
+function simular(cin) {
+  const c = config(cin);
+  const sc = SCEN[c.escenario];
+  const PF = shieldPF(c);
+  const V = c.area * c.altura * 1000;                 // L de aire
+  const molAir = P_ALT * 1000 * (V / 1000) / (R_GAS * T_REF); // mol totales
+  // metabolismo: kcal → O2 y CO2 (mol/h)
+  const kcalPerros = 105 * Math.pow(c.pesoPerro, 0.75) * c.perros;
+  const kcalHum = c.kcalPersona * c.personas;
+  const o2Met = (kcalHum + kcalPerros) / KCAL_PER_L_O2 * MOL_PER_L_STP / 24; // mol/h
+  const co2Met = o2Met * RQ;
+  const heatMet = (136.7 * c.personas + (kcalPerros * 4184 / 86400)) / 1000; // kW
+  const vaporMet = (2.0 * c.personas + 0.4 * c.perros) / 24; // L/h
+
+  const pvKWp = c.panelW * c.paneles / 1000;
+  const fuelRate = fuelLperKWh(c.combustible);
+  const s = {
+    o2: 0.2095 * molAir, co2: 420e-6 * molAir, T: 18.3, Tg: 18.3, soc: 0.8 * c.bateriaKWh, fuel: c.combustibleL,
+    agua: c.aguaL, comida: c.comidaDias * kcalHum, croq: c.croquetasKg, cal: c.calSodada, o2kg: c.o2kg,
+    peces: c.peces, alimPeces: c.alimentoPeces, dosis: 0, dosisOut: 0, lastRecov: 0,
+  };
+  const s0 = { soc: s.soc, agua: s.agua, o2: s.o2, co2: s.co2 };
+  const days = [];
+  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0 };
+  const firsts = {};
+  const mark = (k, d) => { if (firsts[k] === undefined) firsts[k] = d; };
+  const ventQ = c.vent * 1000; // L/h
+  const crop = (area, name, ppfd) => ({ area, cr: CROPS[name], ppfd });
+  const cultivos = [crop(c.hidroArea, c.hidroCultivo, c.hidroPPFD), crop(c.aeroArea, c.aeroCultivo, c.aeroPPFD)];
+  const ledKW = cultivos.reduce((a, k) => a + k.area * k.ppfd / c.ledEff / 1000, 0);
+  const algKW = c.algasL * c.algasW / 1000;
+
+  for (let d = 0; d < c.dias; d++) {
+    const m = Math.floor((d % 365) / 30.42) % 12;
+    // forzamiento del hollín (sube en semanas, decae con vida e de 4.6 años) y respuesta retrasada del clima
+    const f = (1 - Math.exp(-d / SOOT_RISE_D)) * Math.exp(-d / SOOT_EFOLD_D);
+    const fT = d === 0 ? 0 : days[d - 1].fT + (f - days[d - 1].fT) / TEMP_LAG_D;
+    const Tout = T_NORMAL[m] - sc.dT * fT / 0.8;
+    const luz = 1 - sc.light * f;
+    const lluviaFac = 1 - sc.rain * fT / 0.8;
+    const day = { d, f, fT, Tout, luz, o2min: 1, co2max: 0, o2: 0, co2: 0, T: 0, pv: 0, gen: 0, shed: 0, kcalProd: 0,
+      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0 };
+    const sealed = d < c.sellarDias;
+    s.Tg += ((18.3 - sc.dT * fT / 0.8) - s.Tg) / 365;   // la tierra alrededor se enfría despacio
+    let ledHours = 0;
+    for (let h = 0; h < 24; h++) {
+      const tH = d * 24 + h + 1; // horas desde la detonación
+      // 1. Radiación: regla t^-1.2 desde la llegada de la lluvia radiactiva
+      const rate = tH >= c.llegadaH ? c.tasaH1 * Math.pow(tH, -1.2) : 0;
+      const outside = d >= c.salidaDia && rate < c.umbralSalida && h === 12 && c.salidaH > 0;
+      const dIn = rate / PF, dOut = outside ? rate * c.salidaH * 0.7 : 0;  // afuera: terreno real ≈ 0.7 del ideal
+      s.dosis += dIn + dOut; s.dosisOut += rate;
+      day.rateOut = Math.max(day.rateOut, rate); day.rateIn = Math.max(day.rateIn, dIn);
+
+      // 2. Energía: panel → cargas por prioridad → batería → generador; lo que falta se apaga de abajo hacia arriba
+      const sun = h >= 6 && h < 18 ? Math.sin(Math.PI * (h - 6 + 0.5) / 12) * Math.PI / 24 : 0; // suma 1 en el día
+      const pv = pvKWp * PV_YIELD[m] * luz * sun;
+      const lights = h >= 6 && h < 6 + c.fotoperiodo;
+      // ventilación: caudal normal y, si hace calor dentro y afuera está más fresco, caudal de enfriamiento
+      const cool = !sealed && s.T > 25 && Tout < s.T - 2;
+      const ventFlow = sealed ? 0 : cool ? Math.max(c.vent, c.ventMax) : c.vent;
+      const ventKW = sealed ? 0.02 : ventFlow * c.ventW / 1000;
+      const vital = [['vent', ventKW], ['base', c.cargaBase], ['calef', s.T < c.tSet ? c.calefKW : 0]];
+      const extra = [['deshum', s.lastRecov * c.deshumKWhL], ['algas', lights ? algKW : 0], ['led', lights ? ledKW : 0]];
+      const served = {};
+      let pvLeft = pv, gen = 0, short = 0, ch = 0;
+      const discharge = (kwh, floor) => {          // entrega kwh desde la batería sin bajar de floor
+        const dis = Math.min(kwh / 0.95, Math.max(0, s.soc - floor * c.bateriaKWh));
+        s.soc -= dis; tot.dis += dis; tot.lossDis += dis * 0.05; return dis * 0.95;
+      };
+      // a) cargas vitales: panel → batería hasta 10 % → generador
+      let needV = vital.reduce((a, l) => a + l[1], 0);
+      const fromPV = Math.min(pvLeft, needV); pvLeft -= fromPV; needV -= fromPV;
+      needV -= discharge(needV, 0.1);
+      if ((needV > 1e-9 || s.soc < 0.25 * c.bateriaKWh) && s.fuel > 0 && d < fuelLife(c.combustible) && c.generadorKW > 0) {
+        const cap = Math.min(c.generadorKW, s.fuel / fuelRate);
+        const toLoad = Math.min(needV, cap);
+        const toBat = s.soc < 0.25 * c.bateriaKWh ? Math.max(0, Math.min((cap - toLoad) * 0.95, 0.9 * c.bateriaKWh - s.soc)) : 0;
+        gen = toLoad + toBat / 0.95;
+        s.soc += toBat; tot.ch += toBat / 0.95;
+        needV -= toLoad; s.fuel -= gen * fuelRate;
+      }
+      let cut = Math.max(0, needV); short += cut; tot.shedVital += cut; day.shedVital += cut;
+      for (let i = vital.length - 1; i >= 0; i--) { const [k, w] = vital[i]; const x = Math.min(cut, w); served[k] = w - x; cut -= x; }
+      // b) asegura la noche: el panel carga la batería hasta 60 % antes de alimentar cultivos
+      const pre = Math.max(0, Math.min(pvLeft * 0.95, 0.6 * c.bateriaKWh - s.soc));
+      s.soc += pre; tot.ch += pre / 0.95; pvLeft -= pre / 0.95; ch += pre;
+      // c) cargas de cultivo y agua: sólo excedente del panel o batería arriba de 50 %
+      for (const [k, w] of extra) {
+        let give = Math.min(pvLeft, w); pvLeft -= give;
+        give += discharge(w - give, 0.5);
+        served[k] = give; short += w - give;
+      }
+      // d) lo que sobra del panel carga la batería; el resto se tira
+      const post = Math.max(0, Math.min(pvLeft * 0.95, 0.95 * c.bateriaKWh - s.soc));
+      s.soc += post; tot.ch += post / 0.95; pvLeft -= post / 0.95; ch += post;
+      const pvUsed = pv - pvLeft;
+      const loads = [...vital, ...extra];
+      tot.pv += pvUsed; tot.gen += gen; tot.shed += short;
+      for (const k in served) tot.load += served[k];
+      day.pv += pvUsed; day.gen += gen; day.shed += short;
+      const ledFrac = lights && ledKW > 0 ? served.led / ledKW : 0;
+      const algFrac = lights && algKW > 0 ? served.algas / algKW : 0;
+      const ventOn = sealed ? 0 : (ventKW > 0 ? served.vent / ventKW : 1) * ventFlow / Math.max(1e-9, c.vent);
+      const deshFrac = extra[0][1] > 0 ? served.deshum / extra[0][1] : 1;
+      if (lights) ledHours += ledFrac;
+
+      // 3. Fotosíntesis de plantas y algas (sólo con luz)
+      let o2P = 0, co2P = 0, transp = 0, kcalH = 0;
+      for (const k of cultivos) {
+        if (k.area <= 0 || !lights) continue;
+        const mol = k.ppfd * 3600e-6 * k.area * ledFrac;  // mol de fotones en la hora
+        const bio = mol * k.cr.lueTot;                     // g de biomasa seca
+        o2P += bio * O2_PER_G_BIOMASS / 32; co2P += bio * CO2_PER_G_BIOMASS / 44; transp += bio * TRANSP_L_PER_G;
+        if (d >= k.cr.cycle) kcalH += mol * k.cr.lueEd * k.cr.kcal;
+      }
+      const algBio = lights && c.algasL > 0 ? c.algasL * c.algasProd / c.fotoperiodo * algFrac : 0;
+      const o2A = algBio * 1.4 / 32, co2A = algBio * 1.9 / 44;   // con nitrato como fuente de N (calibrado)
+      if (d >= 14) kcalH += algBio * 3.0;
+      // 4. Peces: respiran todo el día (150 mg O2/kg/h)
+      const fishO2 = s.peces * 150e-3 / 32;
+
+      // 5. Aire: balance de moles con ventilación filtrada (implícito)
+      const o2Src = -o2Met - fishO2 + o2P + o2A;
+      const co2Src = co2Met + fishO2 * 0.9 - co2P - co2A;
+      const Qn = ventOn * ventQ / V;               // recambios por hora (ventOn incluye el caudal de enfriamiento)
+      const o2Out = 0.2095 * molAir, co2Out = 420e-6 * molAir;
+      const o2Prev = s.o2, co2Prev = s.co2;
+      s.o2 = (s.o2 + o2Src + Qn * o2Out) / (1 + Qn);
+      s.co2 = (s.co2 + co2Src + Qn * co2Out) / (1 + Qn);
+      tot.o2Src += o2Src; tot.o2Vent += s.o2 - o2Prev - o2Src;
+      tot.co2Src += co2Src; tot.co2Vent += s.co2 - co2Prev - co2Src;
+      // depurador de cal sodada (0.5 kg CO2/kg) cuando el CO2 pasa de 5 000 ppm
+      let calUse = 0;
+      if (s.co2 / molAir > 0.005 && s.cal > 0) {
+        calUse = Math.min(s.cal, (s.co2 - 0.004 * molAir) * 0.044 / 0.5);
+        s.co2 -= calUse * 0.5 / 0.044; s.cal -= calUse; tot.co2Scrub += calUse * 0.5 / 0.044;
+      }
+      // oxígeno embotellado si baja de 19 %
+      if (s.o2 / molAir < 0.19 && s.o2kg > 0) {
+        const add = Math.min(s.o2kg, (0.195 * molAir - s.o2) * 0.032);
+        s.o2 += add / 0.032; s.o2kg -= add; tot.o2Bottle += add / 0.032;
+      }
+      day.o2Met += o2Met; day.o2Plant += o2P; day.o2Alg += o2A; day.o2Fish += fishO2; day.calUsed += calUse;
+      day.o2Vent += s.o2 - o2Prev - o2Src;
+      const o2f = s.o2 / molAir, co2f = s.co2 / molAir;
+      day.o2min = Math.min(day.o2min, o2f); day.co2max = Math.max(day.co2max, co2f);
+      day.o2 += o2f / 24; day.co2 += co2f / 24;
+
+      // 6. Temperatura: tierra, aire de ventilación (con recuperador), gente, perros, focos y calefacción
+      let gains = heatMet;
+      for (const k in served) gains += served[k];
+      const UAg = 0.75 * (2 * c.area + 4 * Math.sqrt(c.area) * c.altura) / 1000;      // kW/K hacia la tierra
+      const UAv = ventOn * c.vent * 1.0 * 1.005 / 3600 * (cool ? 1 : 1 - c.recupCalor); // kW/K del aire que entra; sin recuperador si enfría
+      s.T = (s.T * CTH + gains + UAg * s.Tg + UAv * Tout) / (CTH + UAg + UAv);
+      day.T += s.T / 24;
+
+      // 7. Agua: consumo, vapor recuperado por el deshumidificador, aguas grises y lluvia
+      const use = (c.aguaPersona * c.personas + c.aguaPerro * c.perros) / 24;
+      const evapAcu = c.acuarioL * 0.01 / 24;
+      const vapor = vaporMet + transp + evapAcu;
+      const recov = vapor * c.deshum * deshFrac;
+      s.lastRecov = vapor * c.deshum;
+      const grey = c.aguaPersona * c.personas * 0.6 / 24 * c.reciclaGris;
+      const rain = d >= c.lluviaDia ? c.techo * RAIN_MM[m] / 30.42 / 24 * 0.8 * lluviaFac : 0;
+      const inflow = recov + grey + rain, outflow = use + transp + evapAcu;
+      const want = s.agua + inflow - outflow;
+      const next = clamp(want, 0, c.aguaL);
+      tot.aguaIn += inflow; tot.aguaOut += outflow; tot.aguaRebose += Math.max(0, want - next); tot.aguaFalta += Math.max(0, next - want);
+      day.aguaFalta += Math.max(0, next - want);
+      s.agua = next; day.lluvia += rain;
+      day.kcalProd += kcalH;
+    }
+    if (day.aguaFalta > 0) mark('agua', d);
+    // comida del día
+    const fishFeed = Math.min(s.alimPeces, s.peces * 0.015);
+    s.alimPeces -= fishFeed; s.peces += fishFeed / 1.8;                // conversión alimenticia 1.8
+    const maxFish = c.acuarioL / 1000 * 25;
+    if (s.peces > maxFish) { day.kcalProd += (s.peces - maxFish) * 960; s.peces = maxFish; }
+    const need = kcalHum - day.kcalProd;
+    tot.kcalProd += Math.min(day.kcalProd, kcalHum);
+    if (need > 0) { const take = Math.min(s.comida, need); s.comida -= take; if (take < need) { tot.kcalFalta += need - take; mark('comida', d); } }
+    const croqNeed = kcalPerros / 3500;
+    const croqTake = Math.min(s.croq, croqNeed); s.croq -= croqTake;
+    if (croqTake < croqNeed) { tot.croqFalta += croqNeed - croqTake; mark('croquetas', d); }
+    if (c.combustibleL > 0 && s.fuel <= 1e-6) mark('combustible', d);
+    if (c.combustibleL > 0 && d >= fuelLife(c.combustible)) mark('combustible caducado', d);
+    if (c.calSodada > 0 && s.cal <= 1e-6) mark('cal sodada', d);
+    if (day.co2max > 0.005) mark('CO₂ arriba de 5 000 ppm', d);
+    if (day.co2max > 0.03) mark('CO₂ peligroso (3 %)', d);
+    if (day.o2min < 0.195) mark('oxígeno bajo (19.5 %)', d);
+    if (day.T < 12) mark('frío dentro (< 12 °C)', d);
+    if (day.T > 30) mark('calor dentro (> 30 °C)', d);
+    if (day.shedVital > 0.05) mark('se apagan cargas vitales', d);
+    if (day.ledOnFrac < 0.5) mark('cultivos con menos de la mitad de luz', d);
+    Object.assign(day, {
+      agua: s.agua, comida: s.comida / kcalHum, croq: s.croq / croqNeed, fuel: s.fuel, soc: c.bateriaKWh ? s.soc / c.bateriaKWh : 0,
+      cal: s.cal, dosis: s.dosis, peces: s.peces, ledOnFrac: c.fotoperiodo ? ledHours / c.fotoperiodo : 0, o2kg: s.o2kg,
+    });
+    days.push(day);
+  }
+  return { c, days, tot, firsts, s0, end: s, PF, molAir, V, ledKW, algKW, pvKWp, kcalHum, kcalPerros, o2Met, co2Met, scen: sc };
+}
+
+// Necesidades de diseño para 3 años: lo que habría que guardar o producir
+function necesidades(c) {
+  const r = simular(Object.assign({}, c, { dias: 1 }));
+  const kcalPerros = r.kcalPerros;
+  return {
+    comidaKg: c.kcalPersona * c.personas * c.dias / 3500, croquetasKg: kcalPerros * c.dias / 3500,
+    aguaSinReciclar: (c.aguaPersona * c.personas + c.aguaPerro * c.perros) * c.dias,
+    o2kgDia: r.o2Met * 24 * 0.032, co2kgDia: r.co2Met * 24 * 0.044,
+    calSodadaSellado: r.co2Met * 24 * 0.044 / 0.5,
+    ventPara1000ppm: r.co2Met * R_GAS * T_REF / (P_ALT * 1000) / 0.00058,   // m3/h
+    areaO2: r.o2Met * 24 * 32 / O2_PER_G_BIOMASS / (c.aeroPPFD * 3600e-6 * c.fotoperiodo * CROPS.papa.lueTot),
+    areaComida: c.kcalPersona * c.personas / (c.aeroPPFD * 3600e-6 * c.fotoperiodo * CROPS.papa.lueEd * CROPS.papa.kcal),
+  };
+}
+
+</script>
+<script>
+// ---------- Interfaz ----------
+const $ = (id) => document.getElementById(id);
+const NUM = ['tasaH1', 'dias', 'tierra', 'concreto', 'vueltas', 'area', 'personas', 'perros', 'pesoPerro', 'kcalPersona', 'vent', 'sellarDias', 'calSodada', 'o2kg',
+  'hidroArea', 'aeroArea', 'aeroPPFD', 'algasL', 'acuarioL', 'paneles', 'bateriaKWh', 'combustibleL', 'aguaL', 'aguaPersona', 'techo', 'reciclaGris', 'comidaDias', 'croquetasKg'];
+const SEL = ['escenario', 'hidroCultivo', 'aeroCultivo', 'combustible'];
+const fmtN = (v, d = 0) => Number(v).toLocaleString('es-MX', { maximumFractionDigits: d, minimumFractionDigits: d });
+const UNITS = {
+  tasaH1: (v) => `${fmtN(Math.pow(10, v), 0)} R/h`, dias: (v) => `${v} días (${(v / 365).toFixed(1)} años)`, tierra: (v) => `${v} m`, concreto: (v) => `${Math.round(v * 100)} cm`,
+  vueltas: (v) => ['recta', '1 vuelta', '2 vueltas', '3 vueltas'][v], area: (v) => `${v} m²`, personas: (v) => v, perros: (v) => v, pesoPerro: (v) => `${v} kg`,
+  kcalPersona: (v) => `${fmtN(v)} kcal/día`, vent: (v) => `${v} m³/h`, sellarDias: (v) => `${v} días`, calSodada: (v) => `${v} kg`, o2kg: (v) => `${v} kg`,
+  hidroArea: (v) => `${v} m²`, aeroArea: (v) => `${v} m²`, aeroPPFD: (v) => `${v} µmol/m²·s`, algasL: (v) => `${fmtN(v)} L`, acuarioL: (v) => `${fmtN(v)} L`,
+  paneles: (v) => `${v} (${(v * 0.55).toFixed(1)} kWp)`, bateriaKWh: (v) => `${(+v).toFixed(1)} kWh`, combustibleL: (v) => `${fmtN(v)} L`, aguaL: (v) => `${fmtN(v)} L`,
+  aguaPersona: (v) => `${v} L`, techo: (v) => `${v} m²`, reciclaGris: (v) => `${Math.round(v * 100)} %`, comidaDias: (v) => `${v} días`, croquetasKg: (v) => `${fmtN(v)} kg`,
+};
+const PRESETS = {
+  base: {},
+  sellado: { sellarDias: 14, calSodada: 200 },
+  regional: { escenario: '5Tg', tasaH1: 1 },
+  granja: { hidroArea: 40, aeroArea: 60, paneles: 60, bateriaKWh: 61.44, algasL: 1000, acuarioL: 2000, comidaDias: 600 },
+  minimo: { hidroArea: 0, aeroArea: 0, algasL: 0, acuarioL: 0, paneles: 8, comidaDias: 1100, croquetasKg: 1300 },
+};
+const DEFAULTS = {};
+let cfg, res, day = 0, running = false, clock = 0;
+
+function readCfg() {
+  const o = {};
+  for (const k of NUM) o[k] = parseFloat($(k).value);
+  for (const k of SEL) o[k] = $(k).value;
+  o.tasaH1 = Math.pow(10, o.tasaH1);
+  o.peces = o.acuarioL / 1000 * 20;
+  o.alimentoPeces = o.peces * 10;
+  return config(o);
+}
+function refreshOutputs() { for (const k of NUM) $('o-' + k).value = UNITS[k]($(k).value); $('o-day').value = `día ${day}`; }
+function recompute() {
+  cfg = readCfg();
+  res = simular(cfg);
+  res.need = necesidades(cfg);
+  $('day').max = cfg.dias - 1;
+  day = Math.min(day, cfg.dias - 1);
+  renderStatic();
+}
+function phaseOf(d) {
+  const x = res.days[d];
+  if (d === 0) return ['Detonación y lluvia radiactiva', 'crit'];
+  if (x.rateOut > cfg.umbralSalida) return ['Encierro: radiación alta afuera', 'warn'];
+  if (x.f > 0.5) return ['Invierno nuclear: cielo oscuro', 'on'];
+  if (x.f > 0.2) return ['Invierno nuclear: se aclara despacio', 'on'];
+  return ['Recuperación', 'ok'];
+}
+document.querySelectorAll('aside input, aside select').forEach((el) => el.addEventListener('input', () => { refreshOutputs(); recompute(); }));
+document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
+  for (const k in DEFAULTS) $(k).value = DEFAULTS[k];
+  const p = PRESETS[b.dataset.preset];
+  for (const k in p) $(k).value = p[k];   // tasaH1 va en escala logarítmica (1 = 10 R/h)
+  refreshOutputs(); recompute(); day = 0; running = true; setRun();
+}));
+$('day').addEventListener('input', () => { day = +$('day').value; running = false; setRun(); refreshOutputs(); });
+$('btn-run').addEventListener('click', () => { if (day >= cfg.dias - 1) day = 0; running = !running; setRun(); });
+$('btn-reset').addEventListener('click', () => { day = 0; running = false; setRun(); refreshOutputs(); });
+function setRun() { $('btn-run').textContent = running ? '❚❚ Pausar' : '▶ Reproducir'; }
+
+// ---------- Colores ----------
+let C = {};
+const TOK = ['bg', 'panel', 'panel2', 'line', 'fg', 'muted', 'oil', 'heat', 'cool', 'steel', 'pipe', 'water', 'fuel', 'o2', 'co2', 'plant', 'food', 'energy', 'rad', 'soil', 'concrete', 'sky', 'ok', 'warn', 'crit'];
+function readTheme() { const cs = getComputedStyle(document.documentElement); TOK.forEach((k) => { C[k] = cs.getPropertyValue('--' + k).trim(); }); }
+readTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTheme);
+new MutationObserver(readTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; }
+function mix(a, b, t) { const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16); const ch = (s) => Math.round(((pa >> s) & 255) * (1 - t) + ((pb >> s) & 255) * t); return `rgb(${ch(16)},${ch(8)},${ch(0)})`; }
+function setupCanvas(cv) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), r = cv.getBoundingClientRect();
+  const w = Math.max(10, r.width), h = Math.max(10, r.height);
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return { ctx, w, h };
+}
+
+// ---------- Escena ----------
+const parts = [];
+function drawScene(dt) {
+  const { ctx, w, h } = setupCanvas($('scene'));
+  ctx.save(); ctx.scale(w / 1000, h / 660); ctx.clearRect(0, 0, 1000, 660);
+  const x = res.days[day], c = cfg;
+  const rr = (X, Y, W, H, r) => { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(X, Y, W, H, r) : ctx.rect(X, Y, W, H); };
+  const lab = (s, X, Y, col = C.muted, al = 'left', sz = 11, wt = 500) => { ctx.fillStyle = col; ctx.font = `${wt} ${sz}px "IBM Plex Mono", monospace`; ctx.textAlign = al; ctx.fillText(s, X, Y); };
+  const ttl = (s, X, Y, col = C.fg) => { ctx.fillStyle = col; ctx.font = '600 14px "Saira Condensed", sans-serif'; ctx.textAlign = 'left'; ctx.fillText(s.toUpperCase(), X, Y); };
+  const bar = (X, Y, W, H, f, col, label) => {
+    ctx.fillStyle = C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 1.5; rr(X, Y, W, H, 4); ctx.fill(); ctx.stroke();
+    const ff = clamp(f, 0, 1); ctx.fillStyle = col; ctx.fillRect(X + 2, Y + H - 2 - (H - 4) * ff, W - 4, (H - 4) * ff);
+    if (label) lab(label, X + W / 2, Y + H + 12, C.muted, 'center', 10);
+  };
+  const live = running ? dt : 0;
+
+  // cielo: se oscurece con el hollín; lluvia radiactiva los primeros días
+  const skyCol = mix(C.sky, '#3a3632', 1 - x.luz);
+  const g = ctx.createLinearGradient(0, 0, 0, 150); g.addColorStop(0, skyCol); g.addColorStop(1, mix(skyCol, C.bg, 0.4));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 1000, 150);
+  ctx.fillStyle = `rgba(255,236,170,${0.25 + 0.6 * x.luz})`; ctx.beginPath(); ctx.arc(120, 50, 22, 0, 6.283); ctx.fill();
+  const fall = clamp(Math.log10(1 + x.rateOut) / 3, 0, 1), snow = x.Tout < 5 ? (5 - x.Tout) / 10 : 0;
+  if (running) {
+    for (let k = 0; k < Math.floor(6 * fall + Math.random()); k++) parts.push({ t: 'fall', x: Math.random() * 1000, y: 0, v: 40 + Math.random() * 30 });
+    for (let k = 0; k < Math.floor(4 * snow + Math.random()); k++) parts.push({ t: 'snow', x: Math.random() * 1000, y: 0, v: 15 + Math.random() * 10 });
+    if (x.lluvia > 5) for (let k = 0; k < Math.min(8, x.lluvia / 30); k++) parts.push({ t: 'rain', x: 40 + Math.random() * 250, y: 0, v: 160 });
+  }
+  lab(`afuera ${x.Tout.toFixed(1)} °C · sol ${(100 * x.luz).toFixed(0)} %`, 990, 20, '#ffffff', 'right', 12, 600);
+  lab(`radiación ${x.rateOut >= 0.01 ? fmtN(x.rateOut, x.rateOut < 1 ? 2 : 0) : '<0.01'} R/h`, 990, 38, x.rateOut > c.umbralSalida ? '#ffb39c' : '#ffffff', 'right', 12, 600);
+
+  // superficie
+  ctx.fillStyle = mix('#6b5a43', '#d9d6d0', snow); ctx.fillRect(0, 150, 1000, 8);
+  // techo para lluvia
+  ctx.fillStyle = C.steel; ctx.fillRect(40, 118, 250, 6); lab(`techo ${c.techo} m²`, 165, 112, '#ffffff', 'center', 11);
+  ctx.strokeStyle = C.water; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(290, 124); ctx.lineTo(300, 124); ctx.lineTo(300, 158); ctx.stroke();
+  // toma de aire con filtro
+  ctx.fillStyle = C.steel; ctx.fillRect(345, 110, 18, 48); ctx.fillRect(338, 104, 32, 8); lab('toma de aire', 354, 98, '#ffffff', 'center', 10);
+  ctx.fillRect(400, 120, 14, 38); lab('escape', 407, 114, '#ffffff', 'center', 10);
+  // paneles solares
+  const np = Math.min(c.paneles, 24);
+  for (let k = 0; k < np; k++) {
+    const px = 600 + (k % 12) * 32, py = 112 + Math.floor(k / 12) * 20;
+    ctx.fillStyle = mix('#1c2a44', '#4f78c4', x.luz * 0.8); ctx.save(); ctx.translate(px, py); ctx.transform(1, 0, -0.35, 1, 0, 0); ctx.fillRect(0, 0, 28, 16); ctx.restore();
+  }
+  if (c.paneles) lab(`${c.paneles} paneles · ${fmtN(x.pv, 1)} kWh hoy`, 790, 104, '#ffffff', 'center', 11, 600);
+  // entrada con vueltas
+  ctx.strokeStyle = C.concrete; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(470, 150); ctx.lineTo(470, 200);
+  if (c.vueltas >= 1) { ctx.lineTo(520, 200); ctx.lineTo(520, 235); } else ctx.lineTo(470, 235);
+  ctx.stroke(); lab('entrada', 482, 170, C.muted, 'left', 10);
+
+  // tierra y concreto
+  const soilH = 18 + 40 * c.tierra;
+  ctx.fillStyle = C.soil; ctx.fillRect(0, 158, 1000, 200 - 158 + soilH - 40);
+  const roofY = 158 + soilH, slab = 6 + c.concreto * 40;
+  ctx.fillStyle = C.concrete; ctx.fillRect(0, roofY, 1000, slab);
+  lab(`${c.tierra} m de tierra + ${Math.round(c.concreto * 100)} cm de concreto · protección ×${fmtN(res.PF)}`, 10, roofY - 6, '#e9dcc8', 'left', 11);
+  const top = roofY + slab, bot = 640;
+  ctx.fillStyle = C.panel; ctx.fillRect(0, top, 1000, bot - top);
+  ctx.fillStyle = C.concrete; ctx.fillRect(0, bot, 1000, 20); ctx.fillRect(0, top, 6, bot - top); ctx.fillRect(994, top, 6, bot - top);
+  const walls = [300, 600, 790];
+  walls.forEach((wx) => ctx.fillRect(wx, top, 6, bot - top - 60));
+  const iy = top + 22;
+
+  // 1 · dormitorio
+  ttl('Dormitorio y estancia', 16, iy);
+  lab(`${x.T.toFixed(1)} °C dentro`, 16, iy + 18, x.T > 28 ? C.crit : x.T < 14 ? C.cool : C.fg, 'left', 12, 600);
+  lab(`O₂ ${(100 * x.o2).toFixed(2)} % · CO₂ ${fmtN(x.co2max * 1e6)} ppm`, 16, iy + 34, x.co2max > 0.005 ? C.crit : x.co2max > 0.002 ? C.warn : C.o2, 'left', 11);
+  for (let k = 0; k < c.personas; k++) {
+    const px = 40 + (k % 5) * 50, py = bot - 90 - Math.floor(k / 5) * 50 + Math.sin(clock * 2 + k) * (running ? 2 : 0);
+    ctx.fillStyle = C.fg; ctx.beginPath(); ctx.arc(px, py - 26, 8, 0, 6.283); ctx.fill(); rr(px - 9, py - 16, 18, 30, 6); ctx.fill();
+    if (running && Math.random() < 0.05) parts.push({ t: 'co2', x: px, y: py - 30, v: -20 });
+  }
+  for (let k = 0; k < c.perros; k++) {
+    const px = 50 + k * 60, py = bot - 22;
+    ctx.fillStyle = C.food; rr(px - 14, py - 10, 28, 12, 5); ctx.fill(); ctx.beginPath(); ctx.arc(px + 15, py - 12, 6, 0, 6.283); ctx.fill();
+  }
+  // 2 · cultivo
+  ttl('Cuarto de cultivo', 316, iy);
+  const led = x.ledOnFrac;
+  ctx.fillStyle = `rgba(214,120,255,${0.08 + 0.25 * led})`; ctx.fillRect(306, top, 294, bot - top - 60);
+  ctx.fillStyle = `rgba(230,160,255,${0.3 + 0.7 * led})`; for (let k = 0; k < 3; k++) ctx.fillRect(316 + k * 95, iy + 26, 80, 4);
+  lab(`luz para plantas ${Math.round(100 * led)} %`, 316, iy + 18, led < 0.5 ? C.warn : C.plant, 'left', 11);
+  // hidroponía NFT
+  const grow = Math.min(1, (day % 30) / 30 + 0.2);
+  for (let k = 0; k < 3; k++) {
+    const ty = iy + 60 + k * 34;
+    ctx.fillStyle = C.steel; ctx.fillRect(316, ty, 120, 6);
+    for (let j = 0; j < 6 && c.hidroArea > 0; j++) { ctx.fillStyle = C.plant; ctx.beginPath(); ctx.arc(326 + j * 20, ty - 4, 4 + 5 * grow * led, 0, 6.283); ctx.fill(); }
+  }
+  lab(`hidroponía ${c.hidroArea} m²`, 316, iy + 170, C.muted, 'left', 10);
+  // aeroponía en torres
+  for (let k = 0; k < 3; k++) {
+    const tx = 460 + k * 26; ctx.fillStyle = C.steel; ctx.fillRect(tx, iy + 46, 10, 120);
+    for (let j = 0; j < 5 && c.aeroArea > 0; j++) { ctx.fillStyle = C.plant; ctx.beginPath(); ctx.arc(tx + (j % 2 ? 12 : -2), iy + 56 + j * 24, 3 + 4 * led, 0, 6.283); ctx.fill(); }
+  }
+  lab(`aeroponía ${c.aeroArea} m²`, 455, iy + 182, C.muted, 'left', 10);
+  // algas
+  for (let k = 0; k < 4 && c.algasL > 0; k++) {
+    const ax = 545 + k * 12; ctx.fillStyle = mix('#2c5f2a', '#7ad34e', led); rr(ax, iy + 40, 8, 120, 4); ctx.fill();
+    if (running && led > 0 && Math.random() < 0.3) parts.push({ t: 'o2b', x: ax + 4, y: iy + 160, v: -30, stop: iy + 40 });
+  }
+  lab(`algas ${fmtN(c.algasL)} L`, 545, iy + 196, C.muted, 'left', 10);
+  // pecera
+  const aqY = bot - 110;
+  if (c.acuarioL > 0) {
+    ctx.fillStyle = rgba(C.water, 0.35); ctx.strokeStyle = C.water; ctx.lineWidth = 2; rr(316, aqY, 270, 60, 6); ctx.fill(); ctx.stroke();
+    const nf = Math.min(8, Math.max(1, Math.round(x.peces / 2)));
+    for (let k = 0; k < nf; k++) { const fx = 330 + ((clock * 30 + k * 37) % 240), fy = aqY + 15 + (k % 3) * 14; ctx.fillStyle = C.food; ctx.beginPath(); ctx.ellipse(fx, fy, 7, 4, 0, 0, 6.283); ctx.fill(); }
+    lab(`pecera ${fmtN(c.acuarioL)} L · ${x.peces.toFixed(1)} kg de tilapia`, 316, aqY + 76, C.muted, 'left', 10);
+  }
+  const o2bio = (x.o2Plant + x.o2Alg - x.o2Fish) / x.o2Met;
+  lab(`O₂ de este cuarto: ${(100 * o2bio).toFixed(1)} % de lo que se respira`, 316, aqY - 10, o2bio > 0.2 ? C.plant : C.warn, 'left', 11, 600);
+  // 3 · almacén
+  ttl('Almacén', 616, iy);
+  const fFood = res.days[0].comida > 0 ? x.comida / res.days[0].comida : 0;
+  for (let k = 0; k < 24; k++) {
+    const sx = 616 + (k % 6) * 27, sy = iy + 30 + Math.floor(k / 6) * 24;
+    ctx.fillStyle = k / 24 < fFood ? C.food : C.panel2; ctx.strokeStyle = C.steel; ctx.lineWidth = 1; rr(sx, sy, 22, 18, 4); ctx.fill(); ctx.stroke();
+  }
+  lab(`comida ${fmtN(x.comida)} días`, 616, iy + 140, x.comida < 60 ? C.crit : C.food, 'left', 11, 600);
+  lab(`croquetas ${fmtN(x.croq)} días`, 616, iy + 156, x.croq < 60 ? C.crit : C.food, 'left', 11);
+  // cisternas
+  const nTanks = Math.max(1, Math.ceil(c.aguaL / 10000)), tw = Math.min(50, 160 / nTanks - 6);
+  for (let k = 0; k < nTanks; k++) bar(616 + k * (tw + 6), bot - 130, tw, 70, x.agua / c.aguaL, rgba(C.water, 0.85));
+  lab(`agua ${fmtN(x.agua)} L`, 616, bot - 40, x.agua < 2000 ? C.crit : C.water, 'left', 11, 600);
+  if (x.lluvia > 1) lab(`+${fmtN(x.lluvia)} L de lluvia hoy`, 616, bot - 25, C.water, 'left', 10);
+  // 4 · cuarto de máquinas
+  ttl('Máquinas', 806, iy);
+  const nb = Math.max(1, Math.round(c.bateriaKWh / 5.12));
+  for (let k = 0; k < Math.min(nb, 6); k++) bar(806 + k * 30, iy + 30, 24, 60, x.soc, rgba(C.energy, 0.85));
+  lab(`baterías ${Math.round(100 * x.soc)} %`, 806, iy + 108, C.energy, 'left', 11, 600);
+  // generador
+  const genOn = x.gen > 0.01;
+  ctx.fillStyle = C.panel2; ctx.strokeStyle = genOn ? C.heat : C.steel; ctx.lineWidth = 2; rr(806, iy + 122, 70, 40, 6); ctx.fill(); ctx.stroke();
+  if (genOn) { ctx.strokeStyle = C.heat; ctx.beginPath(); const a = clock * 10; ctx.moveTo(841, iy + 142); ctx.lineTo(841 + 12 * Math.cos(a), iy + 142 + 12 * Math.sin(a)); ctx.stroke(); }
+  lab('generador', 841, iy + 176, genOn ? C.heat : C.muted, 'center', 10);
+  bar(890, iy + 122, 26, 40, c.combustibleL ? x.fuel / c.combustibleL : 0, rgba(C.fuel, 0.85));
+  lab(`${fmtN(x.fuel)} L`, 903, iy + 176, C.fuel, 'center', 10);
+  // ventilador y filtro
+  const vy = bot - 150;
+  ctx.strokeStyle = C.steel; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(830, vy, 18, 0, 6.283); ctx.stroke();
+  const va = running && day >= c.sellarDias ? clock * 12 : 0;
+  for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(830, vy); ctx.lineTo(830 + 15 * Math.cos(va + k * 2.09), vy + 15 * Math.sin(va + k * 2.09)); ctx.stroke(); }
+  ctx.fillStyle = C.panel2; ctx.fillRect(858, vy - 16, 40, 32); ctx.strokeRect(858, vy - 16, 40, 32); lab('HEPA', 878, vy + 4, C.muted, 'center', 10);
+  lab(day < c.sellarDias ? 'sellado' : `${c.vent} m³/h`, 806, vy + 34, day < c.sellarDias ? C.warn : C.o2, 'left', 11);
+  bar(918, vy - 20, 24, 40, c.calSodada ? x.cal / c.calSodada : 0, rgba(C.co2, 0.85));
+  lab('cal', 930, vy + 34, C.muted, 'center', 10);
+  // ducto de aire
+  ctx.strokeStyle = rgba(C.o2, 0.5); ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(354, 158); ctx.lineTo(354, top - 4); ctx.stroke();
+  if (running && day >= c.sellarDias && c.vent > 0 && Math.random() < 0.5) parts.push({ t: 'air', x: 354, y: 130, v: 60, stop: top + 20 });
+  if (running && x.lluvia > 5 && Math.random() < 0.5) parts.push({ t: 'water', x: 300, y: 126, v: 80, stop: top + 10 });
+
+  // partículas
+  for (let k = parts.length - 1; k >= 0; k--) {
+    const p = parts[k]; if (running) p.y += p.v * dt;
+    const dead = p.t === 'fall' || p.t === 'snow' || p.t === 'rain' ? p.y > 150 : p.v > 0 ? p.y > (p.stop || 640) : p.y < (p.stop !== undefined ? p.stop : top + 4);
+    if (dead) { parts.splice(k, 1); continue; }
+    if (p.t === 'snow') p.x += Math.sin(clock + k) * 0.5;
+    ctx.fillStyle = { fall: C.rad, snow: '#f2f2f2', rain: C.water, co2: rgba(C.co2, 0.8), o2b: C.o2, air: C.o2, water: C.water }[p.t];
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.t === 'fall' ? 2 : p.t === 'rain' ? 1.5 : 2.5, 0, 6.283); ctx.fill();
+  }
+  if (parts.length > 900) parts.splice(0, parts.length - 900);
+  // dosis
+  lab(`dosis acumulada dentro: ${x.dosis < 10 ? x.dosis.toFixed(2) : fmtN(x.dosis)} rem`, 990, roofY - 6, x.dosis > 100 ? '#ffb39c' : '#e9dcc8', 'right', 11, 600);
+  ctx.restore();
+}
+
+// ---------- Gráficas ----------
+function chart(id, series, opts) {
+  const { ctx, w, h } = setupCanvas($(id));
+  ctx.clearRect(0, 0, w, h);
+  const pad = { l: 46, r: 46, t: 10, b: 22 };
+  const n = res.days.length, X = (i) => pad.l + (w - pad.l - pad.r) * i / Math.max(1, n - 1);
+  ctx.font = '500 10.5px "IBM Plex Mono", monospace';
+  for (const side of ['L', 'R']) {
+    const ax = opts[side]; if (!ax) continue;
+    const Y = (v) => pad.t + (h - pad.t - pad.b) * (1 - (v - ax.min) / (ax.max - ax.min));
+    ax.Y = Y;
+    for (let k = 0; k <= 4; k++) {
+      const v = ax.min + (ax.max - ax.min) * k / 4, y = Y(v);
+      if (side === 'L') { ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke(); }
+      ctx.fillStyle = ax.col || C.muted; ctx.textAlign = side === 'L' ? 'right' : 'left'; ctx.fillText(ax.fmt(v), side === 'L' ? pad.l - 4 : w - pad.r + 4, y + 3);
+    }
+  }
+  ctx.fillStyle = C.muted; ctx.textAlign = 'center';
+  for (let yr = 0; yr * 365 < n; yr++) ctx.fillText(yr ? `año ${yr}` : 'día 0', X(yr * 365), h - 6);
+  for (const s of series) {
+    const ax = opts[s.side || 'L'];
+    if (s.dash) { ctx.setLineDash([4, 4]); }
+    ctx.strokeStyle = s.col; ctx.lineWidth = s.w || 2; ctx.beginPath();
+    for (let i = 0; i < n; i += Math.max(1, Math.floor(n / 600))) { const v = s.f(res.days[i], i); const y = ax.Y(clamp(v, ax.min, ax.max)); i ? ctx.lineTo(X(i), y) : ctx.moveTo(X(i), y); }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // cursor del día
+  ctx.strokeStyle = C.oil; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X(day), pad.t); ctx.lineTo(X(day), h - pad.b); ctx.stroke();
+  // leyenda
+  let lx = pad.l + 4;
+  ctx.textAlign = 'left';
+  for (const s of series) { if (!s.name) continue; ctx.fillStyle = s.col; ctx.fillRect(lx, pad.t + 4, 10, 3); ctx.fillText(s.name, lx + 14, pad.t + 9); lx += ctx.measureText(s.name).width + 28; }
+}
+function drawCharts() {
+  const maxCO2 = Math.max(6000, ...res.days.map((d) => d.co2max * 1e6));
+  chart('ch-air', [
+    { f: () => 5000, col: C.crit, dash: true, side: 'R', w: 1 },
+    { name: 'CO₂ máx', f: (d) => d.co2max * 1e6, col: C.co2, side: 'R' },
+    { name: 'O₂ %', f: (d) => d.o2 * 100, col: C.o2 },
+  ], { L: { min: 18, max: 21.5, fmt: (v) => v.toFixed(1) + '%', col: C.o2 }, R: { min: 0, max: Math.ceil(maxCO2 / 1000) * 1000, fmt: (v) => fmtN(v), col: C.co2 } });
+  chart('ch-sup', [
+    { name: 'agua (L)', f: (d) => d.agua, col: C.water },
+    { name: 'comida (días)', f: (d) => d.comida, col: C.food, side: 'R' },
+    { name: 'croquetas (días)', f: (d) => d.croq, col: C.fuel, side: 'R' },
+  ], { L: { min: 0, max: cfg.aguaL, fmt: (v) => fmtN(v / 1000) + 'k', col: C.water }, R: { min: 0, max: Math.max(100, cfg.comidaDias, res.days[0].croq), fmt: (v) => fmtN(v) + ' d', col: C.food } });
+  const maxE = Math.max(10, ...res.days.map((d) => d.pv + d.gen));
+  chart('ch-en', [
+    { name: 'sol', f: (d) => d.pv, col: C.energy },
+    { name: 'generador', f: (d) => d.gen, col: C.heat },
+    { name: 'luz cultivos %', f: (d) => 100 * d.ledOnFrac, col: C.plant, side: 'R' },
+  ], { L: { min: 0, max: Math.ceil(maxE / 10) * 10, fmt: (v) => fmtN(v) + ' kWh', col: C.energy }, R: { min: 0, max: 100, fmt: (v) => v + '%', col: C.plant } });
+  const maxDose = Math.max(1, res.days[res.days.length - 1].dosis);
+  chart('ch-out', [
+    { name: 'afuera °C', f: (d) => d.Tout, col: C.cool },
+    { name: 'dentro °C', f: (d) => d.T, col: C.heat },
+    { name: 'sol %', f: (d) => 100 * d.luz, col: C.energy, side: 'R' },
+    { name: 'dosis (rem)', f: (d) => 100 * d.dosis / maxDose, col: C.rad, side: 'R', dash: true },
+  ], { L: { min: -10, max: 35, fmt: (v) => v.toFixed(0) + '°', col: C.cool }, R: { min: 0, max: 100, fmt: (v) => v + '%', col: C.energy } });
+}
+
+// ---------- Paneles de texto ----------
+const LIMITS = { 'cal sodada': 'Se acaba la cal sodada', agua: 'Falta agua', comida: 'Se acaba la comida de las personas', croquetas: 'Se acaban las croquetas',
+  combustible: 'Se acaba el combustible del generador', 'combustible caducado': 'El combustible guardado caduca', 'CO₂ arriba de 5 000 ppm': 'CO₂ arriba de 5 000 ppm (límite de 8 h)',
+  'CO₂ peligroso (3 %)': 'CO₂ arriba de 3 %: peligroso', 'oxígeno bajo (19.5 %)': 'Oxígeno abajo de 19.5 %', 'frío dentro (< 12 °C)': 'Frío dentro (menos de 12 °C)',
+  'calor dentro (> 30 °C)': 'Calor dentro (más de 30 °C)', 'se apagan cargas vitales': 'No alcanza la energía para ventilar y lo básico',
+  'cultivos con menos de la mitad de luz': 'Los cultivos reciben menos de la mitad de su luz' };
+function renderStatic() {
+  const f = res.firsts, n = res.need, c = cfg;
+  const ev = Object.entries(f).sort((a, b) => a[1] - b[1]);
+  $('events').innerHTML = ev.length ? ev.map(([k, d]) => `<li><span>${LIMITS[k] || k}</span><span class="when">día ${d} · ${(d / 30.4).toFixed(1)} meses</span></li>`).join('')
+    : `<li><span>Nada se acaba en ${c.dias} días con este diseño</span><span class="when ok">✓</span></li>`;
+  const last = res.days[res.days.length - 1];
+  $('needs').innerHTML = [
+    ['Comida seca para las personas', `${fmtN(n.comidaKg)} kg (${fmtN(n.comidaKg / 25)} bultos de 25 kg)`],
+    ['Croquetas para los perros', `${fmtN(n.croquetasKg)} kg`],
+    ['Agua sin reciclar ni lluvia', `${fmtN(n.aguaSinReciclar)} L`],
+    ['O₂ que respiran al día / CO₂ que exhalan', `${n.o2kgDia.toFixed(1)} / ${n.co2kgDia.toFixed(1)} kg`],
+    ['Ventilación para CO₂ ≤ 1 000 ppm', `${fmtN(n.ventPara1000ppm)} m³/h`],
+    ['Cal sodada por día si se sella', `${n.calSodadaSellado.toFixed(1)} kg`],
+    ['Papa bajo LED para todo el O₂', `${fmtN(n.areaO2)} m²`],
+    ['Papa bajo LED para toda la comida', `${fmtN(n.areaComida)} m² y ${fmtN(n.areaComida * c.aeroPPFD / c.ledEff * c.fotoperiodo * 3600 / 3.6e6)} kWh/día de focos`],
+  ].map(([a, b]) => `<li><span>${a}</span><span class="when" style="color:var(--fg)">${b}</span></li>`).join('');
+  // hallazgos
+  const d400 = res.days[Math.min(400, res.days.length - 1)];
+  const bio = (d400.o2Plant + d400.o2Alg - d400.o2Fish) / d400.o2Met;
+  const prodFrac = res.tot.kcalProd / (res.kcalHum * c.dias);
+  const pvNorm = res.pvKWp * 6.5, pvMin = Math.min(...res.days.map((d) => d.pv));
+  $('findings').innerHTML = [
+    [`${(100 * bio).toFixed(0)} %`, 'del oxígeno lo dan plantas, algas y pecera', 'El resto lo da la ventilación con filtro. Los peces consumen oxígeno; las algas y las plantas lo producen.'],
+    [`${(100 * prodFrac).toFixed(0)} %`, 'de la comida se cultiva dentro', `Producir toda la comida necesitaría ${fmtN(n.areaComida)} m² de papa bajo LED. Lo demás tiene que estar guardado.`],
+    [`${fmtN(pvMin, 0)} kWh`, 'el peor día de sol', `Contra ${fmtN(pvNorm)} kWh de un día normal con estos paneles. El hollín apaga buena parte del sol por años.`],
+    [`${last.dosis < 10 ? last.dosis.toFixed(1) : fmtN(last.dosis)} rem`, 'de dosis dentro en todo el periodo', `Con protección ×${fmtN(res.PF)}. Afuera, sin protección, serían ${fmtN(res.end.dosisOut)} rem.`],
+  ].map(([big, t, p]) => `<div class="finding"><span class="big">${big}</span><strong>${t}</strong><p>${p}</p></div>`).join('');
+  // barra de fases
+  const cols = { crit: C.crit, warn: C.warn, on: C.oil, ok: C.ok };
+  let html = '', cur = null, start = 0;
+  for (let i = 0; i <= res.days.length; i++) {
+    const p = i < res.days.length ? phaseOf(i)[0] : null;
+    if (p !== cur) { if (cur) html += `<span title="${cur}" style="width:${100 * (i - start) / res.days.length}%;background:${cols[phaseOf(start)[1]]}"></span>`; cur = p; start = i; }
+  }
+  $('phases').innerHTML = html;
+  $('tl-legend').innerHTML = [['crit', 'detonación'], ['warn', 'encierro por radiación'], ['on', 'invierno nuclear'], ['ok', 'recuperación']].map(([k, n]) => `<span><i class="sw" style="background:${cols[k]}"></i>${n}</span>`).join('');
+  renderBuy();
+}
+function renderTiles() {
+  const x = res.days[day], [ph, cl] = phaseOf(day);
+  $('k-day').textContent = fmtN(day); $('k-phase').textContent = ph;
+  $('k-out').textContent = `${x.Tout.toFixed(0)} °C`; $('k-out-sub').textContent = `sol ${Math.round(100 * x.luz)} % · ${x.rateOut >= 0.01 ? fmtN(x.rateOut, x.rateOut < 1 ? 2 : 0) : '<0.01'} R/h`;
+  $('k-air').textContent = `${fmtN(x.co2max * 1e6)} ppm`; $('k-air').style.color = x.co2max > 0.005 ? C.crit : x.co2max > 0.002 ? C.warn : C.o2;
+  $('k-air-sub').textContent = `CO₂ máx · O₂ ${(100 * x.o2).toFixed(2)} % · ${x.T.toFixed(0)} °C`;
+  $('k-water').textContent = `${fmtN(x.agua / 1000, 1)} m³`; $('k-water-sub').textContent = `${fmtN(x.agua / ((cfg.aguaPersona * cfg.personas + cfg.aguaPerro * cfg.perros) || 1))} días sin lluvia`;
+  $('k-food').textContent = `${fmtN(x.comida)} d`; $('k-food-sub').textContent = `perros: ${fmtN(x.croq)} d · cultivado hoy ${fmtN(x.kcalProd)} kcal`;
+  $('k-energy').textContent = `${Math.round(100 * x.soc)} %`; $('k-energy-sub').textContent = `batería · sol ${fmtN(x.pv, 1)} kWh · gen ${fmtN(x.gen, 1)}`;
+  const pills = [[ph, cl]];
+  if (day < cfg.sellarDias) pills.push(['Sellado: sólo cal sodada y botellas', 'warn']);
+  if (x.co2max > 0.005) pills.push(['CO₂ alto', 'crit']);
+  if (x.T > 28) pills.push(['Calor dentro', 'warn']);
+  if (x.T < 14) pills.push(['Frío dentro', 'warn']);
+  if (x.comida <= 0) pills.push(['Sin comida guardada', 'crit']);
+  if (x.croq <= 0 && cfg.perros) pills.push(['Sin croquetas', 'crit']);
+  if (x.shedVital > 0.05) pills.push(['No alcanza la energía vital', 'crit']);
+  if (x.rateOut < cfg.umbralSalida && day >= cfg.salidaDia) pills.push(['Se puede salir un rato a limpiar paneles', 'ok']);
+  $('status').innerHTML = pills.map(([s, c]) => `<span class="pill ${c}">${s}</span>`).join('');
+  $('day').value = day; $('o-day').value = `día ${day}`;
+}
+
+// ---------- Presupuesto ----------
+const ML = 'https://listado.mercadolibre.com.mx/';
+function presupuesto() {
+  const c = cfg, n = res.need;
+  const kgFood = c.comidaDias * c.kcalPersona * c.personas;
+  const rice = kgFood * 0.6 / 3630, beans = kgFood * 0.4 / 3417;
+  const concrete = (2 * c.area + 4 * Math.sqrt(c.area) * c.altura) * c.concreto;
+  return [
+    { g: 'Obra (valores de ejemplo: pide cotización)' },
+    { n: 'Construcción del búnker', d: `${c.area} m² a $12,300/m² (costo medio en Guanajuato); un búnker enterrado e impermeabilizado cuesta más`, q: c.area, p: 12300, u: 'https://tandacasa.com/blog/costo-construccion-por-metro-cuadrado-estado-mexico-2026', s: 'Referencia' },
+    { n: 'Concreto premezclado (sólo el material)', d: `${fmtN(concrete)} m³ de losa y muros; ya incluido arriba, sirve para revisar`, q: 0, p: 2750, u: 'https://teseodata.com/blog/reportes-sectoriales/precios-concreto-premezclado-por-region-mexico-2026', s: 'Referencia' },
+    { n: 'Excavación, impermeabilización y relleno', d: 'Sin precio: cotiza con una constructora de Celaya', q: 1, p: null, u: ML + 'impermeabilizante-cimentacion', s: 'Cotizar' },
+    { g: 'Aire' },
+    { n: 'Extractor centrífugo Soler & Palau CEB-1200', d: 'Ventilación filtrada', q: 2, p: 7350, u: ML + 'extractor-centrifugo', s: 'Mercado Libre' },
+    { n: 'Filtros HEPA H13 de repuesto (paquete de 2)', d: 'Para retener el polvo radiactivo; uno al año', q: Math.ceil(c.dias / 365) + 1, p: 2128, u: 'https://www.amazon.com.mx/HEPA-H13-purificadores-APH260-APH320/dp/B089K82T7Z', s: 'Amazon MX' },
+    { n: 'Filtro NBC para refugio (tipo suizo)', d: 'Sin precio en México: cotiza con un proveedor de refugios', q: 1, p: null, u: 'https://bombsheltersupply.com/products/swiss-nbc-air-filtration-system', s: 'Proveedor' },
+    { n: 'Cal sodada, bidón de 5 L (≈ 4.5 kg)', d: 'Respaldo para periodos sellados', q: Math.ceil(c.calSodada / 4.5), p: 1069, u: 'https://sistemedica.com/products/cal-sodada-para-anestesia', s: 'Sistemedica' },
+    { n: 'Medidor de CO₂ con sensor NDIR', d: '', q: 2, p: 3748, u: ML + 'medidor-de-co2', s: 'Mercado Libre' },
+    { g: 'Radiación' },
+    { n: 'Contador Geiger portátil', d: 'Para saber cuándo se puede salir', q: 2, p: 1185, u: ML + 'contador-geiger', s: 'Mercado Libre' },
+    { g: 'Energía' },
+    { n: 'Panel solar 550 W monocristalino', d: '', q: c.paneles, p: 2590, u: ML + 'paneles-solares-550w', s: 'Mercado Libre' },
+    { n: 'Batería LiFePO4 48 V, 5.12 kWh', d: '', q: Math.round(c.bateriaKWh / 5.12), p: 22000, u: ML + 'bateria-lifepo4-48v-100ah', s: 'Mercado Libre' },
+    { n: 'Inversor híbrido 5 kW 48 V con MPPT (PowMr)', d: 'Uno por cada ~10 paneles', q: Math.max(1, Math.ceil(c.paneles / 10)), p: 12390, u: 'https://www.mercadolibre.com.mx/powmr-5-kw-inversor-solar-hibrido-carga-80a-mppt-maximo-soporte-fv-5500w-500voc-22a-minimo-arranque-fv-120voc-soporta-baterias-48v-para-salida-110vac/p/MLM35852798', s: 'Mercado Libre' },
+    { n: 'Generador 10 kW gasolina / gas LP / gas natural', d: 'Afuera o con escape sellado: el CO mata', q: 1, p: 21995, u: ML + 'generador-electrico-de-gas-lp', s: 'Mercado Libre' },
+    { n: 'Tanque estacionario de gas LP 300 L (usado)', d: 'Se llenan al 80 %', q: c.combustible === 'gaslp' ? Math.ceil(c.combustibleL / 240) : 0, p: 2999, u: ML + 'tanque-gas-20-kg-usado-puebla', s: 'Mercado Libre' },
+    { g: 'Agua' },
+    { n: 'Cisterna Rotoplas 10,000 L', d: '', q: Math.ceil(c.aguaL / 10000), p: 44999, u: ML + 'cisterna-rotoplas-10000-litros', s: 'Mercado Libre' },
+    { n: 'Esterilizador UV 12 GPM', d: 'Para lluvia y agua recuperada', q: 1, p: 1704, u: 'https://www.amazon.com.mx/ultravioleta-purificador-esterilizador-purificaci%C3%B3n-HQUA-UV-12/dp/B0714HSSNH', s: 'Amazon MX' },
+    { n: 'Deshumidificador grande', d: 'Recupera el vapor de gente y plantas; sin precio de uno de 50 L/día', q: 1, p: null, u: ML + 'deshumidificador', s: 'Cotizar' },
+    { g: 'Cultivo' },
+    { n: 'Lámpara LED de cultivo 600 W espectro completo', d: `${(res.ledKW).toFixed(1)} kW de focos en total`, q: Math.ceil(res.ledKW / 0.6), p: 3688, u: ML + 'lamparas-para-cultivo-de-hidroponia', s: 'Mercado Libre' },
+    { n: 'Sistema hidropónico NFT', d: '≈ 2 m² por equipo', q: Math.ceil(c.hidroArea / 2), p: 11947, u: 'https://www.amazon.com.mx/hydroponics-growing-system/s?k=hydroponics+growing+system&page=2', s: 'Amazon MX' },
+    { n: 'Torre aeropónica de 14 niveles', d: '≈ 0.5 m² por torre', q: Math.ceil(c.aeroArea / 0.5), p: 3715, u: 'https://www.amazon.com.mx/hidrop%C3%B3nico-Vertical-Automatizar-aeropon%C3%ADa-Interior/dp/B0D925KZG9', s: 'Amazon MX' },
+    { n: 'Pecera, fotobiorreactor de algas y alevines', d: 'Sin precio: se arman con tanques y bombas de acuario', q: 1, p: null, u: ML + 'acuario-grande', s: 'Cotizar' },
+    { g: 'Comida' },
+    { n: 'Arroz, bulto de 25 kg', d: '60 % de las calorías guardadas', q: Math.ceil(rice / 25), p: 857, u: ML + 'arroz-25-kg', s: 'Mercado Libre' },
+    { n: 'Frijol pinto, bulto de 25 kg', d: '40 % de las calorías guardadas; agrega aceite, sal, avena y vitaminas', q: Math.ceil(beans / 25), p: 1185, u: ML + 'bulto-de-frijol-pinto', s: 'Mercado Libre' },
+    { n: 'Croquetas para perro, 20 kg', d: '', q: Math.ceil(c.croquetasKg / 20), p: 669, u: ML + 'croquetas-20-kg', s: 'Mercado Libre' },
+  ];
+}
+let eqQty = {};
+function renderBuy() {
+  const list = presupuesto();
+  let tot = 0;
+  $('buy-body').innerHTML = list.map((it, k) => {
+    if (it.g) return `<tr><td colspan="5" class="stage">${it.g}</td></tr>`;
+    const q = eqQty[it.n] != null ? eqQty[it.n] : it.q; const sub = it.p == null ? null : q * it.p; if (sub) tot += sub;
+    return `<tr><td><div class="bn">${it.n}</div>${it.d ? `<div class="bd">${it.d}</div>` : ''}</td><td class="num"><input class="qty" type="number" min="0" step="1" data-n="${it.n}" id="eq-${k}" value="${q}" aria-label="Cantidad de ${it.n}"></td><td class="num">${it.p == null ? '—' : '$' + fmtN(it.p)}</td><td class="num">${sub == null ? 'cotizar' : '$' + fmtN(sub)}</td><td><a href="${it.u}" target="_blank" rel="noopener">${it.s}</a></td></tr>`;
+  }).join('');
+  $('buy-total').textContent = '$' + fmtN(tot) + ' MXN';
+  document.querySelectorAll('#buy-body input.qty').forEach((el) => el.addEventListener('change', () => { eqQty[el.dataset.n] = Math.max(0, parseFloat(el.value) || 0); renderBuy(); }));
+}
+
+// ---------- Lazo ----------
+let last = performance.now(), acc = 0;
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; clock += dt;
+  if (running) { acc += dt * parseFloat($('speed').value); while (acc >= 1) { acc -= 1; day++; } if (day >= cfg.dias - 1) { day = cfg.dias - 1; running = false; setRun(); } }
+  renderTiles(); drawScene(dt); drawCharts();
+  requestAnimationFrame(frame);
+}
+for (const k of [...NUM, ...SEL]) DEFAULTS[k] = $(k).value;
+refreshOutputs(); recompute(); setRun();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
