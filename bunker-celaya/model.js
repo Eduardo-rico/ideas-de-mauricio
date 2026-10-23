@@ -39,6 +39,11 @@ const CROPS = {
 };
 const O2_PER_G_BIOMASS = 32 / 30;   // CH2O: 1 g de biomasa libera 1.07 g de O2
 const CO2_PER_G_BIOMASS = 44 / 30;
+// Algas: espirulina (comestible, 30–35 °C, pH 9.5–11 con ~16 g/L de bicarbonato) o chlorella (25–30 °C, pH neutro)
+const ALGAS = {
+  espirulina: { name: 'Espirulina', tOpt: 32, tMin: 20, kcal: 2.9, prot: 0.6, enPecera: false },
+  chlorella:  { name: 'Chlorella', tOpt: 28, tMin: 15, kcal: 3.0, prot: 0.5, enPecera: true },
+};
 const TRANSP_L_PER_G = 0.25;        // agua transpirada por g de biomasa seca (≈ 4 g/kg de eficiencia)
 
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
@@ -53,12 +58,13 @@ function config(o = {}) {
     o2kg: 0, // oxígeno embotellado de reserva
     hidroArea: 10, hidroCultivo: 'lechuga', hidroPPFD: 250,
     aeroArea: 10, aeroCultivo: 'papa', aeroPPFD: 400, fotoperiodo: 16, ledEff: 2.7,
-    algasL: 200, algasProd: 0.5, algasW: 1.0, algasEnPecera: false, algasNoche: 0.25,
+    algasL: 200, algasProd: 0.5, algasW: 1.0, algasEnPecera: false, algasNoche: 0.25, alga: 'espirulina', espirulinaG: 5, calentarAlgas: true,
     acuarioL: 500, peces: 10, alimentoPeces: 300, calentarPecera: true, tPecera: 28, salPecera: 2,
     panelW: 550, paneles: 20, bateriaKWh: 20.5, generadorKW: 7, combustible: 'gaslp', combustibleL: 600,
     cargaBase: 0.25, tSet: 17, calefKW: 3,
     aguaL: 20000, aguaPersona: 15, aguaPerro: 1.0, reciclaGris: 0.5, deshum: 0.8, deshumKWhL: 0.55, techo: 100, lluviaDia: 30,
     comidaDias: 900, croquetasKg: 1500,
+    duchasSemana: 3.5, duchaMin: 3, regaderaLmin: 6, tDucha: 38, lombricomposta: true,
     salidaDia: 30, salidaH: 0.5, umbralSalida: 0.5,
   }, o);
 }
@@ -97,7 +103,7 @@ function simular(cin) {
   };
   const s0 = { soc: s.soc, agua: s.agua, o2: s.o2, co2: s.co2, co2aq: s.co2aq };
   const days = [];
-  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0, pescadoKg: 0 };
+  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0, pescadoKg: 0, algasComidaKg: 0, algasPecesKg: 0, lombrizKg: 0 };
   const firsts = {};
   const mark = (k, d) => { if (firsts[k] === undefined) firsts[k] = d; };
   const ventQ = c.vent * 1000; // L/h
@@ -117,8 +123,8 @@ function simular(cin) {
     const luz = 1 - sc.light * f;
     const lluviaFac = 1 - sc.rain * fT / 0.8;
     const day = { d, f, fT, Tout, Tmin, luz, rainFac: lluviaFac, o2min: 1, co2max: 0, o2: 0, co2: 0, T: 0, pv: 0, gen: 0, shed: 0, kcalProd: 0,
-      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0, co2Aq: 0, Taq: 0, vitC: 0,
-      w: { lluvia: 0, condensado: 0, grises: 0, beber: 0, cocina: 0, higiene: 0, perros: 0, plantas: 0, pecera: 0, vaporPerdido: 0, negras: 0 } };
+      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0, co2Aq: 0, Taq: 0, vitC: 0, algasG: 0, algasComidaG: 0, duchaFrac: 0, residuosG: 0,
+      w: { recambio: 0, lluvia: 0, condensado: 0, grises: 0, beber: 0, cocina: 0, higiene: 0, perros: 0, plantas: 0, pecera: 0, vaporPerdido: 0, negras: 0 } };
     const sealed = d < c.sellarDias;
     s.Tg += ((18.3 - sc.dT * fT / 0.8) - s.Tg) / 365;   // la tierra alrededor se enfría despacio
     let ledHours = 0;
@@ -142,8 +148,15 @@ function simular(cin) {
       // pecera: pierde ~20 W/K por cada 500 L (con tapa y aislamiento lateral); la tilapia muere abajo de ~11 °C
       const UAaq = c.acuarioL > 0 ? 0.020 * Math.pow(c.acuarioL / 500, 2 / 3) : 0;
       const aqKW = c.calentarPecera ? Math.max(0, UAaq * (c.tPecera - s.T)) : 0;
-      const vital = [['vent', ventKW], ['base', c.cargaBase], ['calef', s.T < c.tSet ? c.calefKW : 0], ['pecera', aqKW]];
-      const extra = [['deshum', s.lastRecov * c.deshumKWhL], ['algas', lights ? algKW : 0], ['led', lights ? ledKW : 0]];
+      const aire = c.acuarioL > 0 ? 0.03 * c.acuarioL / 500 : 0;          // aireador: sin él los peces se asfixian en horas
+      const vital = [['vent', ventKW], ['base', c.cargaBase], ['calef', s.T < c.tSet ? c.calefKW : 0], ['pecera', aqKW + aire]];
+      const al = ALGAS[c.alga];
+      const UAalg = c.algasL > 0 && !c.algasEnPecera ? 0.020 * Math.pow(c.algasL / 500, 2 / 3) : 0;
+      const algHeatKW = c.calentarAlgas && UAalg ? Math.max(0, UAalg * (al.tOpt - s.T)) : 0;
+      // regadera: agua de la cisterna (a la temperatura del cuarto) calentada a 38 °C, repartida en el día
+      const duchaL = c.duchasSemana / 7 * c.duchaMin * c.regaderaLmin * c.personas;
+      const duchaKW = duchaL * 4.186 * Math.max(0, c.tDucha - s.T) / 3600 / 0.95 / 24;
+      const extra = [['deshum', s.lastRecov * c.deshumKWhL], ['ducha', duchaKW], ['algas', (lights ? algKW : 0) + algHeatKW], ['led', lights ? ledKW : 0]];
       const served = {};
       let pvLeft = pv, gen = 0, short = 0, ch = 0;
       const discharge = (kwh, floor) => {          // entrega kwh desde la batería sin bajar de floor
@@ -182,10 +195,15 @@ function simular(cin) {
       for (const k in served) tot.load += served[k];
       day.pv += pvUsed; day.gen += gen; day.shed += short;
       const ledFrac = lights && ledKW > 0 ? served.led / ledKW : 0;
-      const algFrac = lights && algKW > 0 ? served.algas / algKW : 0;
+      const algDemand = (lights ? algKW : 0) + algHeatKW;
+      const algServed = algDemand > 0 ? served.algas / algDemand : 1;
+      const algFrac = lights && algKW > 0 ? algServed : 0;
+      // temperatura del cultivo: en la pecera es la del agua; aparte, la del cuarto más lo que alcance el calentador
+      const Talg = c.algasEnPecera ? null : (c.calentarAlgas ? s.T + algServed * (al.tOpt - s.T) : s.T);
       const ventOn = sealed ? 0 : (ventKW > 0 ? served.vent / ventKW : 1) * ventFlow / Math.max(1e-9, c.vent);
       const deshFrac = extra[0][1] > 0 ? served.deshum / extra[0][1] : 1;
-      const aqFrac = aqKW > 0 ? served.pecera / aqKW : (c.calentarPecera ? 1 : 0);
+      day.duchaFrac += (duchaKW > 0 ? served.ducha / duchaKW : 1) / 24;
+      const aqFrac = aqKW + aire > 0 ? Math.min(1, served.pecera / (aqKW + aire)) : (c.calentarPecera ? 1 : 0);
       const Taq = c.calentarPecera ? s.T + aqFrac * (c.tPecera - s.T) : s.T;
       day.Taq += Taq / 24;
       if (lights) ledHours += ledFrac;
@@ -198,15 +216,20 @@ function simular(cin) {
         const bio = mol * k.cr.lueTot;                     // g de biomasa seca
         o2P += bio * O2_PER_G_BIOMASS / 32; co2P += bio * CO2_PER_G_BIOMASS / 44; transp += bio * TRANSP_L_PER_G;
         if (d >= k.cr.cycle) { kcalH += mol * k.cr.lueEd * k.cr.kcal; day.vitC += mol * k.cr.lueEd * k.cr.vitC; }
+        day.residuosG += mol * (k.cr.lueTot - k.cr.lueEd);            // hojas, tallos y raíces
       }
       // en la pecera el agua es turbia y está sombreada: ~30 % de la productividad de un fotobiorreactor
-      const algProd = c.algasProd * (c.algasEnPecera ? 0.3 : 1);
+      // la espirulina necesita agua alcalina y salada que mataría a la tilapia: no puede ir en la pecera
+      const tAlg = c.algasEnPecera ? Taq : Talg;
+      const gAlg = clamp((tAlg - al.tMin) / (al.tOpt - al.tMin), 0, 1);
+      const compatible = !(c.algasEnPecera && !al.enPecera);
+      const algProd = compatible ? c.algasProd * (c.algasEnPecera ? 0.3 : 1) * gAlg : 0;
       const algDay = c.algasL * algProd / c.fotoperiodo;
       const algBio = lights && c.algasL > 0 ? algDay * algFrac : 0;
       // de noche las algas respiran una parte de lo que produjeron de día
       const algResp = !lights && c.algasL > 0 ? algDay * c.fotoperiodo * c.algasNoche / (24 - c.fotoperiodo) : 0;
       const o2A = (algBio - algResp) * 1.4 / 32, co2A = (algBio - algResp) * 1.9 / 44;   // con nitrato como fuente de N (calibrado)
-      if (d >= 14) kcalH += algBio * 3.0;
+      day.algasG += algBio;
       // 4. Peces: respiran todo el día (150 mg O2/kg/h)
       const fishO2 = s.peces * 150e-3 / 32;
 
@@ -262,7 +285,10 @@ function simular(cin) {
       const higiene = Math.max(0, c.aguaPersona - 6) * c.personas / 24;
       const grey = (higiene + 0.5 * cocina) * c.reciclaGris;
       const rain = d >= c.lluviaDia ? c.techo * RAIN_MM[m] / 30.42 / 24 * 0.8 * lluviaFac : 0;
-      const inflow = recov + grey + rain, outflow = use + transp + evapAcu;
+      // el recambio de la pecera (1.5 % al día) sale de la cisterna y riega las plantas: abono para ellas
+      const recambio = c.acuarioL * 0.015 / 24;
+      const riegoTanque = Math.max(0, transp - recambio);
+      const inflow = recov + grey + rain, outflow = use + recambio + riegoTanque + evapAcu;
       const want = s.agua + inflow - outflow;
       const next = clamp(want, 0, c.aguaL);
       tot.aguaIn += inflow; tot.aguaOut += outflow; tot.aguaRebose += Math.max(0, want - next); tot.aguaFalta += Math.max(0, next - want);
@@ -270,12 +296,33 @@ function simular(cin) {
       s.agua = next; day.lluvia += rain;
       const w = day.w;
       w.lluvia += rain; w.condensado += recov; w.grises += grey; w.beber += beber; w.cocina += cocina; w.higiene += higiene;
-      w.perros += c.aguaPerro * c.perros / 24; w.plantas += transp; w.pecera += evapAcu; w.vaporPerdido += vapor - recov;
+      w.perros += c.aguaPerro * c.perros / 24; w.plantas += riegoTanque; w.pecera += evapAcu + recambio; w.recambio += recambio; w.vaporPerdido += vapor - recov;
       w.negras += Math.max(0, beber + 0.5 * cocina - vaporMet * c.personas * 2.0 / (2.0 * c.personas + 0.4 * c.perros || 1));
       day.kcalProd += kcalH;
     }
     if (day.aguaFalta > 0) mark('agua', d);
     // comida del día
+    // algas cosechadas: hasta el tope por persona se come (espirulina); lo que sobra es alimento para la tilapia
+    if (d >= 14 && day.algasG > 0) {
+      const al = ALGAS[c.alga];
+      const comer = c.alga === 'espirulina' ? Math.min(day.algasG, c.espirulinaG * c.personas) : 0;
+      day.algasComidaG = comer; day.kcalProd += comer * al.kcal;
+      s.alimPeces += (day.algasG - comer) / 1000;                    // kg de alga seca como alimento de peces
+      tot.algasComidaKg += comer / 1000; tot.algasPecesKg += (day.algasG - comer) / 1000;
+    }
+    // desechos: heces 128 g y orina 1.42 L por persona (Rose 2015); perros, en proporción a sus croquetas
+    const croqDia = kcalPerros / 3500;
+    const des = {
+      hecesKg: 0.128 * c.personas, orinaL: 1.42 * c.personas,
+      hecesPerrosKg: 0.82 * croqDia, orinaPerrosL: 0.04 * c.pesoPerro * c.perros,
+      aserrinKg: 0.030 * 1.2 * c.personas + 0.2 * c.perros,           // 30 g por uso; arena de aserrín para los perros
+      restosKg: day.residuosG / 1000 * 5,                              // restos de cultivo frescos (≈ 20 % materia seca)
+      basuraKg: 0.05 * c.personas,                                     // empaques de la comida guardada
+    };
+    // lombricomposta: las lombrices se comen los restos de cultivo; ~10 % se vuelve lombriz, alimento para la tilapia
+    if (c.lombricomposta && des.restosKg > 0) { const lomb = 0.10 * des.restosKg * 0.2; s.alimPeces += lomb; tot.lombrizKg += lomb; }
+    for (const k in des) tot[k] = (tot[k] || 0) + des[k];
+    day.des = des;
     const gT = clamp((day.Taq - 18) / 10, 0, 1);                       // crecen bien a 28 °C, casi nada a 18 °C
     if (s.peces > 0 && day.Taq < 11) { mark('peces mueren de frío', d); day.kcalProd += s.peces * 960; s.peces = 0; }
     const feedNeed = s.peces * 0.015 * gT;                             // 1.5 % del peso al día si el agua está tibia
@@ -325,7 +372,16 @@ function necesidades(c) {
     areaComida: c.kcalPersona * c.personas / (c.aeroPPFD * 3600e-6 * c.fotoperiodo * CROPS.papa.lueEd * CROPS.papa.kcal),
     salPersonasKg: 0.005 * c.personas * c.dias,                                  // 5 g por persona al día
     salPeceraKg: c.acuarioL * c.salPecera / 1000 * (1 + 0.015 * c.dias),         // carga inicial + recambio de 1.5 % al día
+    // espirulina: carga inicial de 16.8 g/L de bicarbonato y reposición; nitrato ≈ 0.7 g por g de alga
+    bicarbonatoKg: c.alga === 'espirulina' && !c.algasEnPecera ? c.algasL * 0.0168 + c.algasL * c.algasProd * c.dias * 1.0 / 1000 : 0,
+    nitratoKg: c.algasL * c.algasProd * c.dias * 0.7 / 1000,
+    banos: Math.max(1, Math.ceil(c.personas / 5)),
+    duchaL: c.duchasSemana / 7 * c.duchaMin * c.regaderaLmin,                    // L por persona al día
+    // composta de heces + aserrín (≈ 0.5 kg/L), cámaras para 12 meses cada una (se alternan)
+    camaraL: (0.128 * c.personas + 0.036 * c.personas) * 365 / 0.5,
+    orinaL: 1.42 * c.personas * c.dias,
+    aserrinKg: (0.036 * c.personas + 0.2 * c.perros) * c.dias,
   };
 }
 // MODEL-END
-if (typeof module !== 'undefined') module.exports = { simular, config, necesidades, shieldPF, SCEN, CROPS, T_NORMAL, RAIN_MM, DTR };
+if (typeof module !== 'undefined') module.exports = { simular, config, necesidades, shieldPF, SCEN, CROPS, ALGAS, T_NORMAL, RAIN_MM, DTR };

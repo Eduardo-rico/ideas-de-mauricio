@@ -244,7 +244,11 @@ tfoot td { background: var(--panel2); }
           <select class="full" id="aeroCultivo"><option value="papa">Papa</option><option value="lechuga">Lechuga y hojas</option><option value="trigo">Trigo</option><option value="frijol">Soya</option></select></label>
         <label class="ctl" for="aeroArea"><span class="row">Aeroponía: área<output id="o-aeroArea"></output></span><input type="range" id="aeroArea" min="0" max="80" step="1" value="10"></label>
         <label class="ctl" for="aeroPPFD"><span class="row">Luz LED de la aeroponía<output id="o-aeroPPFD"></output></span><input type="range" id="aeroPPFD" min="100" max="800" step="25" value="400"></label>
+        <label class="ctl" for="alga"><span class="row">Alga</span>
+          <select class="full" id="alga"><option value="espirulina">Espirulina (se come; 30–35 °C, agua alcalina)</option><option value="chlorella">Chlorella (puede ir en la pecera)</option></select></label>
         <label class="ctl" for="algasL"><span class="row">Fotobiorreactor de algas<output id="o-algasL"></output></span><input type="range" id="algasL" min="0" max="2000" step="50" value="200"></label>
+        <label class="chk" for="calentarAlgas"><input type="checkbox" id="calentarAlgas" checked> Calentar el cultivo de algas a su temperatura</label>
+        <label class="ctl" for="espirulinaG"><span class="row">Espirulina por persona al día<output id="o-espirulinaG"></output></span><input type="range" id="espirulinaG" min="0" max="10" step="1" value="5"><span class="hint">Se recomiendan 2–5 g. Lo que sobra va de alimento para la tilapia.</span></label>
         <label class="chk" for="algasEnPecera"><input type="checkbox" id="algasEnPecera"> Algas dentro de la pecera (en vez de su propio fotobiorreactor)</label>
         <label class="ctl" for="acuarioL"><span class="row">Pecera (tilapia)<output id="o-acuarioL"></output></span><input type="range" id="acuarioL" min="0" max="3000" step="100" value="500"></label>
         <label class="chk" for="calentarPecera"><input type="checkbox" id="calentarPecera" checked> Calentar la pecera a 28 °C (la tilapia muere abajo de ~11 °C)</label>
@@ -264,6 +268,11 @@ tfoot td { background: var(--panel2); }
         <label class="ctl" for="aguaPersona"><span class="row">Agua por persona al día<output id="o-aguaPersona"></output></span><input type="range" id="aguaPersona" min="5" max="40" step="1" value="15"><span class="hint">15 L es el mínimo de supervivencia de las normas Esfera.</span></label>
         <label class="ctl" for="techo"><span class="row">Techo que capta lluvia<output id="o-techo"></output></span><input type="range" id="techo" min="0" max="300" step="10" value="100"></label>
         <label class="ctl" for="reciclaGris"><span class="row">Reciclaje de aguas grises<output id="o-reciclaGris"></output></span><input type="range" id="reciclaGris" min="0" max="0.9" step="0.05" value="0.5"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Baño y desechos</legend>
+        <label class="ctl" for="duchasSemana"><span class="row">Regaderazos por persona a la semana<output id="o-duchasSemana"></output></span><input type="range" id="duchasSemana" min="0" max="7" step="0.5" value="3.5"><span class="hint">Baño de 3 minutos con regadera de 6 L/min y agua a 38 °C.</span></label>
+        <label class="chk" for="lombricomposta"><input type="checkbox" id="lombricomposta" checked> Lombricomposta con los restos de cultivo (las lombrices alimentan a la tilapia)</label>
       </fieldset>
       <fieldset>
         <legend>Comida guardada</legend>
@@ -317,11 +326,29 @@ tfoot td { background: var(--panel2); }
     </tbody></table></div>
   </section>
 
+  <section class="doc" id="bano">
+    <div class="eyebrow">Saneamiento</div>
+    <h2>Baño, regadera y desechos</h2>
+    <p id="bano-intro"></p>
+    <div class="tablewrap" style="border:0"><div id="bano-plan" style="min-width:640px"></div></div>
+    <div class="tablewrap"><table><thead><tr><th>Desecho</th><th class="num">Al día</th><th class="num">En todo el periodo</th><th>A dónde va</th></tr></thead><tbody id="bano-body"></tbody></table></div>
+    <p class="note">El baño seco necesita su propio extractor hacia afuera (el olor y el amoniaco no deben llegar al dormitorio) y se usa sin agua: sólo aserrín o fibra de coco después de cada uso. La composta de heces humanas y de perro no se usa en los cultivos de comida del búnker; al salir se entierra o se usa en árboles.</p>
+  </section>
+
   <section class="doc" id="salud">
     <div class="eyebrow">Salud</div>
     <h2>Botiquín, suplementos y alimentación</h2>
     <p id="salud-intro"></p>
     <div class="tablewrap"><table><thead><tr><th>Qué</th><th>Por qué</th><th class="num">Cantidad para el periodo</th></tr></thead><tbody id="salud-body"></tbody></table></div>
+    <h3>Cuidado de la pecera</h3>
+    <div class="tablewrap"><table><thead><tr><th>Qué</th><th>Cómo</th></tr></thead><tbody>
+      <tr><td><strong>Aire</strong></td><td>Aireador siempre encendido y uno de respaldo con batería: sin aire los peces se asfixian en horas. En el modelo va con las cargas vitales.</td></tr>
+      <tr><td><strong>Limpieza</strong></td><td>Filtro de sólidos (se lava cada semana), biofiltro con bacterias que vuelven el amoniaco nitrato, sifón del fondo y recambio de 1–2 % del agua al día; esa agua riega las plantas.</td></tr>
+      <tr><td><strong>Pruebas de agua</strong></td><td>Amonio total menor a 2 mg/L, nitrito de 1 mg/L o menos, nitrato abajo de ~100 mg/L; pH arriba de 6 para que no se mueran las bacterias del biofiltro. Kit de pruebas cada semana.</td></tr>
+      <tr><td><strong>Sal</strong></td><td>No es necesaria; 1–3 g/L de sal sin yodo bajan el estrés. Los baños de sal más concentrados contra parásitos, sólo con guía de un veterinario acuícola.</td></tr>
+      <tr><td><strong>Antibióticos</strong></td><td>Nunca preventivos: matan las bacterias del biofiltro, dejan residuos en el pescado y en las plantas que riega la pecera, y crean bacterias resistentes que pueden pasar a las personas. Si hay un brote, con receta de un veterinario acuícola (los usados en tilapia son oxitetraciclina o florfenicol en el alimento), en un tanque hospital aparte y respetando el tiempo de retiro antes de comer los peces.</td></tr>
+      <tr><td><strong>Prevención</strong></td><td>Cuarentena de 2–4 semanas para peces nuevos, no sobrepoblar (25 kg por m³ en el modelo), no sobrealimentar, agua tibia y estable.</td></tr>
+    </tbody></table></div>
     <p class="note">Esta lista es para planear con tu médico y tu veterinario, no sustituye su receta. Las dosis de suplementos son las recomendadas para la población general. Los antibióticos y las medicinas de enfermedades crónicas necesitan receta, y conviene pedir una reserva extra. El yoduro de potasio sólo se toma si lo indican las autoridades de salud.</p>
   </section>
 
@@ -371,6 +398,12 @@ tfoot td { background: var(--panel2); }
       <div class="eq"><span class="what">8d · Calentador de la pecera</span>
         <math display="block"><msub><mi>P</mi><mtext>pecera</mtext></msub><mo>=</mo><mi>U</mi><msub><mi>A</mi><mtext>pecera</mtext></msub><mo>(</mo><mn>28</mn><mtext> °C</mtext><mo>−</mo><msub><mi>T</mi><mtext>cuarto</mtext></msub><mo>)</mo><mo>,</mo><mspace width="0.4em"/><mi>U</mi><mi>A</mi><mo>≈</mo><mn>20</mn><mtext> W/K por 500 L</mtext><mo>,</mo><mspace width="0.4em"/><msub><mi>g</mi><mi>T</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>T</mi><mtext>agua</mtext></msub><mo>−</mo><mn>18</mn></mrow><mn>10</mn></mfrac></math>
         <p>La tilapia crece mejor entre 28 y 31 °C y muere abajo de ~11 °C. Con el cuarto a ~19 °C, calentar 500 L cuesta ~4 kWh al día y va con las cargas vitales. Sin calentador come y crece en proporción a lo tibia que esté el agua. No necesita sal; 1–3 g/L la protege del estrés y de algunos parásitos.</p></div>
+      <div class="eq"><span class="what">8e · Espirulina</span>
+        <math display="block"><mi>B</mi><mo>=</mo><msub><mi>p</mi><mi>V</mi></msub><mi>V</mi><mo>×</mo><mfrac><mrow><mi>T</mi><mo>−</mo><mn>20</mn></mrow><mrow><mn>32</mn><mo>−</mo><mn>20</mn></mrow></mfrac><mo>,</mo><mspace width="0.4em"/><msub><mi>B</mi><mtext>comida</mtext></msub><mo>=</mo><mi>min</mi><mo>(</mo><mi>B</mi><mo>,</mo><mn>5</mn><mtext> g</mtext><mo>×</mo><mi>N</mi><mo>)</mo><mo>,</mo><mspace width="0.4em"/><msub><mi>B</mi><mtext>peces</mtext></msub><mo>=</mo><mi>B</mi><mo>−</mo><msub><mi>B</mi><mtext>comida</mtext></msub></math>
+        <p>Crece a 30–35 °C en agua alcalina (pH 9.5–11) con ~16 g/L de bicarbonato de sodio y nitrato como abono, así que no puede ir en la pecera. Tiene 60 % de proteína, pero su B12 es casi toda inactiva. Se come hasta ~5 g por persona al día y el resto alimenta a la tilapia. En reactor cerrado y con cepa pura se evitan las toxinas de otras cianobacterias.</p></div>
+      <div class="eq"><span class="what">8f · Baño y desechos</span>
+        <math display="block"><msub><mi>m</mi><mtext>heces</mtext></msub><mo>=</mo><mn>128</mn><mtext> g</mtext><mo>,</mo><mspace width="0.3em"/><msub><mi>V</mi><mtext>orina</mtext></msub><mo>=</mo><mn>1.42</mn><mtext> L</mtext><mspace width="0.3em"/><mtext>por persona al día</mtext><mo>,</mo><mspace width="0.4em"/><msub><mi>E</mi><mtext>ducha</mtext></msub><mo>=</mo><mfrac><mrow><mi>V</mi><msub><mi>c</mi><mi>p</mi></msub><mo>(</mo><mn>38</mn><mo>−</mo><mi>T</mi><mo>)</mo></mrow><mn>0.95</mn></mfrac></math>
+        <p>Medianas de Rose et al. (2015). Cada uso del baño seco lleva ~30 g de aserrín. Las heces y el aserrín (~0.5 kg/L) llenan una cámara en 12 meses; mientras la otra madura. Un regaderazo de 18 L a 38 °C cuesta ~0.4 kWh.</p></div>
       <div class="eq"><span class="what">9 · Energía por prioridades</span>
         <math display="block"><mtext>sol</mtext><mo>=</mo><msub><mtext>kWp</mtext><mrow></mrow></msub><mo>×</mo><msub><mi>Y</mi><mtext>mes</mtext></msub><mo>×</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mi>f</mi><mo>)</mo><mo>,</mo><mspace width="0.4em"/><msub><mi>Y</mi><mtext>Celaya</mtext></msub><mo>≈</mo><mn>5.8</mn><mo>–</mo><mn>8</mn><mtext> kWh/kWp·día</mtext></math>
         <p>Primero ventilación, luz y refrigerador (pueden usar la batería hasta 10 % y el generador). Luego se carga la batería a 60 %. Lo que sobra va a los cultivos, las algas y el deshumidificador. Si falta, se apagan de abajo hacia arriba.</p></div>
@@ -399,6 +432,9 @@ tfoot td { background: var(--panel2); }
       <tr><td>Alimento de tilapia</td><td>1.5 % del peso al día; bulto de 25 kg con 32 % de proteína</td><td><span class="tag lit">Etiqueta del alimento (3 % para juveniles)</span></td></tr>
       <tr><td>Temperatura de la tilapia</td><td>óptima 28–31 °C; letal abajo de 10–11 °C; sal opcional 1–3 g/L (tolera hasta 15)</td><td><span class="tag lit">Estudios de crecimiento de tilapia del Nilo</span></td></tr>
       <tr><td>Vitamina C de los cultivos</td><td>lechuga 9 mg/100 g; papa 20 mg/100 g (frescos)</td><td><span class="tag lit">Tablas de composición</span> <span class="tag cal">por g de materia seca</span></td></tr>
+      <tr><td>Espirulina</td><td>30–35 °C; pH 9.5–11; 16–18 g/L de bicarbonato; 2–5 g por persona al día; B12 ~80 % inactiva</td><td><span class="tag lit">Revisiones de cultivo; ANSES</span></td></tr>
+      <tr><td>Heces y orina humanas</td><td>128 g y 1.42 L por persona al día (medianas)</td><td><span class="tag lit">Rose et al. 2015</span></td></tr>
+      <tr><td>Aserrín, heces y orina de perros, restos de cultivo, basura, lombriz</td><td>30 g por uso; 0.82 kg de heces por kg de croqueta; 0.04 L/kg de orina; 10 % de los restos se vuelve lombriz</td><td><span class="tag cal">Calibrado o valor típico</span></td></tr>
       <tr><td>Solubilidad del CO₂ en agua</td><td>0.039 mol/L·atm a ~20 °C</td><td><span class="tag lit">Ley de Henry</span></td></tr>
       <tr><td>Algas en la pecera</td><td>30 % de la productividad; respiración nocturna 25 %</td><td><span class="tag cal">Calibrado</span></td></tr>
       <tr><td>Mínimas de Celaya</td><td>enero ≈ 7 °C; oscilación diaria 12–16 °C</td><td><span class="tag lit">Normales SMN 1991–2020 (vía Climate-Zone)</span> <span class="tag cal">meses intermedios estimados</span></td></tr>
@@ -500,6 +536,11 @@ const CROPS = {
 };
 const O2_PER_G_BIOMASS = 32 / 30;   // CH2O: 1 g de biomasa libera 1.07 g de O2
 const CO2_PER_G_BIOMASS = 44 / 30;
+// Algas: espirulina (comestible, 30–35 °C, pH 9.5–11 con ~16 g/L de bicarbonato) o chlorella (25–30 °C, pH neutro)
+const ALGAS = {
+  espirulina: { name: 'Espirulina', tOpt: 32, tMin: 20, kcal: 2.9, prot: 0.6, enPecera: false },
+  chlorella:  { name: 'Chlorella', tOpt: 28, tMin: 15, kcal: 3.0, prot: 0.5, enPecera: true },
+};
 const TRANSP_L_PER_G = 0.25;        // agua transpirada por g de biomasa seca (≈ 4 g/kg de eficiencia)
 
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
@@ -514,12 +555,13 @@ function config(o = {}) {
     o2kg: 0, // oxígeno embotellado de reserva
     hidroArea: 10, hidroCultivo: 'lechuga', hidroPPFD: 250,
     aeroArea: 10, aeroCultivo: 'papa', aeroPPFD: 400, fotoperiodo: 16, ledEff: 2.7,
-    algasL: 200, algasProd: 0.5, algasW: 1.0, algasEnPecera: false, algasNoche: 0.25,
+    algasL: 200, algasProd: 0.5, algasW: 1.0, algasEnPecera: false, algasNoche: 0.25, alga: 'espirulina', espirulinaG: 5, calentarAlgas: true,
     acuarioL: 500, peces: 10, alimentoPeces: 300, calentarPecera: true, tPecera: 28, salPecera: 2,
     panelW: 550, paneles: 20, bateriaKWh: 20.5, generadorKW: 7, combustible: 'gaslp', combustibleL: 600,
     cargaBase: 0.25, tSet: 17, calefKW: 3,
     aguaL: 20000, aguaPersona: 15, aguaPerro: 1.0, reciclaGris: 0.5, deshum: 0.8, deshumKWhL: 0.55, techo: 100, lluviaDia: 30,
     comidaDias: 900, croquetasKg: 1500,
+    duchasSemana: 3.5, duchaMin: 3, regaderaLmin: 6, tDucha: 38, lombricomposta: true,
     salidaDia: 30, salidaH: 0.5, umbralSalida: 0.5,
   }, o);
 }
@@ -558,7 +600,7 @@ function simular(cin) {
   };
   const s0 = { soc: s.soc, agua: s.agua, o2: s.o2, co2: s.co2, co2aq: s.co2aq };
   const days = [];
-  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0, pescadoKg: 0 };
+  const tot = { pv: 0, gen: 0, load: 0, shed: 0, shedVital: 0, ch: 0, dis: 0, lossDis: 0, aguaIn: 0, aguaOut: 0, aguaRebose: 0, aguaFalta: 0, o2Src: 0, o2Vent: 0, o2Bottle: 0, co2Src: 0, co2Vent: 0, co2Scrub: 0, co2Aq: 0, kcalProd: 0, kcalFalta: 0, croqFalta: 0, pescadoKg: 0, algasComidaKg: 0, algasPecesKg: 0, lombrizKg: 0 };
   const firsts = {};
   const mark = (k, d) => { if (firsts[k] === undefined) firsts[k] = d; };
   const ventQ = c.vent * 1000; // L/h
@@ -578,8 +620,8 @@ function simular(cin) {
     const luz = 1 - sc.light * f;
     const lluviaFac = 1 - sc.rain * fT / 0.8;
     const day = { d, f, fT, Tout, Tmin, luz, rainFac: lluviaFac, o2min: 1, co2max: 0, o2: 0, co2: 0, T: 0, pv: 0, gen: 0, shed: 0, kcalProd: 0,
-      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0, co2Aq: 0, Taq: 0, vitC: 0,
-      w: { lluvia: 0, condensado: 0, grises: 0, beber: 0, cocina: 0, higiene: 0, perros: 0, plantas: 0, pecera: 0, vaporPerdido: 0, negras: 0 } };
+      o2Plant: 0, o2Alg: 0, o2Fish: 0, o2Met: 0, o2Vent: 0, calUsed: 0, lluvia: 0, rateOut: 0, rateIn: 0, ledOnFrac: 0, aguaFalta: 0, shedVital: 0, co2Aq: 0, Taq: 0, vitC: 0, algasG: 0, algasComidaG: 0, duchaFrac: 0, residuosG: 0,
+      w: { recambio: 0, lluvia: 0, condensado: 0, grises: 0, beber: 0, cocina: 0, higiene: 0, perros: 0, plantas: 0, pecera: 0, vaporPerdido: 0, negras: 0 } };
     const sealed = d < c.sellarDias;
     s.Tg += ((18.3 - sc.dT * fT / 0.8) - s.Tg) / 365;   // la tierra alrededor se enfría despacio
     let ledHours = 0;
@@ -603,8 +645,15 @@ function simular(cin) {
       // pecera: pierde ~20 W/K por cada 500 L (con tapa y aislamiento lateral); la tilapia muere abajo de ~11 °C
       const UAaq = c.acuarioL > 0 ? 0.020 * Math.pow(c.acuarioL / 500, 2 / 3) : 0;
       const aqKW = c.calentarPecera ? Math.max(0, UAaq * (c.tPecera - s.T)) : 0;
-      const vital = [['vent', ventKW], ['base', c.cargaBase], ['calef', s.T < c.tSet ? c.calefKW : 0], ['pecera', aqKW]];
-      const extra = [['deshum', s.lastRecov * c.deshumKWhL], ['algas', lights ? algKW : 0], ['led', lights ? ledKW : 0]];
+      const aire = c.acuarioL > 0 ? 0.03 * c.acuarioL / 500 : 0;          // aireador: sin él los peces se asfixian en horas
+      const vital = [['vent', ventKW], ['base', c.cargaBase], ['calef', s.T < c.tSet ? c.calefKW : 0], ['pecera', aqKW + aire]];
+      const al = ALGAS[c.alga];
+      const UAalg = c.algasL > 0 && !c.algasEnPecera ? 0.020 * Math.pow(c.algasL / 500, 2 / 3) : 0;
+      const algHeatKW = c.calentarAlgas && UAalg ? Math.max(0, UAalg * (al.tOpt - s.T)) : 0;
+      // regadera: agua de la cisterna (a la temperatura del cuarto) calentada a 38 °C, repartida en el día
+      const duchaL = c.duchasSemana / 7 * c.duchaMin * c.regaderaLmin * c.personas;
+      const duchaKW = duchaL * 4.186 * Math.max(0, c.tDucha - s.T) / 3600 / 0.95 / 24;
+      const extra = [['deshum', s.lastRecov * c.deshumKWhL], ['ducha', duchaKW], ['algas', (lights ? algKW : 0) + algHeatKW], ['led', lights ? ledKW : 0]];
       const served = {};
       let pvLeft = pv, gen = 0, short = 0, ch = 0;
       const discharge = (kwh, floor) => {          // entrega kwh desde la batería sin bajar de floor
@@ -643,10 +692,15 @@ function simular(cin) {
       for (const k in served) tot.load += served[k];
       day.pv += pvUsed; day.gen += gen; day.shed += short;
       const ledFrac = lights && ledKW > 0 ? served.led / ledKW : 0;
-      const algFrac = lights && algKW > 0 ? served.algas / algKW : 0;
+      const algDemand = (lights ? algKW : 0) + algHeatKW;
+      const algServed = algDemand > 0 ? served.algas / algDemand : 1;
+      const algFrac = lights && algKW > 0 ? algServed : 0;
+      // temperatura del cultivo: en la pecera es la del agua; aparte, la del cuarto más lo que alcance el calentador
+      const Talg = c.algasEnPecera ? null : (c.calentarAlgas ? s.T + algServed * (al.tOpt - s.T) : s.T);
       const ventOn = sealed ? 0 : (ventKW > 0 ? served.vent / ventKW : 1) * ventFlow / Math.max(1e-9, c.vent);
       const deshFrac = extra[0][1] > 0 ? served.deshum / extra[0][1] : 1;
-      const aqFrac = aqKW > 0 ? served.pecera / aqKW : (c.calentarPecera ? 1 : 0);
+      day.duchaFrac += (duchaKW > 0 ? served.ducha / duchaKW : 1) / 24;
+      const aqFrac = aqKW + aire > 0 ? Math.min(1, served.pecera / (aqKW + aire)) : (c.calentarPecera ? 1 : 0);
       const Taq = c.calentarPecera ? s.T + aqFrac * (c.tPecera - s.T) : s.T;
       day.Taq += Taq / 24;
       if (lights) ledHours += ledFrac;
@@ -659,15 +713,20 @@ function simular(cin) {
         const bio = mol * k.cr.lueTot;                     // g de biomasa seca
         o2P += bio * O2_PER_G_BIOMASS / 32; co2P += bio * CO2_PER_G_BIOMASS / 44; transp += bio * TRANSP_L_PER_G;
         if (d >= k.cr.cycle) { kcalH += mol * k.cr.lueEd * k.cr.kcal; day.vitC += mol * k.cr.lueEd * k.cr.vitC; }
+        day.residuosG += mol * (k.cr.lueTot - k.cr.lueEd);            // hojas, tallos y raíces
       }
       // en la pecera el agua es turbia y está sombreada: ~30 % de la productividad de un fotobiorreactor
-      const algProd = c.algasProd * (c.algasEnPecera ? 0.3 : 1);
+      // la espirulina necesita agua alcalina y salada que mataría a la tilapia: no puede ir en la pecera
+      const tAlg = c.algasEnPecera ? Taq : Talg;
+      const gAlg = clamp((tAlg - al.tMin) / (al.tOpt - al.tMin), 0, 1);
+      const compatible = !(c.algasEnPecera && !al.enPecera);
+      const algProd = compatible ? c.algasProd * (c.algasEnPecera ? 0.3 : 1) * gAlg : 0;
       const algDay = c.algasL * algProd / c.fotoperiodo;
       const algBio = lights && c.algasL > 0 ? algDay * algFrac : 0;
       // de noche las algas respiran una parte de lo que produjeron de día
       const algResp = !lights && c.algasL > 0 ? algDay * c.fotoperiodo * c.algasNoche / (24 - c.fotoperiodo) : 0;
       const o2A = (algBio - algResp) * 1.4 / 32, co2A = (algBio - algResp) * 1.9 / 44;   // con nitrato como fuente de N (calibrado)
-      if (d >= 14) kcalH += algBio * 3.0;
+      day.algasG += algBio;
       // 4. Peces: respiran todo el día (150 mg O2/kg/h)
       const fishO2 = s.peces * 150e-3 / 32;
 
@@ -723,7 +782,10 @@ function simular(cin) {
       const higiene = Math.max(0, c.aguaPersona - 6) * c.personas / 24;
       const grey = (higiene + 0.5 * cocina) * c.reciclaGris;
       const rain = d >= c.lluviaDia ? c.techo * RAIN_MM[m] / 30.42 / 24 * 0.8 * lluviaFac : 0;
-      const inflow = recov + grey + rain, outflow = use + transp + evapAcu;
+      // el recambio de la pecera (1.5 % al día) sale de la cisterna y riega las plantas: abono para ellas
+      const recambio = c.acuarioL * 0.015 / 24;
+      const riegoTanque = Math.max(0, transp - recambio);
+      const inflow = recov + grey + rain, outflow = use + recambio + riegoTanque + evapAcu;
       const want = s.agua + inflow - outflow;
       const next = clamp(want, 0, c.aguaL);
       tot.aguaIn += inflow; tot.aguaOut += outflow; tot.aguaRebose += Math.max(0, want - next); tot.aguaFalta += Math.max(0, next - want);
@@ -731,12 +793,33 @@ function simular(cin) {
       s.agua = next; day.lluvia += rain;
       const w = day.w;
       w.lluvia += rain; w.condensado += recov; w.grises += grey; w.beber += beber; w.cocina += cocina; w.higiene += higiene;
-      w.perros += c.aguaPerro * c.perros / 24; w.plantas += transp; w.pecera += evapAcu; w.vaporPerdido += vapor - recov;
+      w.perros += c.aguaPerro * c.perros / 24; w.plantas += riegoTanque; w.pecera += evapAcu + recambio; w.recambio += recambio; w.vaporPerdido += vapor - recov;
       w.negras += Math.max(0, beber + 0.5 * cocina - vaporMet * c.personas * 2.0 / (2.0 * c.personas + 0.4 * c.perros || 1));
       day.kcalProd += kcalH;
     }
     if (day.aguaFalta > 0) mark('agua', d);
     // comida del día
+    // algas cosechadas: hasta el tope por persona se come (espirulina); lo que sobra es alimento para la tilapia
+    if (d >= 14 && day.algasG > 0) {
+      const al = ALGAS[c.alga];
+      const comer = c.alga === 'espirulina' ? Math.min(day.algasG, c.espirulinaG * c.personas) : 0;
+      day.algasComidaG = comer; day.kcalProd += comer * al.kcal;
+      s.alimPeces += (day.algasG - comer) / 1000;                    // kg de alga seca como alimento de peces
+      tot.algasComidaKg += comer / 1000; tot.algasPecesKg += (day.algasG - comer) / 1000;
+    }
+    // desechos: heces 128 g y orina 1.42 L por persona (Rose 2015); perros, en proporción a sus croquetas
+    const croqDia = kcalPerros / 3500;
+    const des = {
+      hecesKg: 0.128 * c.personas, orinaL: 1.42 * c.personas,
+      hecesPerrosKg: 0.82 * croqDia, orinaPerrosL: 0.04 * c.pesoPerro * c.perros,
+      aserrinKg: 0.030 * 1.2 * c.personas + 0.2 * c.perros,           // 30 g por uso; arena de aserrín para los perros
+      restosKg: day.residuosG / 1000 * 5,                              // restos de cultivo frescos (≈ 20 % materia seca)
+      basuraKg: 0.05 * c.personas,                                     // empaques de la comida guardada
+    };
+    // lombricomposta: las lombrices se comen los restos de cultivo; ~10 % se vuelve lombriz, alimento para la tilapia
+    if (c.lombricomposta && des.restosKg > 0) { const lomb = 0.10 * des.restosKg * 0.2; s.alimPeces += lomb; tot.lombrizKg += lomb; }
+    for (const k in des) tot[k] = (tot[k] || 0) + des[k];
+    day.des = des;
     const gT = clamp((day.Taq - 18) / 10, 0, 1);                       // crecen bien a 28 °C, casi nada a 18 °C
     if (s.peces > 0 && day.Taq < 11) { mark('peces mueren de frío', d); day.kcalProd += s.peces * 960; s.peces = 0; }
     const feedNeed = s.peces * 0.015 * gT;                             // 1.5 % del peso al día si el agua está tibia
@@ -786,6 +869,15 @@ function necesidades(c) {
     areaComida: c.kcalPersona * c.personas / (c.aeroPPFD * 3600e-6 * c.fotoperiodo * CROPS.papa.lueEd * CROPS.papa.kcal),
     salPersonasKg: 0.005 * c.personas * c.dias,                                  // 5 g por persona al día
     salPeceraKg: c.acuarioL * c.salPecera / 1000 * (1 + 0.015 * c.dias),         // carga inicial + recambio de 1.5 % al día
+    // espirulina: carga inicial de 16.8 g/L de bicarbonato y reposición; nitrato ≈ 0.7 g por g de alga
+    bicarbonatoKg: c.alga === 'espirulina' && !c.algasEnPecera ? c.algasL * 0.0168 + c.algasL * c.algasProd * c.dias * 1.0 / 1000 : 0,
+    nitratoKg: c.algasL * c.algasProd * c.dias * 0.7 / 1000,
+    banos: Math.max(1, Math.ceil(c.personas / 5)),
+    duchaL: c.duchasSemana / 7 * c.duchaMin * c.regaderaLmin,                    // L por persona al día
+    // composta de heces + aserrín (≈ 0.5 kg/L), cámaras para 12 meses cada una (se alternan)
+    camaraL: (0.128 * c.personas + 0.036 * c.personas) * 365 / 0.5,
+    orinaL: 1.42 * c.personas * c.dias,
+    aserrinKg: (0.036 * c.personas + 0.2 * c.perros) * c.dias,
   };
 }
 
@@ -794,14 +886,14 @@ function necesidades(c) {
 // ---------- Interfaz ----------
 const $ = (id) => document.getElementById(id);
 const NUM = ['tasaH1', 'dias', 'tierra', 'concreto', 'vueltas', 'area', 'personas', 'perros', 'pesoPerro', 'kcalPersona', 'vent', 'sellarDias', 'calSodada', 'o2kg',
-  'hidroArea', 'aeroArea', 'aeroPPFD', 'algasL', 'acuarioL', 'alimentoPeces', 'paneles', 'bateriaKWh', 'combustibleL', 'aguaL', 'aguaPersona', 'techo', 'reciclaGris', 'comidaDias', 'croquetasKg'];
-const SEL = ['escenario', 'hidroCultivo', 'aeroCultivo', 'combustible'];
+  'hidroArea', 'aeroArea', 'aeroPPFD', 'algasL', 'espirulinaG', 'acuarioL', 'alimentoPeces', 'duchasSemana', 'paneles', 'bateriaKWh', 'combustibleL', 'aguaL', 'aguaPersona', 'techo', 'reciclaGris', 'comidaDias', 'croquetasKg'];
+const SEL = ['escenario', 'hidroCultivo', 'aeroCultivo', 'combustible', 'alga'];
 const fmtN = (v, d = 0) => Number(v).toLocaleString('es-MX', { maximumFractionDigits: d, minimumFractionDigits: d });
 const UNITS = {
   tasaH1: (v) => `${fmtN(Math.pow(10, v), 0)} R/h`, dias: (v) => `${v} días (${(v / 365).toFixed(1)} años)`, tierra: (v) => `${v} m`, concreto: (v) => `${Math.round(v * 100)} cm`,
   vueltas: (v) => ['recta', '1 vuelta', '2 vueltas', '3 vueltas'][v], area: (v) => `${v} m²`, personas: (v) => v, perros: (v) => v, pesoPerro: (v) => `${v} kg`,
   kcalPersona: (v) => `${fmtN(v)} kcal/día`, vent: (v) => `${v} m³/h`, sellarDias: (v) => `${v} días`, calSodada: (v) => `${v} kg`, o2kg: (v) => `${v} kg`,
-  hidroArea: (v) => `${v} m²`, aeroArea: (v) => `${v} m²`, aeroPPFD: (v) => `${v} µmol/m²·s`, algasL: (v) => `${fmtN(v)} L`, acuarioL: (v) => `${fmtN(v)} L`, alimentoPeces: (v) => `${fmtN(v)} kg`,
+  hidroArea: (v) => `${v} m²`, aeroArea: (v) => `${v} m²`, aeroPPFD: (v) => `${v} µmol/m²·s`, algasL: (v) => `${fmtN(v)} L`, acuarioL: (v) => `${fmtN(v)} L`, alimentoPeces: (v) => `${fmtN(v)} kg`, espirulinaG: (v) => `${v} g`, duchasSemana: (v) => `${v}`,
   paneles: (v) => `${v} (${(v * 0.55).toFixed(1)} kWp)`, bateriaKWh: (v) => `${(+v).toFixed(1)} kWh`, combustibleL: (v) => `${fmtN(v)} L`, aguaL: (v) => `${fmtN(v)} L`,
   aguaPersona: (v) => `${v} L`, techo: (v) => `${v} m²`, reciclaGris: (v) => `${Math.round(v * 100)} %`, comidaDias: (v) => `${v} días`, croquetasKg: (v) => `${fmtN(v)} kg`,
 };
@@ -824,6 +916,7 @@ function readCfg() {
   o.peces = o.acuarioL / 1000 * 20;
   o.algasEnPecera = $('algasEnPecera').checked;
   o.calentarPecera = $('calentarPecera').checked;
+  o.calentarAlgas = $('calentarAlgas').checked; o.lombricomposta = $('lombricomposta').checked;
   return config(o);
 }
 function refreshOutputs() { for (const k of NUM) $('o-' + k).value = UNITS[k]($(k).value); $('o-day').value = `día ${day}`; }
@@ -846,7 +939,7 @@ function phaseOf(d) {
 document.querySelectorAll('aside input, aside select').forEach((el) => el.addEventListener('input', () => { refreshOutputs(); recompute(); }));
 document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
   for (const k in DEFAULTS) $(k).value = DEFAULTS[k];
-  $('algasEnPecera').checked = false; $('calentarPecera').checked = true;
+  $('algasEnPecera').checked = false; $('calentarPecera').checked = true; $('calentarAlgas').checked = true; $('lombricomposta').checked = true;
   const p = PRESETS[b.dataset.preset];
   for (const k in p) $(k).value = p[k];   // tasaH1 va en escala logarítmica (1 = 10 R/h)
   refreshOutputs(); recompute(); day = 0; running = true; setRun();
@@ -973,7 +1066,7 @@ function drawScene(dt) {
     const ax = 545 + k * 12; ctx.fillStyle = mix('#2c5f2a', '#7ad34e', led); rr(ax, iy + 40, 8, 120, 4); ctx.fill();
     if (running && led > 0 && Math.random() < 0.3) parts.push({ t: 'o2b', x: ax + 4, y: iy + 160, v: -30, stop: iy + 40 });
   }
-  if (!c.algasEnPecera) lab(`algas ${fmtN(c.algasL)} L`, 545, iy + 196, C.muted, 'left', 10);
+  if (!c.algasEnPecera) lab(`${c.alga} ${fmtN(c.algasL)} L`, 545, iy + 196, C.muted, 'left', 10);
   // pecera
   const aqY = bot - 110;
   if (c.acuarioL > 0) {
@@ -1121,6 +1214,8 @@ function renderStatic() {
     ['Cal sodada por día si se sella', `${n.calSodadaSellado.toFixed(1)} kg`],
     ['Papa bajo LED para todo el O₂', `${fmtN(n.areaO2)} m²`],
     ['Sal para personas y pecera', `${fmtN(n.salPersonasKg)} + ${fmtN(n.salPeceraKg)} kg`],
+    ['Bicarbonato y nitrato para la espirulina', `${fmtN(n.bicarbonatoKg)} + ${fmtN(n.nitratoKg)} kg`],
+    ['Aserrín para baño seco y perros', `${fmtN(n.aserrinKg)} kg`],
     ['Papa bajo LED para toda la comida', `${fmtN(n.areaComida)} m² y ${fmtN(n.areaComida * c.aeroPPFD / c.ledEff * c.fotoperiodo * 3600 / 3.6e6)} kWh/día de focos`],
   ].map(([a, b]) => `<li><span>${a}</span><span class="when" style="color:var(--fg)">${b}</span></li>`).join('');
   // hallazgos
@@ -1143,7 +1238,7 @@ function renderStatic() {
   }
   $('phases').innerHTML = html;
   $('tl-legend').innerHTML = [['crit', 'detonación'], ['warn', 'encierro por radiación'], ['on', 'invierno nuclear'], ['ok', 'recuperación']].map(([k, n]) => `<span><i class="sw" style="background:${cols[k]}"></i>${n}</span>`).join('');
-  renderBuy(); renderPlan(); renderClimaTable(); renderSalud(); lastWaterDay = -1;
+  renderBuy(); renderPlan(); renderClimaTable(); renderSalud(); renderBano(); lastWaterDay = -1;
 }
 function renderTiles() {
   const x = res.days[day], [ph, cl] = phaseOf(day);
@@ -1202,12 +1297,24 @@ function presupuesto() {
     { n: 'Sistema hidropónico NFT', d: '≈ 2 m² por equipo', q: Math.ceil(c.hidroArea / 2), p: 11947, u: 'https://www.amazon.com.mx/hydroponics-growing-system/s?k=hydroponics+growing+system&page=2', s: 'Amazon MX' },
     { n: 'Torre aeropónica de 14 niveles', d: '≈ 0.5 m² por torre', q: Math.ceil(c.aeroArea / 0.5), p: 3715, u: 'https://www.amazon.com.mx/hidrop%C3%B3nico-Vertical-Automatizar-aeropon%C3%ADa-Interior/dp/B0D925KZG9', s: 'Amazon MX' },
     { n: 'Alimento para tilapia, bulto de 25 kg (32 % de proteína)', d: '', q: Math.ceil(c.alimentoPeces / 25), p: 989, u: 'https://articulo.mercadolibre.com.mx/MLM-874676387-alimento-para-peces-engorda-35mm-tilapiabagre-25kg-_JM', s: 'Mercado Libre' },
+    { n: 'Bicarbonato de sodio, saco de 25 kg', d: 'Medio de cultivo de la espirulina', q: Math.ceil(n.bicarbonatoKg / 25), p: 750, u: ML + 'bicarbonato-de-sodio-25-kg', s: 'Mercado Libre' },
+    { n: 'Nitrato de sodio o potasio', d: `${fmtN(n.nitratoKg)} kg; sin precio: cotiza con una tienda de fertilizantes`, q: Math.ceil(n.nitratoKg), p: null, u: ML + 'nitrato-de-potasio', s: 'Cotizar' },
+    { n: 'Cepa pura de espirulina', d: 'Sin precio: con un laboratorio o productor certificado (evita toxinas de otras cianobacterias)', q: c.alga === 'espirulina' ? 1 : 0, p: null, u: ML + 'espirulina-cepa', s: 'Cotizar' },
+    { n: 'Kit de pruebas de agua (amonio, nitrito, nitrato, pH)', d: '', q: Math.max(1, Math.ceil(c.dias / 365)), p: 1619, u: ML + 'kit-test-acuario', s: 'Mercado Libre' },
+    { n: 'Aireador de pecera con batería de respaldo', d: 'Sin precio exacto: dos aireadores, uno de 12 V', q: 2, p: null, u: ML + 'bomba-de-aire-acuario', s: 'Cotizar' },
     { n: 'Pecera, fotobiorreactor de algas y alevines', d: 'Sin precio: se arman con tanques y bombas de acuario', q: 1, p: null, u: ML + 'acuario-grande', s: 'Cotizar' },
     { g: 'Comida' },
     { n: 'Arroz, bulto de 25 kg', d: '60 % de las calorías guardadas', q: Math.ceil(rice / 25), p: 857, u: ML + 'arroz-25-kg', s: 'Mercado Libre' },
     { n: 'Frijol pinto, bulto de 25 kg', d: '40 % de las calorías guardadas; agrega aceite, sal, avena y vitaminas', q: Math.ceil(beans / 25), p: 1185, u: ML + 'bulto-de-frijol-pinto', s: 'Mercado Libre' },
     { n: 'Croquetas para perro, 20 kg', d: '', q: Math.ceil(c.croquetasKg / 20), p: 669, u: ML + 'croquetas-20-kg', s: 'Mercado Libre' },
     { n: 'Sal de grano, bulto de 25 kg', d: 'Para cocinar y para la pecera (la de la pecera, sin yodo)', q: Math.ceil((n.salPersonasKg + n.salPeceraKg) / 25), p: 580, u: ML + 'sal-de-grano', s: 'Mercado Libre' },
+    { g: 'Baño y desechos' },
+    { n: 'Separador de orina para baño seco', d: 'Fibra de vidrio, 21 × 38 × 48 cm', q: res.need.banos, p: 1959, u: 'https://www.mercadolibre.com.mx/embudo-separador-de-orina-sanitario-ecologico-bano-seco/up/MLMU569214864', s: 'Mercado Libre' },
+    { n: 'Regadera ahorradora Aquasave Eco80', d: '', q: res.need.banos, p: 569, u: ML + 'regaderas-ahorradoras-de-agua', s: 'Mercado Libre' },
+    { n: 'Calentador de agua de paso eléctrico 6.5 kW', d: 'Pide 6.5 kW mientras corre: el inversor debe aguantarlo; un boiler chico de 1–1.5 kW es más amable con las baterías', q: res.need.banos, p: 790, u: 'https://www.amazon.com.mx/calentador-de-agua-electrico-paso/s?k=calentador+de+agua+electrico+de+paso', s: 'Amazon MX' },
+    { n: 'Aserrín, costal de 10 kg', d: '', q: Math.ceil(res.need.aserrinKg / 10), p: 189, u: 'https://www.amazon.com.mx/Aserrin-Sustrato-Animales-Decoracion-Caballos/dp/B0GGTFZ5DD', s: 'Amazon MX' },
+    { n: 'Lombriz roja californiana, pie de cría 5 kg', d: 'Para la lombricomposta', q: c.lombricomposta ? 1 : 0, p: 729, u: ML + 'kilo-de-lombriz-roja-californiana', s: 'Mercado Libre' },
+    { n: 'Garrafones y tambos para orina, cámaras de composta, extractor del baño', d: 'Sin precio: se arman con tambos de 200 L y un extractor chico', q: 1, p: null, u: ML + 'tambo-200-litros', s: 'Cotizar' },
     { g: 'Salud' },
     { n: 'Vitamina D3 2000 UI, 350 cápsulas', d: 'Sin sol, la piel no la produce', q: Math.ceil(c.personas * c.dias / 350), p: 292, u: ML + 'vitamina-d3-2000-iu', s: 'Mercado Libre' },
     { n: 'Multivitamínico con B12, 365 tabletas', d: 'El arroz y el frijol no traen B12', q: Math.ceil(c.personas * c.dias / 365), p: 695, u: 'https://www.mercadolibre.com.mx/multivitaminico-diario-completo-365-tabletas-eg-p58-sabor-sin-sabor/p/MLM27968349', s: 'Mercado Libre' },
@@ -1235,10 +1342,11 @@ function cuartos() {
     { k: 'entrada', n: 'Esclusa y ducha', a: 8, col: 'var(--concrete)' },
     { k: 'dorm', n: 'Dormitorio y estancia', a: 4 * c.personas + 1.5 * c.perros + 6, col: 'var(--panel2)' },
     { k: 'cocina', n: 'Cocina y comedor', a: 12, col: 'var(--panel2)' },
-    { k: 'bano', n: 'Baño seco y regadera', a: 6, col: 'var(--panel2)' },
+    { k: 'bano', n: 'Baños secos y regaderas', a: 3.2 * Math.max(1, Math.ceil(c.personas / 5)) * 2.4, col: 'var(--panel2)' },
     { k: 'maq', n: 'Máquinas y filtros', a: 8 + c.bateriaKWh / 5.12 * 0.3, col: 'var(--panel2)' },
     { k: 'cult', n: 'Cultivo, algas y pecera', a: (c.hidroArea + c.aeroArea) * 1.6 + (c.algasEnPecera ? 0 : c.algasL / 1000 * 2) + c.acuarioL / 1000 * 1.5 + 2, col: 'var(--plant)' },
     { k: 'alm', n: 'Almacén', a: foodKg / (600 * 1.8) * 2 + c.croquetasKg / (400 * 1.8) * 2 + 4, col: 'var(--food)' },
+    { k: 'comp', n: 'Compostas, orina, perros', a: 3.4 * 1.2 + 1 + 0.4 * c.perros + 2, col: 'var(--clay)' },
   ];
 }
 function renderPlan() {
@@ -1246,7 +1354,7 @@ function renderPlan() {
   const need = rooms.reduce((a, r) => a + r.a, 0);
   const total = Math.max(c.area, need);
   const D = Math.sqrt(total / 1.6), W = 1.6 * D;
-  const top = rooms.filter((r) => ['dorm', 'cocina', 'bano', 'maq'].includes(r.k)), bottom = rooms.filter((r) => ['entrada', 'cult', 'alm'].includes(r.k));
+  const top = rooms.filter((r) => ['dorm', 'cocina', 'bano', 'maq'].includes(r.k)), bottom = rooms.filter((r) => ['entrada', 'cult', 'alm', 'comp'].includes(r.k));
   const scaleRow = (row) => { const a = row.reduce((x, r) => x + r.a, 0); return a; };
   const aTop = scaleRow(top), aBot = scaleRow(bottom), extra = total - need;
   // el área que sobra se reparte entre dormitorio y almacén
@@ -1261,7 +1369,7 @@ function renderPlan() {
     let x = 0;
     for (const r of list) {
       const w = r.a / d, num = legend.length + 1;
-      svg += rect(x, y0, w, d, r.col, r.k === 'cult' ? 0.35 : r.k === 'alm' ? 0.35 : 1);
+      svg += rect(x, y0, w, d, r.col, ['cult', 'alm', 'comp'].includes(r.k) ? 0.35 : 1);
       svg += `<circle cx="${ox + (x + w / 2) * px}" cy="${oy + (y0 + d / 2) * px}" r="11" fill="var(--oil)"/>` + text(x + w / 2, y0 + d / 2 + 0.2, num, 'pl-num');
       if (w > 4.5) svg += text(x + w / 2, y0 + d / 2 + 1.1, r.n, 'pl-n');
       legend.push(`<li><span><b>${num}</b> · ${r.n}</span><span class="when" style="color:var(--fg)">${r.a.toFixed(0)} m² · ${w.toFixed(1)} × ${d.toFixed(1)} m</span></li>`);
@@ -1373,6 +1481,7 @@ function renderWater() {
   const uses = [['Beber', w.beber, 30], ['Cocinar', w.cocina, 85], ['Higiene', w.higiene, 140], ['Perros', w.perros, 195], ['Plantas', w.plantas, 250], ['Pecera', w.pecera, 305]];
   uses.forEach(([n, v, y]) => { svg += arrow(`M 440 170 C 500 170, 500 ${y + 20}, 560 ${y + 20}`, v, 'var(--water)'); svg += box(560, y, 120, 40, n, '', 'var(--water)') + `<text x="690" y="${y + 25}" class="wf-v">${f(v)} L</text>`; });
   // a dónde se va
+  svg += `<text x="620" y="380" text-anchor="middle" class="wf-v">el recambio de la pecera (${f(w.recambio)} L al día) riega las plantas</text>`;
   svg += arrow('M 740 120 C 780 120, 790 70, 820 70', w.condensado + w.vaporPerdido, 'var(--o2)');
   svg += box(820, 45, 150, 50, 'Vapor al aire', `${f(w.condensado + w.vaporPerdido)} L`, 'var(--o2)');
   svg += `<text x="895" y="112" text-anchor="middle" class="wf-v">${f(w.vaporPerdido)} L se van al ventilar</text>`;
@@ -1383,7 +1492,51 @@ function renderWater() {
   // ciclos de regreso
   svg += `<path d="M 895 45 C 895 0, 85 0, 85 125" fill="none" stroke="var(--o2)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="480" y="16" text-anchor="middle" class="wf-v">el deshumidificador recupera ${Math.round(100 * w.condensado / Math.max(1e-9, w.condensado + w.vaporPerdido))} % del vapor</text>`;
   svg += `<path d="M 895 215 C 895 250, 830 255, 830 255 M 820 340 C 400 360, 85 350, 85 285" fill="none" stroke="var(--steel)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="480" y="356" text-anchor="middle" class="wf-v">se trata y regresa ${Math.round(100 * cfg.reciclaGris)} % de las grises</text>`;
-  $('water-flow').innerHTML = `<svg viewBox="0 0 990 365" width="100%" role="img" aria-label="Diagrama de flujos de agua del día"><style>.wf-t{font:600 13px 'Saira Condensed',sans-serif;fill:var(--fg)}.wf-v{font:500 11px 'IBM Plex Mono',monospace;fill:var(--muted)}</style>${svg}</svg>`;
+  $('water-flow').innerHTML = `<svg viewBox="0 0 990 390" width="100%" role="img" aria-label="Diagrama de flujos de agua del día"><style>.wf-t{font:600 13px 'Saira Condensed',sans-serif;fill:var(--fg)}.wf-v{font:500 11px 'IBM Plex Mono',monospace;fill:var(--muted)}</style>${svg}</svg>`;
+}
+
+// ---------- Baño, regadera y desechos ----------
+function renderBano() {
+  const c = cfg, n = res.need, t = res.tot, D = c.dias;
+  const nb = n.banos;
+  $('bano-intro').textContent = `Para ${c.personas} personas: ${nb} ${nb > 1 ? 'baños secos' : 'baño seco'} con separación de orina y ${nb} ${nb > 1 ? 'regaderas' : 'regadera'} ahorradora${nb > 1 ? 's' : ''}. Con ${c.duchasSemana} regaderazos por persona a la semana se usan ${fmtN(n.duchaL, 1)} L por persona al día${n.duchaL > Math.max(0, c.aguaPersona - 6) ? `, más de los ${fmtN(Math.max(0, c.aguaPersona - 6))} L de higiene que da tu consumo de ${c.aguaPersona} L: sube el agua por persona o báñense menos` : ''}. El agua caliente sale de la misma energía que los cultivos: en el día seleccionado se calienta ${Math.round(100 * res.days[day].duchaFrac)} % de lo que se pide.`;
+  // plano del baño (medidas en m)
+  const px = 120, ox = 20, oy = 40, W = 3.2 * nb + 3.6, H = 3.6;
+  const r = (x, y, w, h, fill, op = 1, dash) => `<rect x="${ox + x * px}" y="${oy + y * px}" width="${w * px}" height="${h * px}" fill="${fill}" fill-opacity="${op}" stroke="var(--fg)" stroke-width="1.4"${dash ? ' stroke-dasharray="4 3"' : ''}/>`;
+  const tx = (x, y, s, cls = 'bp-d', a = 'middle') => `<text x="${ox + x * px}" y="${oy + y * px}" text-anchor="${a}" class="${cls}">${s}</text>`;
+  let svg = r(0, 0, W, H, 'var(--panel2)');
+  for (let k = 0; k < nb; k++) {
+    const x0 = k * 3.2;
+    svg += r(x0, 0, 1.4, 1.6, 'var(--panel)') + tx(x0 + 0.7, 0.55, 'Baño seco', 'bp-n') + tx(x0 + 0.7, 0.85, 'separador de orina');
+    svg += `<ellipse cx="${ox + (x0 + 0.7) * px}" cy="${oy + 1.2 * px}" rx="${0.22 * px}" ry="${0.28 * px}" fill="var(--food)" fill-opacity="0.5" stroke="var(--fg)"/>`;
+    svg += r(x0 + 1.5, 0, 1.6, 1.6, 'var(--water)', 0.25) + tx(x0 + 2.3, 0.55, 'Regadera', 'bp-n') + tx(x0 + 2.3, 0.85, '6 L/min · 3 min');
+    svg += `<circle cx="${ox + (x0 + 2.3) * px}" cy="${oy + 1.25 * px}" r="5" fill="var(--water)"/>`;
+    svg += r(x0 + 0.2, 1.75, 0.9, 0.5, 'var(--panel)') + tx(x0 + 0.65, 2.08, 'lavabo');
+  }
+  const xs = 3.2 * nb;
+  // bajo el piso / cuarto de servicio
+  svg += r(xs + 0.2, 0, 3.2, 1.0, 'var(--food)', 0.35) + tx(xs + 1.8, 0.45, 'Cámaras de composta A | B', 'bp-n') + tx(xs + 1.8, 0.75, `se alternan cada 12 meses · ${fmtN(n.camaraL)} L c/u`);
+  svg += `<line x1="${ox + (xs + 1.8) * px}" y1="${oy}" x2="${ox + (xs + 1.8) * px}" y2="${oy + 1.0 * px}" stroke="var(--fg)" stroke-width="1.4"/>`;
+  svg += r(xs + 0.2, 1.1, 1.5, 0.9, 'var(--fuel)', 0.3) + tx(xs + 0.95, 1.5, 'Garrafones de orina', 'bp-n') + tx(xs + 0.95, 1.78, '1 mes guardada → abono');
+  svg += r(xs + 1.8, 1.1, 1.6, 0.9, 'var(--steel)', 0.3) + tx(xs + 2.6, 1.5, 'Trampa de grasa', 'bp-n') + tx(xs + 2.6, 1.78, '→ arena → carbón → UV');
+  svg += r(xs + 0.2, 2.1, 1.5, 0.8, 'var(--clay)', 0.3) + tx(xs + 0.95, 2.45, 'Aserrín', 'bp-n') + tx(xs + 0.95, 2.72, `${fmtN(n.aserrinKg)} kg en total`);
+  svg += r(xs + 1.8, 2.1, 1.6, 0.8, 'var(--plant)', 0.3) + tx(xs + 2.6, 2.45, 'Lombricomposta', 'bp-n') + tx(xs + 2.6, 2.72, 'restos de cultivo');
+  svg += r(0.2, 2.6, Math.min(3.0, xs - 0.4), 0.9, 'var(--food)', 0.2, true) + tx(0.2 + Math.min(3.0, xs - 0.4) / 2, 2.98, `Área de perros (${c.perros})`, 'bp-n') + tx(0.2 + Math.min(3.0, xs - 0.4) / 2, 3.25, 'charola con pasto sintético y aserrín');
+  svg += r(xs + 0.2, 3.0, 3.2, 0.5, 'var(--steel)', 0.15) + tx(xs + 1.8, 3.32, 'Basura inorgánica compactada');
+  // extractor
+  svg += `<path d="M ${ox + W * px} ${oy + 0.5 * px} h 40 v -40" fill="none" stroke="var(--o2)" stroke-width="5"/>` + tx(W + 0.6, -0.15, 'extractor al exterior', 'bp-d');
+  svg += `<line x1="${ox}" y1="${oy + (H + 0.45) * px}" x2="${ox + px}" y2="${oy + (H + 0.45) * px}" stroke="var(--fg)" stroke-width="2"/>` + tx(0.5, H + 0.85, '1 m');
+  $('bano-plan').innerHTML = `<svg viewBox="0 0 ${ox * 2 + W * px + 160} ${oy + (H + 1.1) * px}" width="100%" style="max-width:${ox * 2 + W * px + 160}px" role="img" aria-label="Plano del baño seco, regaderas y manejo de desechos"><style>.bp-n{font:600 13px 'Saira Condensed',sans-serif;fill:var(--fg)}.bp-d{font:500 10.5px 'IBM Plex Mono',monospace;fill:var(--muted)}</style>${svg}</svg>`;
+  const rows = [
+    ['Heces de personas', `${fmtN(0.128 * c.personas, 1)} kg`, `${fmtN(t.hecesKg)} kg`, 'Baño seco con aserrín → cámara de composta 12 meses'],
+    ['Orina de personas', `${fmtN(1.42 * c.personas, 1)} L`, `${fmtN(t.orinaL)} L`, 'Garrafones 1 mes → abono diluido para cultivos en tierra; el excedente se guarda'],
+    ['Heces de perros', `${fmtN(t.hecesPerrosKg / D, 1)} kg`, `${fmtN(t.hecesPerrosKg)} kg`, 'Composta aparte (parásitos); nunca a cultivos de comida'],
+    ['Orina de perros', `${fmtN(t.orinaPerrosL / D, 1)} L`, `${fmtN(t.orinaPerrosL)} L`, 'Charola con aserrín → composta'],
+    ['Aserrín o fibra de coco', `${fmtN(t.aserrinKg / D, 1)} kg`, `${fmtN(t.aserrinKg)} kg`, 'Se compra y guarda; cubre cada uso'],
+    ['Restos de cultivo', `${fmtN(t.restosKg / D, 2)} kg`, `${fmtN(t.restosKg)} kg`, c.lombricomposta ? `Lombricomposta → ${fmtN(t.lombrizKg)} kg de lombriz para la tilapia y humus` : 'Composta'],
+    ['Basura inorgánica (empaques)', `${fmtN(t.basuraKg / D, 2)} kg`, `${fmtN(t.basuraKg)} kg`, 'Se lava, compacta y guarda; no se quema adentro (monóxido)'],
+  ];
+  $('bano-body').innerHTML = rows.map(([a, b2, c2, d2]) => `<tr><td>${a}</td><td class="num">${b2}</td><td class="num">${c2}</td><td>${d2}</td></tr>`).join('');
 }
 
 // ---------- Salud ----------

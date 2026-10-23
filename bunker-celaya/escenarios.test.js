@@ -76,5 +76,24 @@ const grande = run({ personas: 10, perros: 10, area: 220, vent: 250 });
 ok(grande.days[100].co2max < 0.005, `10 personas y 10 perros con 250 m³/h: CO₂ máx ${(grande.days[100].co2max * 1e6).toFixed(0)} ppm`);
 ok(Math.abs(M.necesidades(M.config({ personas: 10 })).comidaKg / M.necesidades(M.config({ personas: 5 })).comidaKg - 2) < 1e-9, 'la comida escala con el número de personas');
 
+// Espirulina: comestible hasta el tope, lo demás a los peces; no puede ir en la pecera
+const esp = run({ algasL: 1000 });
+ok(esp.tot.algasComidaKg > 0 && esp.tot.algasPecesKg > 0, `espirulina: ${esp.tot.algasComidaKg.toFixed(0)} kg para comer y ${esp.tot.algasPecesKg.toFixed(0)} kg para los peces en 3 años`);
+ok(esp.days[400].algasComidaG <= 5 * 5 + 1e-9, 'nadie come más de 5 g de espirulina al día');
+const espPecera = run({ algasEnPecera: true, alga: 'espirulina' });
+ok(espPecera.tot.algasComidaKg === 0, 'la espirulina no crece en la pecera: necesita agua alcalina que mataría a la tilapia');
+const chl = run({ algasEnPecera: true, alga: 'chlorella' });
+ok(chl.days[400].o2Alg !== 0, 'la chlorella sí puede vivir en la pecera');
+const fria2 = run({ calentarAlgas: false });
+ok(fria2.days[400].o2Alg < base.days[400].o2Alg, 'sin calentar, la espirulina (30–35 °C) produce menos');
+
+// Baño y desechos
+const san = run({});
+ok(Math.abs(san.tot.orinaL / (1.42 * 5 * 1095) - 1) < 1e-9, `orina en 3 años: ${(san.tot.orinaL / 1000).toFixed(1)} m³ (1.42 L por persona al día)`);
+ok(san.tot.restosKg > 0 && san.tot.lombrizKg > 0, `restos de cultivo ${san.tot.restosKg.toFixed(0)} kg → ${san.tot.lombrizKg.toFixed(0)} kg de lombriz para la tilapia`);
+const sinDucha = run({ duchasSemana: 0 }), muchas = run({ duchasSemana: 7 });
+ok(muchas.tot.kcalProd < sinDucha.tot.kcalProd, `el agua caliente le quita energía a los cultivos (${(sinDucha.tot.kcalProd / 1e3).toFixed(0)} → ${(muchas.tot.kcalProd / 1e3).toFixed(0)} mil kcal cultivadas)`);
+ok(M.necesidades(M.config({ personas: 10 })).banos === 2, '10 personas: 2 baños secos');
+
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo en verde');
 process.exit(fallas ? 1 : 0);
