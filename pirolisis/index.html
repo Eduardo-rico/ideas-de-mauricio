@@ -148,8 +148,8 @@ tfoot td { background: var(--panel2); }
         <select id="speed">
           <option value="30">×30</option>
           <option value="120">×120</option>
-          <option value="300" selected>×300</option>
-          <option value="900">×900</option>
+          <option value="300">×300</option>
+          <option value="900" selected>×900</option>
           <option value="2400">×2400</option>
         </select>
       </label>
@@ -160,7 +160,7 @@ tfoot td { background: var(--panel2); }
 
   <div class="tiles">
     <div class="tile"><span class="k">Tiempo</span><span class="v" id="k-time">0:00</span><span class="u">h:min de proceso</span></div>
-    <div class="tile"><span class="k">TI-101 Reactor</span><span class="v" id="k-T">25</span><span class="u">°C · objetivo <span id="k-Tsp">460</span></span></div>
+    <div class="tile"><span class="k">TI-101 Reactor</span><span class="v" id="k-T">25</span><span class="u">°C · objetivo <span id="k-Tsp">460</span> · pared <span id="k-Tw">25</span></span></div>
     <div class="tile"><span class="k">PI-101 Presión</span><span class="v" id="k-P">1.01</span><span class="u">bar abs · τ vapor <span id="k-tau">—</span></span></div>
     <div class="tile"><span class="k">Conversión</span><span class="v" id="k-conv">0</span><span class="u">% del plástico</span></div>
     <div class="tile"><span class="k">Gasolina</span><span class="v" id="k-G" style="color:var(--gasoline)">0.0</span><span class="u">kg · C5–C12</span></div>
@@ -208,6 +208,7 @@ tfoot td { background: var(--panel2); }
         <legend>Operación <small>en vivo</small></legend>
         <label class="ctl" for="Tsp"><span class="row">Temperatura objetivo<output id="o-Tsp"></output></span><input type="range" id="Tsp" min="350" max="600" step="5" value="460"><span class="hint">Más calor = más rápido y más gas.</span></label>
         <label class="ctl" for="Pmax"><span class="row">Potencia del calentador<output id="o-Pmax"></output></span><input type="range" id="Pmax" min="10" max="120" step="5" value="40"></label>
+        <label class="ctl" for="TwMax"><span class="row">Temperatura máxima de pared<output id="o-TwMax"></output></span><input type="range" id="TwMax" min="450" max="750" step="10" value="600"><span class="hint">El plástico fundido es espeso y recibe poco calor. Pared más caliente = más calor, pero más coque pegado y acero más débil.</span></label>
         <label class="ctl" for="Pset"><span class="row">Contrapresión PCV-101<output id="o-Pset"></output></span><input type="range" id="Pset" min="1.05" max="5" step="0.05" value="1.2"><span class="hint">Más presión retiene los vapores pesados y los rompe más.</span></label>
         <label class="ctl" for="n2"><span class="row">Purga de N₂<output id="o-n2"></output></span><input type="range" id="n2" min="0" max="0.05" step="0.0025" value="0.005"></label>
       </fieldset>
@@ -322,14 +323,20 @@ tfoot td { background: var(--panel2); }
         <p>El gas no condensable y el N₂ salen saturados de gasolina. Agua más fría y más presión recuperan más. Con un solo pseudocomponente esta regla subestima la pérdida: Peng–Robinson da 11 % contra 6 %, porque los C5–C6 son mucho más volátiles que el promedio.</p>
       </div>
       <div class="eq">
-        <span class="what">11 · Balance de energía del reactor</span>
-        <math display="block"><mi>C</mi><mo>(</mo><mi>T</mi><mo>)</mo><mfrac><mrow><mi>d</mi><mi>T</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msub><mover><mi>Q</mi><mo>˙</mo></mover><mtext>cal</mtext></msub><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><mi>Δ</mi><msub><mi>H</mi><mi>j</mi></msub><msub><mi>r</mi><mi>j</mi></msub><mo>−</mo><munder><mo>∑</mo><mi>i</mi></munder><mi>Δ</mi><msub><mi>H</mi><mrow><mi>v</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>E</mi><mi>i</mi></msub><mo>−</mo><mi>Δ</mi><msub><mi>H</mi><mtext>sec</mtext></msub><msub><mi>r</mi><mtext>sec</mtext></msub><mo>−</mo><mi>U</mi><mi>A</mi><mo>(</mo><mi>T</mi><mo>−</mo><msub><mi>T</mi><mtext>amb</mtext></msub><mo>)</mo></math>
-        <p>La pirólisis es endotérmica. Craqueo más vaporización suman ≈ 1.25 MJ/kg en PEAD, cerca de los 1 375 ± 233 kJ/kg medidos por DSC.</p>
+        <span class="what">11 · Balance de energía en dos nodos: pared y fundido</span>
+        <math display="block"><msub><mi>C</mi><mi>s</mi></msub><mfrac><mrow><mi>d</mi><msub><mi>T</mi><mi>w</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><msub><mover><mi>Q</mi><mo>˙</mo></mover><mtext>cal</mtext></msub><mo>−</mo><mi>h</mi><msub><mi>A</mi><mtext>moj</mtext></msub><mo>(</mo><msub><mi>T</mi><mi>w</mi></msub><mo>−</mo><mi>T</mi><mo>)</mo><mo>−</mo><mi>U</mi><mi>A</mi><mo>(</mo><msub><mi>T</mi><mi>w</mi></msub><mo>−</mo><msub><mi>T</mi><mtext>amb</mtext></msub><mo>)</mo></math>
+        <math display="block"><mi>C</mi><mo>(</mo><mi>T</mi><mo>)</mo><mfrac><mrow><mi>d</mi><mi>T</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mi>h</mi><msub><mi>A</mi><mtext>moj</mtext></msub><mo>(</mo><msub><mi>T</mi><mi>w</mi></msub><mo>−</mo><mi>T</mi><mo>)</mo><mo>−</mo><munder><mo>∑</mo><mi>j</mi></munder><mi>Δ</mi><msub><mi>H</mi><mi>j</mi></msub><msub><mi>r</mi><mi>j</mi></msub><mo>−</mo><munder><mo>∑</mo><mi>i</mi></munder><mi>Δ</mi><msub><mi>H</mi><mrow><mi>v</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>E</mi><mi>i</mi></msub><mo>−</mo><mi>Δ</mi><msub><mi>H</mi><mtext>sec</mtext></msub><msub><mi>r</mi><mtext>sec</mtext></msub></math>
+        <p>El calentador calienta el acero; el acero le pasa calor al fundido por el área mojada. Un limitador corta el calentador si la pared llega a su máximo. El intercambio se resuelve implícito. La pirólisis es endotérmica: craqueo más vaporización suman ≈ 1.25 MJ/kg en PEAD, cerca de los 1 375 ± 233 kJ/kg medidos por DSC.</p>
       </div>
       <div class="eq">
         <span class="what">12 · Fusión como calor específico aparente</span>
         <math display="block"><mi>C</mi><mo>=</mo><msub><mi>m</mi><mtext>acero</mtext></msub><msub><mi>c</mi><mi>p</mi></msub><mo>+</mo><munder><mo>∑</mo><mi>j</mi></munder><msub><mi>m</mi><mrow><mi>P</mi><mo>,</mo><mi>j</mi></mrow></msub><mrow><mo>[</mo><msub><mi>c</mi><mi>p</mi></msub><mo>+</mo><mi>Δ</mi><msub><mi>H</mi><mi>m</mi></msub><mspace width="0.15em"/><mi>𝒩</mi><mo>(</mo><mi>T</mi><mo>;</mo><msub><mi>T</mi><mi>m</mi></msub><mo>,</mo><mn>6</mn><mtext> K</mtext><mo>)</mo><mo>]</mo></mrow><mo>+</mo><mo>…</mo></math>
         <p>El calor latente de fusión se reparte como una campana alrededor del punto de fusión; por eso la curva de temperatura hace un escalón entre 110 y 165 °C.</p>
+      </div>
+      <div class="eq">
+        <span class="what">13 · Cuánto calor deja pasar la pared</span>
+        <math display="block"><mfrac><mrow><mi>h</mi><mi>D</mi></mrow><mi>k</mi></mfrac><mo>=</mo><mn>0.36</mn><mspace width="0.15em"/><msup><mi>Re</mi><mrow><mn>2</mn><mo>/</mo><mn>3</mn></mrow></msup><msup><mi>Pr</mi><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup><mo>,</mo><mspace width="0.5em"/><mi>ln</mi><mi>μ</mi><mo>=</mo><msub><mi>φ</mi><mi>P</mi></msub><mo>[</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>X</mi><mo>)</mo><mi>ln</mi><msub><mi>μ</mi><mi>P</mi></msub><mo>(</mo><mi>T</mi><mo>)</mo><mo>+</mo><mi>X</mi><mi>ln</mi><msub><mi>μ</mi><mtext>aceite</mtext></msub><mo>]</mo><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mi>φ</mi><mi>P</mi></msub><mo>)</mo><mi>ln</mi><msub><mi>μ</mi><mtext>aceite</mtext></msub></math>
+        <p>Agitador de ancla a 30 rpm (Uhl y Gray), con h mínimo de 40 W/m²K. El plástico recién fundido tiene ~100 Pa·s y le entran pocos kW; conforme se craquea (conversión X) baja hacia 0.005 Pa·s y el calor entra mejor. Por eso un lote tarda ~7 h y no 3.</p>
       </div>
     </div>
 
@@ -354,6 +361,7 @@ tfoot td { background: var(--panel2); }
           <tr><td>Diésel → ligeros</td><td class="num">1×10¹²</td><td class="num">200</td><td>80% gasolina, 20% gas</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
           <tr><td>Gasolina → gas</td><td class="num">1.2×10¹²</td><td class="num">210</td><td>100% gas</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
           <tr><td>Ceras, diésel → coque</td><td class="num">1×10⁸</td><td class="num">170</td><td>coque</td><td><span class="tag cal">Calibrado a tendencias</span></td></tr>
+          <tr><td>Viscosidad del fundido: 1 000 Pa·s a 200 °C, E<sub>flujo</sub> 30 kJ/mol, aceite 0.005 Pa·s</td><td class="num">—</td><td class="num">—</td><td>h de la pared con ancla</td><td><span class="tag cal">Calibrar con reometría</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -466,6 +474,11 @@ const P_RELIEF = 6e5;       // disparo PSV, Pa abs
 const DH_SEC = 0.3e6;       // calor de craqueo secundario, J/kg
 const LHV_GAS = 46e6, ETA_B = 0.75; // gas C1–C4 y eficiencia del quemador
 const KP = 2500, KI = 8;    // control PI del calentador
+const KW = 2000;            // limitador de temperatura de pared, W/K
+// Pared → fundido: ancla de Uhl y Gray y viscosidad del fundido (calibrar con reometría)
+const MU_POLY_REF = 1000, T_MU_REF = 473.15, EA_MU = 30e3; // Pa·s a 200 °C, energía de flujo J/mol
+const MU_OIL = 0.005, K_MELT = 0.15, H_MIN = 40, RPM = 30;  // Pa·s, W/m·K, W/m²K, rpm
+const C_MIN_MELT = 2000;    // J/K de termopozo, agitador y espacio de cabeza
 
 const POLY = {
   HDPE: { name: 'PEAD', A: 1.0e16, Ea: 268e3, s: { W: .55, D: .22, G: .13, Gs: .08, C: .02 }, Tm: 403, dHm: 190e3, dHr: 1.05e6 },
@@ -516,13 +529,33 @@ function refluxFlash(out, nN2, Td, P) {
   return r;
 }
 
+// Recipiente con H/D = 1.5 y tapas 2:1: diámetro y área mojada para un volumen de líquido
+function wetArea(Vr, Vliq) {
+  const D = Math.pow(Vr / (Math.PI / 4 * 1.5 + Math.PI / 12), 1 / 3);
+  const Ah = 1.084 * D * D, Vh = Math.PI * D * D * D / 24;
+  const A = Vliq <= Vh ? Ah * Vliq / Vh : Ah + Math.PI * D * Math.min(1.5 * D, (Vliq - Vh) / (Math.PI * D * D / 4));
+  return { D, A: Math.max(0.05 * Ah, A) };
+}
+
+// Viscosidad del fundido: el polímero se adelgaza al craquearse (mezcla logarítmica con el aceite)
+function meltViscosity(T, conv, fPoly) {
+  const muP = MU_POLY_REF * Math.exp(EA_MU / R * (1 / T - 1 / T_MU_REF));
+  const lnMuP = (1 - conv) * Math.log(muP) + conv * Math.log(MU_OIL);
+  return Math.exp(fPoly * lnMuP + (1 - fPoly) * Math.log(MU_OIL));
+}
+
+function hWall(mu, D) {
+  const Re = RHO * (RPM / 60) * Math.pow(0.95 * D, 2) / mu, Pr = CP_LIQ * mu / K_MELT;
+  return Math.max(H_MIN, 0.36 * Math.pow(Re, 2 / 3) * Math.pow(Pr, 1 / 3) * K_MELT / D);
+}
+
 function makeState(c) {
   const mP = {};
   let tot = 0;
   for (const k in c.mix) tot += c.mix[k];
   for (const k in c.mix) mP[k] = tot > 0 ? c.mass * c.mix[k] / tot : 0;
   const s = {
-    t: 0, T: c.Tamb, P: PATM, I: 0, Q: 0, relief: false, done: false, tau: 0,
+    t: 0, T: c.Tamb, Tw: c.Tamb, P: PATM, I: 0, Q: 0, relief: false, done: false, tau: 0, wallLimited: false,
     mP, mass0: c.mass, L: { W: 0, D: 0, G: 0 }, V: { W: 0, D: 0, G: 0, Gs: 0 },
     nN2: 0, char: 0, tank: { G: 0, D: 0, W: 0 }, gasFlare: 0, gasBurn: 0, gasLossG: 0,
     Eext: 0, Egas: 0, cum: { prim: 0, evap: 0, refl: 0, out: { W: 0, D: 0, G: 0, Gs: 0 } }, tDone: 0,
@@ -632,10 +665,13 @@ function step(s, c, dt) {
   s.gasLossG += lossG;
   const gasM = out.Gs + lossG;
 
-  // 8. Calentador con control PI y gas recirculado al quemador
+  // 8. Calentador: PI sobre el fundido y limitador de temperatura de pared; el gas recirculado entra primero
   const e = c.Tsp - T;
-  if (Math.abs(e) < 25) s.I = clamp(s.I + KI * e * dt, 0, c.Pmax);
-  const Q = clamp(KP * e + s.I, 0, c.Pmax);
+  const Qlim = Math.max(0, KW * (c.TwMax - s.Tw));
+  const Qpi = KP * e + s.I;
+  s.wallLimited = Qpi > Qlim && Qlim < c.Pmax;
+  if (Math.abs(e) < 25 && !s.wallLimited) s.I = clamp(s.I + KI * e * dt, 0, c.Pmax);
+  const Q = clamp(Math.min(Qpi, Qlim), 0, c.Pmax);
   let Qgas = 0, burn = 0;
   if (c.recirc && gasM > 0) {
     Qgas = Math.min(Q, gasM / dt * LHV_GAS * ETA_B);
@@ -645,16 +681,28 @@ function step(s, c, dt) {
   s.Eext += (Q - Qgas) * dt; s.Egas += Qgas * dt;
   s.Q = Q; s.Qgas = Qgas;
 
-  // 9. Balance de energía del reactor
-  let C = c.mSteel * CP_STEEL + Ltot * CP_LIQ + s.char * CP_CHAR;
+  // 9. Balance de energía en dos nodos: pared de acero (Tw) y fundido (T), intercambio implícito
+  let Cm = Ltot * CP_LIQ + s.char * CP_CHAR;
   for (const j in s.mP) {
     const p = POLY[j];
-    C += s.mP[j] * CP_POLY;
-    if (p.dHm > 0) { const sg = 6, z = (T - p.Tm) / sg; C += s.mP[j] * p.dHm * Math.exp(-0.5 * z * z) / (sg * 2.5066); }
+    Cm += s.mP[j] * CP_POLY;
+    if (p.dHm > 0) { const sg = 6, z = (T - p.Tm) / sg; Cm += s.mP[j] * p.dHm * Math.exp(-0.5 * z * z) / (sg * 2.5066); }
   }
-  s.Qloss = c.UA * (T - c.Tamb);
+  Cm = Math.max(C_MIN_MELT, Cm);
+  const Cs = c.mSteel * CP_STEEL;
+  const melt = mPtot + Ltot;
+  const geo = wetArea(c.Vr, (melt + s.char) / RHO);
+  s.mu = meltViscosity(T, 1 - mPtot / s.mass0, melt > 0 ? mPtot / melt : 0);
+  s.hw = hWall(s.mu, geo.D); s.Awet = geo.A;
+  const a = s.hw * geo.A * dt;
+  s.Qloss = c.UA * (s.Tw - c.Tamb);
   s.Qrxn = Qr + Qs + Qv;
-  s.T = T + (Q - Qr - Qs - Qv - s.Qloss) / C * dt;
+  const b1 = Cs * s.Tw + dt * (Q - s.Qloss), b2 = Cm * T - dt * s.Qrxn;
+  const det = (Cs + a) * (Cm + a) - a * a;
+  const Tw1 = (b1 * (Cm + a) + a * b2) / det;
+  const T1 = ((Cs + a) * b2 + a * b1) / det;
+  s.Qwall = s.hw * geo.A * (Tw1 - T1);
+  s.Tw = Tw1; s.T = T1;
   s.t += dt;
 
   const left = mPtot + Ltot;
@@ -699,7 +747,7 @@ const fmt = {
   n2: (v) => `${(v * 22.414 * 60).toFixed(1)} NL/min`,
   cat: (v) => `${(v * 100).toFixed(0)} %`,
 };
-const OUT = { mass: fmt.kg, Vr: fmt.m3, Tsp: fmt.C, Pmax: fmt.kW, Pset: fmt.bar, n2: fmt.n2, Tref: fmt.C, Tc: fmt.C, catLoad: fmt.cat };
+const OUT = { mass: fmt.kg, Vr: fmt.m3, Tsp: fmt.C, Pmax: fmt.kW, TwMax: fmt.C, Pset: fmt.bar, n2: fmt.n2, Tref: fmt.C, Tc: fmt.C, catLoad: fmt.cat };
 
 function readCfg() {
   const v = (id) => parseFloat($(id).value);
@@ -707,9 +755,9 @@ function readCfg() {
   POLYS.forEach((p) => { mix[p] = v('m-' + p); });
   const Vr = v('Vr');
   return {
-    mix, mass: v('mass'), Vr, mSteel: 335 * Math.pow(Vr, 2 / 3), UA: 64 * Math.pow(Vr, 2 / 3), Tamb: 298,
+    mix, mass: v('mass'), Vr, mSteel: 335 * Math.pow(Vr, 2 / 3), UA: 25 * Math.pow(Vr, 2 / 3), Tamb: 298,
     Tsp: v('Tsp') + K0, Pmax: v('Pmax') * 1000, Pset: v('Pset') * 1e5, n2: v('n2'),
-    reflux: $('reflux').checked, Tref: v('Tref') + K0, Tc: v('Tc') + K0, recirc: $('recirc').checked,
+    reflux: $('reflux').checked, Tref: v('Tref') + K0, Tc: v('Tc') + K0, recirc: $('recirc').checked, TwMax: v('TwMax') + K0,
     cat: $('cat').value, catLoad: v('catLoad'),
   };
 }
@@ -989,6 +1037,7 @@ function drawScene(dtReal) {
   }
   title('Reactor R-101', rx + rw / 2, ry + rh + 34, 'center');
   label(`${(st.Q / 1000).toFixed(1)} kW` + (st.Qgas > 1 ? ` · ${(st.Qgas / 1000).toFixed(1)} del gas` : ''), rx + rw / 2, ry + rh + 50, C.heat, 'center', 11);
+  label(`pared ${(st.Tw - K0).toFixed(0)} °C → fundido ${((st.Qwall || 0) / 1000).toFixed(1)} kW`, rx + rw / 2, ry + rh + 64, st.wallLimited ? C.warn : C.muted, 'center', 11);
 
   // quemador con gas recirculado
   if (cfg.recirc) {
@@ -1258,6 +1307,7 @@ function renderStatus() {
   else if (conv < 0.01) phase = ['Calentando el fundido', 'on'];
   else phase = ['Pirolizando', 'on'];
   pills.push(phase);
+  if (running && st.wallLimited && !st.done) pills.push(['Limitado por la pared: el fundido no acepta más calor', 'warn']);
   if (st.relief) pills.push(['PSV abierta: sobrepresión', 'crit']);
   else if (st.P > 5e5) pills.push(['Presión alta', 'warn']);
   if (cfg.n2 === 0) pills.push(['Sin purga de N₂', 'warn']);
@@ -1275,6 +1325,7 @@ function render(dtReal) {
   $('k-T').textContent = (st.T - K0).toFixed(0);
   $('k-Tsp').textContent = (cfg.Tsp - K0).toFixed(0);
   $('k-P').textContent = (st.P / 1e5).toFixed(2);
+  $('k-Tw').textContent = (st.Tw - K0).toFixed(0);
   $('k-tau').textContent = isFinite(st.tau) && st.tau < 1e4 ? `${st.tau.toFixed(0)} s` : '—';
   $('k-conv').textContent = (100 * sm.conv).toFixed(0);
   $('k-G').textContent = sm.G.toFixed(1);

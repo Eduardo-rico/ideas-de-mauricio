@@ -12,7 +12,10 @@ R, PATM = 8.314, 101325.0
 DEFAULTS = {
     "RHO": 750.0, "CP_POLY": 2400.0, "CP_LIQ": 2500.0, "CP_CHAR": 1000.0, "CP_STEEL": 500.0,
     "K_EV": 0.15, "KV": 2e-5, "KR": 1e-3, "P_RELIEF": 6e5, "DH_SEC": 0.3e6,
-    "LHV_GAS": 46e6, "ETA_B": 0.75, "KP": 2500.0, "KI": 8.0,
+    "LHV_GAS": 46e6, "ETA_B": 0.75, "KP": 2500.0, "KI": 8.0, "KW": 2000.0,
+    # pared → fundido (ancla de Uhl y Gray) y viscosidad del fundido; calibrar con reometría
+    "MU_POLY_REF": 1000.0, "T_MU_REF": 473.15, "EA_MU": 30e3, "MU_OIL": 0.005, "K_MELT": 0.15,
+    "H_MIN": 40.0, "RPM": 30.0, "C_MIN_MELT": 2000.0,
     "POLY": {
         "HDPE": {"A": 1.0e16, "Ea": 268e3, "s": {"W": .55, "D": .22, "G": .13, "Gs": .08, "C": .02}, "Tm": 403, "dHm": 190e3, "dHr": 1.05e6},
         "LDPE": {"A": 2.2e14, "Ea": 240e3, "s": {"W": .45, "D": .27, "G": .16, "Gs": .10, "C": .02}, "Tm": 383, "dHm": 120e3, "dHr": 0.95e6},
@@ -61,11 +64,12 @@ def config(**kw):
     """Condiciones de operación con los mismos valores por defecto que la página."""
     c = {"mix": {"HDPE": 40, "LDPE": 20, "PP": 30, "PS": 10}, "mass": 50.0, "Vr": 0.3,
          "Tamb": 298.0, "Tsp": 733.15, "Pmax": 40000.0, "Pset": 1.2e5, "reflux": True,
-         "Tref": 603.15, "Tc": 298.15, "n2": 0.005, "cat": "none", "catLoad": 0.0, "recirc": True}
+         "Tref": 553.15, "Tc": 298.15, "n2": 0.005, "cat": "none", "catLoad": 0.0, "recirc": True,
+         "TwMax": 873.15}
     c.update(kw)
-    # acero y pérdidas escalan con el área del recipiente (∝ V^2/3); a 0.3 m3: 150 kg y 29 W/K
+    # acero y pérdidas escalan con el área (∝ V^2/3); a 0.3 m3: 150 kg y 11 W/K (≈ 50 mm de fibra cerámica)
     c.setdefault("mSteel", 335 * c["Vr"] ** (2 / 3))
-    c.setdefault("UA", 64 * c["Vr"] ** (2 / 3))
+    c.setdefault("UA", 25 * c["Vr"] ** (2 / 3))
     return c
 
 
@@ -96,12 +100,33 @@ def reflux_flash(out, nN2, Td, P, LUMP):
     return {i: (1 - V) / ((1 - V) + V * K[i]) for i in LIQ}
 
 
+def wet_area(Vr, Vliq):
+    """Recipiente con H/D = 1.5 y tapas 2:1: (diámetro, área mojada)."""
+    D = (Vr / (math.pi / 4 * 1.5 + math.pi / 12)) ** (1 / 3)
+    Ah, Vh = 1.084 * D * D, math.pi * D ** 3 / 24
+    A = Ah * Vliq / Vh if Vliq <= Vh else Ah + math.pi * D * min(1.5 * D, (Vliq - Vh) / (math.pi * D * D / 4))
+    return D, max(0.05 * Ah, A)
+
+
+def melt_viscosity(p, T, conv, f_poly):
+    mu_p = p["MU_POLY_REF"] * math.exp(p["EA_MU"] / R * (1 / T - 1 / p["T_MU_REF"]))
+    ln_mu_p = (1 - conv) * math.log(mu_p) + conv * math.log(p["MU_OIL"])
+    return math.exp(f_poly * ln_mu_p + (1 - f_poly) * math.log(p["MU_OIL"]))
+
+
+def h_wall(p, mu, D):
+    Re = p["RHO"] * (p["RPM"] / 60) * (0.95 * D) ** 2 / mu
+    Pr = p["CP_LIQ"] * mu / p["K_MELT"]
+    return max(p["H_MIN"], 0.36 * Re ** (2 / 3) * Pr ** (1 / 3) * p["K_MELT"] / D)
+
+
 def make_state(c, p):
     tot = sum(c["mix"].values())
     mP = {k: (c["mass"] * v / tot if tot > 0 else 0.0) for k, v in c["mix"].items()}
     Vh = max(0.01, c["Vr"] - c["mass"] / p["RHO"])
     return {
-        "t": 0.0, "T": c["Tamb"], "P": PATM, "I": 0.0, "Q": 0.0, "Qgas": 0.0, "relief": False,
+        "t": 0.0, "T": c["Tamb"], "Tw": c["Tamb"], "P": PATM, "I": 0.0, "Q": 0.0, "Qgas": 0.0, "relief": False,
+        "wallLimited": False,
         "done": False, "tau": math.inf, "mP": mP, "mass0": c["mass"],
         "L": {"W": 0.0, "D": 0.0, "G": 0.0}, "V": {"W": 0.0, "D": 0.0, "G": 0.0, "Gs": 0.0},
         "nN2": PATM * Vh / (R * c["Tamb"]), "char": 0.0, "tank": {"G": 0.0, "D": 0.0, "W": 0.0},
@@ -207,11 +232,14 @@ def step(s, c, p, dt):
     s["gasLossG"] += lossG
     gasM = out["Gs"] + lossG
 
-    # 8. Calentador PI y gas recirculado
+    # 8. Calentador: PI sobre el fundido y limitador de temperatura de pared
     e = c["Tsp"] - T
-    if abs(e) < 25:
+    Qlim = max(0.0, p["KW"] * (c["TwMax"] - s["Tw"]))
+    Qpi = p["KP"] * e + s["I"]
+    s["wallLimited"] = Qpi > Qlim and Qlim < c["Pmax"]
+    if abs(e) < 25 and not s["wallLimited"]:
         s["I"] = clamp(s["I"] + p["KI"] * e * dt, 0, c["Pmax"])
-    Q = clamp(p["KP"] * e + s["I"], 0, c["Pmax"])
+    Q = clamp(min(Qpi, Qlim), 0, c["Pmax"])
     Qgas = burn = 0.0
     if c["recirc"] and gasM > 0:
         Qgas = min(Q, gasM / dt * p["LHV_GAS"] * p["ETA_B"])
@@ -220,17 +248,30 @@ def step(s, c, p, dt):
     s["Eext"] += (Q - Qgas) * dt; s["Egas"] += Qgas * dt
     s["Q"], s["Qgas"] = Q, Qgas
 
-    # 9. Balance de energía
-    C = c["mSteel"] * p["CP_STEEL"] + Ltot * p["CP_LIQ"] + s["char"] * p["CP_CHAR"]
+    # 9. Balance de energía en dos nodos: pared (Tw) y fundido (T), intercambio implícito
+    Cm = Ltot * p["CP_LIQ"] + s["char"] * p["CP_CHAR"]
     for j, m in s["mP"].items():
         pj = p["POLY"][j]
-        C += m * p["CP_POLY"]
+        Cm += m * p["CP_POLY"]
         if pj["dHm"] > 0:
             z = (T - pj["Tm"]) / 6
-            C += m * pj["dHm"] * math.exp(-0.5 * z * z) / (6 * 2.5066)
-    s["Qloss"] = c["UA"] * (T - c["Tamb"])
+            Cm += m * pj["dHm"] * math.exp(-0.5 * z * z) / (6 * 2.5066)
+    Cm = max(p["C_MIN_MELT"], Cm)
+    Cs = c["mSteel"] * p["CP_STEEL"]
+    melt = mPtot + Ltot
+    D, A = wet_area(c["Vr"], (melt + s["char"]) / p["RHO"])
+    s["mu"] = melt_viscosity(p, T, 1 - mPtot / s["mass0"], mPtot / melt if melt > 0 else 0.0)
+    s["hw"], s["Awet"] = h_wall(p, s["mu"], D), A
+    a = s["hw"] * A * dt
+    s["Qloss"] = c["UA"] * (s["Tw"] - c["Tamb"])
     s["Qrxn"] = Qr + Qs + Qv
-    s["T"] = T + (Q - Qr - Qs - Qv - s["Qloss"]) / C * dt
+    b1 = Cs * s["Tw"] + dt * (Q - s["Qloss"])
+    b2 = Cm * T - dt * s["Qrxn"]
+    det = (Cs + a) * (Cm + a) - a * a
+    Tw1 = (b1 * (Cm + a) + a * b2) / det
+    T1 = ((Cs + a) * b2 + a * b1) / det
+    s["Qwall"] = s["hw"] * A * (Tw1 - T1)
+    s["Tw"], s["T"] = Tw1, T1
     s["t"] += dt
 
     if not s["done"] and s["t"] > 600 and mPtot + Ltot < 0.003 * s["mass0"]:

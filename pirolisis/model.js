@@ -10,6 +10,11 @@ const P_RELIEF = 6e5;       // disparo PSV, Pa abs
 const DH_SEC = 0.3e6;       // calor de craqueo secundario, J/kg
 const LHV_GAS = 46e6, ETA_B = 0.75; // gas C1–C4 y eficiencia del quemador
 const KP = 2500, KI = 8;    // control PI del calentador
+const KW = 2000;            // limitador de temperatura de pared, W/K
+// Pared → fundido: ancla de Uhl y Gray y viscosidad del fundido (calibrar con reometría)
+const MU_POLY_REF = 1000, T_MU_REF = 473.15, EA_MU = 30e3; // Pa·s a 200 °C, energía de flujo J/mol
+const MU_OIL = 0.005, K_MELT = 0.15, H_MIN = 40, RPM = 30;  // Pa·s, W/m·K, W/m²K, rpm
+const C_MIN_MELT = 2000;    // J/K de termopozo, agitador y espacio de cabeza
 
 const POLY = {
   HDPE: { name: 'PEAD', A: 1.0e16, Ea: 268e3, s: { W: .55, D: .22, G: .13, Gs: .08, C: .02 }, Tm: 403, dHm: 190e3, dHr: 1.05e6 },
@@ -60,13 +65,33 @@ function refluxFlash(out, nN2, Td, P) {
   return r;
 }
 
+// Recipiente con H/D = 1.5 y tapas 2:1: diámetro y área mojada para un volumen de líquido
+function wetArea(Vr, Vliq) {
+  const D = Math.pow(Vr / (Math.PI / 4 * 1.5 + Math.PI / 12), 1 / 3);
+  const Ah = 1.084 * D * D, Vh = Math.PI * D * D * D / 24;
+  const A = Vliq <= Vh ? Ah * Vliq / Vh : Ah + Math.PI * D * Math.min(1.5 * D, (Vliq - Vh) / (Math.PI * D * D / 4));
+  return { D, A: Math.max(0.05 * Ah, A) };
+}
+
+// Viscosidad del fundido: el polímero se adelgaza al craquearse (mezcla logarítmica con el aceite)
+function meltViscosity(T, conv, fPoly) {
+  const muP = MU_POLY_REF * Math.exp(EA_MU / R * (1 / T - 1 / T_MU_REF));
+  const lnMuP = (1 - conv) * Math.log(muP) + conv * Math.log(MU_OIL);
+  return Math.exp(fPoly * lnMuP + (1 - fPoly) * Math.log(MU_OIL));
+}
+
+function hWall(mu, D) {
+  const Re = RHO * (RPM / 60) * Math.pow(0.95 * D, 2) / mu, Pr = CP_LIQ * mu / K_MELT;
+  return Math.max(H_MIN, 0.36 * Math.pow(Re, 2 / 3) * Math.pow(Pr, 1 / 3) * K_MELT / D);
+}
+
 function makeState(c) {
   const mP = {};
   let tot = 0;
   for (const k in c.mix) tot += c.mix[k];
   for (const k in c.mix) mP[k] = tot > 0 ? c.mass * c.mix[k] / tot : 0;
   const s = {
-    t: 0, T: c.Tamb, P: PATM, I: 0, Q: 0, relief: false, done: false, tau: 0,
+    t: 0, T: c.Tamb, Tw: c.Tamb, P: PATM, I: 0, Q: 0, relief: false, done: false, tau: 0, wallLimited: false,
     mP, mass0: c.mass, L: { W: 0, D: 0, G: 0 }, V: { W: 0, D: 0, G: 0, Gs: 0 },
     nN2: 0, char: 0, tank: { G: 0, D: 0, W: 0 }, gasFlare: 0, gasBurn: 0, gasLossG: 0,
     Eext: 0, Egas: 0, cum: { prim: 0, evap: 0, refl: 0, out: { W: 0, D: 0, G: 0, Gs: 0 } }, tDone: 0,
@@ -176,10 +201,13 @@ function step(s, c, dt) {
   s.gasLossG += lossG;
   const gasM = out.Gs + lossG;
 
-  // 8. Calentador con control PI y gas recirculado al quemador
+  // 8. Calentador: PI sobre el fundido y limitador de temperatura de pared; el gas recirculado entra primero
   const e = c.Tsp - T;
-  if (Math.abs(e) < 25) s.I = clamp(s.I + KI * e * dt, 0, c.Pmax);
-  const Q = clamp(KP * e + s.I, 0, c.Pmax);
+  const Qlim = Math.max(0, KW * (c.TwMax - s.Tw));
+  const Qpi = KP * e + s.I;
+  s.wallLimited = Qpi > Qlim && Qlim < c.Pmax;
+  if (Math.abs(e) < 25 && !s.wallLimited) s.I = clamp(s.I + KI * e * dt, 0, c.Pmax);
+  const Q = clamp(Math.min(Qpi, Qlim), 0, c.Pmax);
   let Qgas = 0, burn = 0;
   if (c.recirc && gasM > 0) {
     Qgas = Math.min(Q, gasM / dt * LHV_GAS * ETA_B);
@@ -189,16 +217,28 @@ function step(s, c, dt) {
   s.Eext += (Q - Qgas) * dt; s.Egas += Qgas * dt;
   s.Q = Q; s.Qgas = Qgas;
 
-  // 9. Balance de energía del reactor
-  let C = c.mSteel * CP_STEEL + Ltot * CP_LIQ + s.char * CP_CHAR;
+  // 9. Balance de energía en dos nodos: pared de acero (Tw) y fundido (T), intercambio implícito
+  let Cm = Ltot * CP_LIQ + s.char * CP_CHAR;
   for (const j in s.mP) {
     const p = POLY[j];
-    C += s.mP[j] * CP_POLY;
-    if (p.dHm > 0) { const sg = 6, z = (T - p.Tm) / sg; C += s.mP[j] * p.dHm * Math.exp(-0.5 * z * z) / (sg * 2.5066); }
+    Cm += s.mP[j] * CP_POLY;
+    if (p.dHm > 0) { const sg = 6, z = (T - p.Tm) / sg; Cm += s.mP[j] * p.dHm * Math.exp(-0.5 * z * z) / (sg * 2.5066); }
   }
-  s.Qloss = c.UA * (T - c.Tamb);
+  Cm = Math.max(C_MIN_MELT, Cm);
+  const Cs = c.mSteel * CP_STEEL;
+  const melt = mPtot + Ltot;
+  const geo = wetArea(c.Vr, (melt + s.char) / RHO);
+  s.mu = meltViscosity(T, 1 - mPtot / s.mass0, melt > 0 ? mPtot / melt : 0);
+  s.hw = hWall(s.mu, geo.D); s.Awet = geo.A;
+  const a = s.hw * geo.A * dt;
+  s.Qloss = c.UA * (s.Tw - c.Tamb);
   s.Qrxn = Qr + Qs + Qv;
-  s.T = T + (Q - Qr - Qs - Qv - s.Qloss) / C * dt;
+  const b1 = Cs * s.Tw + dt * (Q - s.Qloss), b2 = Cm * T - dt * s.Qrxn;
+  const det = (Cs + a) * (Cm + a) - a * a;
+  const Tw1 = (b1 * (Cm + a) + a * b2) / det;
+  const T1 = ((Cs + a) * b2 + a * b1) / det;
+  s.Qwall = s.hw * geo.A * (Tw1 - T1);
+  s.Tw = Tw1; s.T = T1;
   s.t += dt;
 
   const left = mPtot + Ltot;
