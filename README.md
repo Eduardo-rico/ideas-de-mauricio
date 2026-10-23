@@ -13,6 +13,10 @@ Planta piloto virtual que convierte plástico (PEAD, PEBD, PP, PS) en gasolina, 
 
 El modelo es de lumps y semicuantitativo: sirve para aprender y comparar condiciones, no para dimensionar equipo. La cinética del PEAD y PP viene de Bockhorn (1999); las selectividades y el craqueo secundario están calibrados a tendencias de la literatura. Las fuentes están al final de la página.
 
+## Re-refinado de Aceite Usado (`aceite-usado/`)
+
+Recuperar aceite base del aceite de motor usado: sedimentación, deshidratación, tratamiento con solvente y floculante, fosfato o ácido, destilación al vacío y acabado con arcilla o hidroacabado. Simulador visual, ecuaciones, calidad contra referencia, equipo y consumibles con precios. Ver `aceite-usado/README.md`.
+
 ## Flóculo y Diplodon (`lago-diplodon/`)
 
 Modelo dinámico de fósforo para quitar la eutrofia de un lago en dos pasos: floculante (alumbre, PAC, FeCl₃, bentonita-La, Flock & Lock) y siembra de la almeja *Diplodon chilensis*. 9 ecuaciones diferenciales integradas con RK4, lagos animados, gráficas y referencias.
